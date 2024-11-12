@@ -1,0 +1,298 @@
+[
+  {
+    "id": "1",
+    "name": "Alice",
+    "status": "online",
+    "messages": [
+      {
+        "id": "5",
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vulputate, lorem in vehicula consectetur, mi justo sodales sapien, sed rutrum sem enim et augue. Integer euismod metus non convallis condimentum. Suspendisse egestas semper pellentesque. Vivamus luctus bibendum turpis, aliquam dignissim sem congue at. Curabitur ac molestie ante, quis mollis diam. Quisque sagittis tortor suscipit enim dignissim, eget sollicitudin quam facilisis. Donec euismod sollicitudin suscipit. Cras vel quam vel purus lobortis vehicula. Cras placerat bibendum lectus, at luctus mauris aliquet sed. Quisque maximus vehicula magna, id finibus dolor gravida eu. Sed tellus leo, porttitor rhoncus justo ut, semper iaculis lorem. Donec id nulla metus. Donec tristique quis lorem sit amet faucibus.",
+        "author": "Alice",
+        "timestamp": "2023-10-01T15:30:00"
+      },
+      {
+        "id": "4",
+        "content": "Aliquam ut porttitor leo. Praesent accumsan, justo in eleifend ullamcorper, ex augue condimentum diam, vulputate egestas turpis orci non sem. Integer dapibus tellus ac aliquet pretium. Vestibulum ornare, dolor eu rhoncus iaculis, augue tellus lacinia purus, at hendrerit sapien nisl at tortor. Integer sem neque, tempus et convallis at, consequat ut tortor. Duis nec volutpat erat, ut egestas nulla. Suspendisse potenti.",
+        "author": "Alice",
+        "timestamp": "2023-10-01T14:45:00"
+      },
+      {
+        "id": "3",
+        "content": "Don't forget to submit your timesheets.",
+        "author": "Admin",
+        "timestamp": "2023-10-01T13:00:00"
+      },
+      {
+        "id": "2",
+        "content": "Praesent auctor purus id mi scelerisque faucibus. Morbi ut nisl sagittis, scelerisque ex a, vestibulum ipsum. Suspendisse finibus, lectus in hendrerit interdum, felis turpis interdum nunc, aliquam mattis nisi metus at diam. Etiam commodo scelerisque ante, id lobortis dolor accumsan at. Ut bibendum mauris sit amet tellus ultricies imperdiet. Nulla fringilla metus ac vulputate porta. Duis sit amet dolor sit amet dui tincidunt congue. Phasellus est nibh, ornare nec euismod eu, scelerisque in ipsum. Sed non mollis ligula. Nam et sodales diam. Nullam venenatis scelerisque lectus, sed laoreet turpis volutpat at. Donec pulvinar nulla eu ante feugiat, eget ornare urna consectetur.",
+        "author": "Alice",
+        "timestamp": "2023-10-01T09:00:00"
+      },
+      {
+        "id": "1",
+        "content": "Welcome to the General channel.",
+        "author": "Admin",
+        "timestamp": "2023-09-30T08:00:00"
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "name": "Bob",
+    "status": "away",
+    "messages": [
+      {
+        "id": "5",
+        "content": "The new feature branch is ready for testing.",
+        "author": "Bob",
+        "timestamp": "2023-10-01T16:00:00"
+      },
+      {
+        "id": "4",
+        "content": "We need to refactor the authentication module.",
+        "author": "Admin",
+        "timestamp": "2023-10-01T12:30:00"
+      },
+      {
+        "id": "3",
+        "content": "The build is failing on CI.",
+        "author": "Admin",
+        "timestamp": "2023-10-01T11:00:00"
+      },
+      {
+        "id": "2",
+        "content": "Please review the latest commit.",
+        "author": "Bob",
+        "timestamp": "2023-10-01T10:00:00"
+      },
+      {
+        "id": "1",
+        "content": "Welcome to the Development channel.",
+        "author": "Admin",
+        "timestamp": "2023-09-30T08:00:00"
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "name": "Charlie",
+    "status": "online",
+    "messages": [
+      {
+        "id": "5",
+        "content": "Anyone up for a game tonight?",
+        "author": "Charlie",
+        "timestamp": "2023-10-01T18:00:00"
+      },
+      {
+        "id": "4",
+        "content": "Check out this cool article!",
+        "author": "Charlie",
+        "timestamp": "2023-10-01T17:00:00"
+      },
+      {
+        "id": "3",
+        "content": "What are your weekend plans?",
+        "author": "Admin",
+        "timestamp": "2023-10-01T16:00:00"
+      },
+      {
+        "id": "2",
+        "content": "Good afternoon!",
+        "author": "Charlie",
+        "timestamp": "2023-10-01T14:00:00"
+      },
+      {
+        "id": "1",
+        "content": "Welcome to the Random channel.",
+        "author": "Admin",
+        "timestamp": "2023-09-30T08:00:00"
+      }
+    ]
+  },
+  {
+    "id": "4",
+    "name": "David",
+    "status": "online",
+    "messages": [
+      {
+        "id": "5",
+        "content": "The server is down, working on it.",
+        "author": "David",
+        "timestamp": "2023-10-01T19:00:00"
+      },
+      {
+        "id": "4",
+        "content": "Deploying the latest updates.",
+        "author": "David",
+        "timestamp": "2023-10-01T18:00:00"
+      },
+      {
+        "id": "3",
+        "content": "Please check the logs for errors.",
+        "author": "Admin",
+        "timestamp": "2023-10-01T17:00:00"
+      },
+      {
+        "id": "2",
+        "content": "Good evening team!",
+        "author": "David",
+        "timestamp": "2023-10-01T16:00:00"
+      },
+      {
+        "id": "1",
+        "content": "Welcome to the Operations channel.",
+        "author": "Admin",
+        "timestamp": "2023-09-30T08:00:00"
+      }
+    ]
+  },
+  {
+    "id": "5",
+    "name": "Eve",
+    "status": "away",
+    "messages": [
+      {
+        "id": "5",
+        "content": "The design mockups are ready for review.",
+        "author": "Eve",
+        "timestamp": "2023-10-01T20:00:00"
+      },
+      {
+        "id": "4",
+        "content": "We need to finalize the UI by tomorrow.",
+        "author": "Admin",
+        "timestamp": "2023-10-01T19:00:00"
+      },
+      {
+        "id": "3",
+        "content": "The client meeting is scheduled for 3 PM.",
+        "author": "Admin",
+        "timestamp": "2023-10-01T18:00:00"
+      },
+      {
+        "id": "2",
+        "content": "Good afternoon everyone!",
+        "author": "Eve",
+        "timestamp": "2023-10-01T17:00:00"
+      },
+      {
+        "id": "1",
+        "content": "Welcome to the Design channel.",
+        "author": "Admin",
+        "timestamp": "2023-09-30T08:00:00"
+      }
+    ]
+  },
+  {
+    "id": "6",
+    "name": "Frank",
+    "status": "online",
+    "messages": [
+      {
+        "id": "5",
+        "content": "The database migration is complete.",
+        "author": "Frank",
+        "timestamp": "2023-10-01T21:00:00"
+      },
+      {
+        "id": "4",
+        "content": "We need to optimize the query performance.",
+        "author": "Admin",
+        "timestamp": "2023-10-01T20:00:00"
+      },
+      {
+        "id": "3",
+        "content": "The backup process is running smoothly.",
+        "author": "Admin",
+        "timestamp": "2023-10-01T19:00:00"
+      },
+      {
+        "id": "2",
+        "content": "Good evening!",
+        "author": "Frank",
+        "timestamp": "2023-10-01T18:00:00"
+      },
+      {
+        "id": "1",
+        "content": "Welcome to the Database channel.",
+        "author": "Admin",
+        "timestamp": "2023-09-30T08:00:00"
+      }
+    ]
+  },
+  {
+    "id": "7",
+    "name": "Grace",
+    "status": "away",
+    "messages": [
+      {
+        "id": "5",
+        "content": "The marketing campaign is live.",
+        "author": "Grace",
+        "timestamp": "2023-10-01T22:00:00"
+      },
+      {
+        "id": "4",
+        "content": "We need to track the campaign performance.",
+        "author": "Admin",
+        "timestamp": "2023-10-01T21:00:00"
+      },
+      {
+        "id": "3",
+        "content": "The social media posts are scheduled.",
+        "author": "Admin",
+        "timestamp": "2023-10-01T20:00:00"
+      },
+      {
+        "id": "2",
+        "content": "Good night everyone!",
+        "author": "Grace",
+        "timestamp": "2023-10-01T19:00:00"
+      },
+      {
+        "id": "1",
+        "content": "Welcome to the Marketing channel.",
+        "author": "Admin",
+        "timestamp": "2023-09-30T08:00:00"
+      }
+    ]
+  },
+  {
+    "id": "8",
+    "name": "Dani",
+    "status": "away",
+    "messages": [
+      {
+        "id": "5",
+        "content": "The marketing campaign is live.",
+        "author": "Grace",
+        "timestamp": "2023-10-01T22:00:00"
+      },
+      {
+        "id": "4",
+        "content": "We need to track the campaign performance.",
+        "author": "Admin",
+        "timestamp": "2023-10-01T21:00:00"
+      },
+      {
+        "id": "3",
+        "content": "The social media posts are scheduled.",
+        "author": "Admin",
+        "timestamp": "2023-10-01T20:00:00"
+      },
+      {
+        "id": "2",
+        "content": "Good night everyone!",
+        "author": "Grace",
+        "timestamp": "2023-10-01T19:00:00"
+      },
+      {
+        "id": "1",
+        "content": "Welcome to the Marketing channel.",
+        "author": "Admin",
+        "timestamp": "2023-09-30T08:00:00"
+      }
+    ]
+  }
+]
