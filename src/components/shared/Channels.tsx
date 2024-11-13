@@ -9,7 +9,6 @@ const Channels = () => {
     <List
       sx={{
         width: "100%",
-        maxWidth: 250,
         bgcolor: "background.paper",
         overflowY: "auto",
         height: "69dvh",

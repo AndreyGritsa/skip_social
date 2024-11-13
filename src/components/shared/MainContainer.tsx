@@ -13,10 +13,10 @@ const MainContainer: React.FC<MainContainerProps> = ({ children }) => {
     <Container sx={{ p: 1, height: "100dvh" }}>
       <Grid container sx={{ height: "100%" }} spacing={2}>
         <Grid size={{ xs: 5, md: 3 }} container direction="column" spacing={1}>
-          <Grid style={{ flexGrow: 1 }}>
+          <Grid sx={{ flexGrow: 1 }} size={12}>
             <ChannelsContainer />
           </Grid>
-          <Grid>
+          <Grid size={12}>
             <User />
           </Grid>
         </Grid>
