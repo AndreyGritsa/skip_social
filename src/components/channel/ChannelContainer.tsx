@@ -83,6 +83,7 @@ const ChannelContainer = () => {
                 flexDirection: "column",
                 alignItems: "flex-start",
               }}
+              key={message.id}
             >
               <Paper sx={{ p: 1 }}>
                 <Typography variant="body1">{message.content}</Typography>
