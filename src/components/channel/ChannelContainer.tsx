@@ -56,7 +56,6 @@ const ChannelContainer = () => {
       sx={{
         p: 1,
         // TODO: couldn't figure out how to use 100% instead
-        // current solution is not responsive vertically
         height: "97.7dvh",
         overflowY: "auto",
         display: "flex",

@@ -11,7 +11,7 @@ const Channels = () => {
         width: "100%",
         bgcolor: "background.paper",
         overflowY: "auto",
-        height: "69dvh",
+        height: "calc(100vh - 220px)",
       }}
     >
       {channels.map((channel) => (
