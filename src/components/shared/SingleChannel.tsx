@@ -9,13 +9,33 @@ import { useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../app/hooks";
 import { setActiveChannel } from "../../features/active_channel/activeChannelSlice";
 import CustomAvatar from "./CustomAvatar";
+import { Friend } from "../../features/friends/friendsSlice";
+import { addNewChannel } from "../../features/channels/channelsSlice";
+import { store } from "../../app/store";
 
-const SingleChannel = ({ ...props }: Channel) => {
+const SingleChannel = ({ ...props }: Channel | Friend) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const activeChannel = useAppSelector((state) => state.activeChannel.id);
 
   const handleNavigation = (id: string) => {
+    // Check if the channel exists in the store
+    // If not, add it to the store
+    const state = store.getState();
+    const channel = state.channels.channels.find(
+      (channel) => channel.id === id
+    );
+    if (!channel) {
+      dispatch(
+        addNewChannel({
+          id,
+          name: props.name,
+          status: props.status,
+          messages: [],
+        })
+      );
+    }
+
     dispatch(setActiveChannel(id));
     navigate(`/channel/${id}`);
   };

@@ -2,6 +2,7 @@ import channelsReducer, {
   addMessage,
   ChannelsState,
   reorderChannels,
+  addNewChannel,
 } from "./channelsSlice";
 import fakeData from "./fakeData.json";
 
@@ -31,5 +32,17 @@ describe("channels reducer", () => {
       (channel) => channel.id === "1"
     );
     expect(channelIndex).toEqual(0);
+  });
+  it("should handle addNewChannel", () => {
+    const actual = channelsReducer(
+      initialState,
+      addNewChannel({
+        id: "100",
+        name: "New Channel",
+        status: "online",
+        messages: [],
+      })
+    );
+    expect(actual.channels[0].id).toEqual("100");
   });
 });

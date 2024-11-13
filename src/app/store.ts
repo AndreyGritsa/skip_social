@@ -3,6 +3,7 @@ import userReducer from "../features/user/userSlice";
 import channelsReducer from "../features/channels/channelsSlice";
 import activeChannelReducer from "../features/active_channel/activeChannelSlice";
 import postsReducer from "../features/posts/postsSlice";
+import friendsReducer from "../features/friends/friendsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     channels: channelsReducer,
     activeChannel: activeChannelReducer,
     posts: postsReducer,
+    friends: friendsReducer,
   },
 });
 

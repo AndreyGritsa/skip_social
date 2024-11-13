@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTheme, Tab, Tabs, Box } from "@mui/material";
+import FriendsTabPanel from "./FriendsTabPanel";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -52,10 +53,10 @@ const FriendsTabs = () => {
         </Tabs>
       </Box>
       <CustomTabPanel value={value} index={0}>
-        Online
+        <FriendsTabPanel online={true} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>
-        All
+        <FriendsTabPanel online={false} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={2}>
         Add new friend

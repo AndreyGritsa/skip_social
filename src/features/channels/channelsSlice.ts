@@ -62,9 +62,13 @@ export const channelsSlice = createSlice({
         state.channels.unshift(channel);
       }
     },
+    addNewChannel: (state, action: PayloadAction<Channel>) => {
+      state.channels.unshift(action.payload);
+    },
   },
 });
 
-export const { addMessage, reorderChannels } = channelsSlice.actions;
+export const { addMessage, reorderChannels, addNewChannel } =
+  channelsSlice.actions;
 
 export default channelsSlice.reducer;
