@@ -3,7 +3,7 @@ import HomePage from "../pages/HomePage";
 import ChannelPage from "../pages/ChannelPage";
 import FriendsPage from "../pages/FriendsPage";
 
-const AppRoutes = () => {
+const PersonalRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
@@ -13,4 +13,4 @@ const AppRoutes = () => {
   );
 };
 
-export default AppRoutes;
+export default PersonalRoutes;

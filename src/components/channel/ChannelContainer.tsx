@@ -6,6 +6,7 @@ import {
   ListItem,
   InputAdornment,
   IconButton,
+  Box,
 } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../app/hooks";
@@ -24,7 +25,7 @@ const ChannelContainer = () => {
   );
   const user = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
-  const [messageInput, setMessageInput] = useState("");
+  const [messageInput, setMessageInput] = useState<string>("");
 
   useEffect(() => {
     // make sure the active channel is set when page is reloaded
@@ -52,16 +53,15 @@ const ChannelContainer = () => {
   };
 
   return (
-    <Paper
+    <Box
       sx={{
         p: 1,
         // TODO: couldn't figure out how to use 100% instead
-        height: "97.7dvh",
+        height: "95.3dvh",
         overflowY: "auto",
         display: "flex",
         flexDirection: "column",
       }}
-      elevation={4}
     >
       <List
         sx={{
@@ -120,7 +120,7 @@ const ChannelContainer = () => {
           },
         }}
       />
-    </Paper>
+    </Box>
   );
 };
 

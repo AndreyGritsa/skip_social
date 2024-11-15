@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import fakeData from "./fakeData.json";
+import { User } from "../user/userSlice";
 
 export interface Message {
   id: string;
@@ -8,9 +9,7 @@ export interface Message {
   timestamp: string;
 }
 
-export interface Channel {
-  id: string;
-  name: string;
+export interface Channel extends User {
   status: string;
   messages: Message[];
 }

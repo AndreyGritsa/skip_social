@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { User } from "../user/userSlice";
 
 export const fakeFriendsData = [
   { id: "1", name: "Alice", status: "online" },
@@ -6,9 +7,7 @@ export const fakeFriendsData = [
   { id: "500", name: "NotExistentChannel", status: "online" },
 ];
 
-export interface Friend {
-  id: string;
-  name: string;
+export interface Friend extends User {
   status: string;
 }
 

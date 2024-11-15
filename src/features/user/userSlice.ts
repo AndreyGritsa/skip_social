@@ -1,8 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-export interface UserState {
+export interface User {
   id: string;
   name: string;
+}
+
+export interface UserState extends User {
   status: "online" | "away";
 }
 

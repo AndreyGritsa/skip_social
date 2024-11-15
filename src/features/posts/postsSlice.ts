@@ -1,4 +1,5 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { User } from "../user/userSlice";
 
 export const fakePostsData = [
   {
@@ -8,6 +9,10 @@ export const fakePostsData = [
       "Last weekend, I went hiking in the mountains. The view was breathtaking and the experience was unforgettable. I highly recommend it to anyone looking for an adventure.",
     author: "John Doe",
     timestamp: new Date("2023-10-01T10:30:00").toISOString(),
+    comments: [
+      { id: "1", content: "Great post!", author: { id: "1", name: "Alice" } },
+      { id: "2", content: "Insane!", author: { id: "1", name: "Alice" } },
+    ],
   },
   {
     id: "2",
@@ -59,12 +64,23 @@ export const fakePostsData = [
   },
 ];
 
+export interface Comment {
+  id: string;
+  content: string;
+  author: User;
+}
+
 export interface Post {
   id: string;
   title: string;
   content: string;
   author: string;
   timestamp: string;
+  comments?: Comment[];
+}
+
+export interface CommentWithPostId extends Comment {
+  postId: string;
 }
 
 export interface PostsState {
@@ -79,7 +95,20 @@ const initialState: PostsState = {
 export const postsSlice = createSlice({
   name: "posts",
   initialState,
-  reducers: {},
+  reducers: {
+    addComment: (state, action: PayloadAction<CommentWithPostId>) => {
+      const { postId, ...comment } = action.payload;
+      const post = state.posts.find((post) => post.id === postId);
+      if (post) {
+        if (!post.comments) {
+          post.comments = [];
+        }
+        post.comments.push(comment);
+      }
+    },
+  },
 });
+
+export const { addComment } = postsSlice.actions;
 
 export default postsSlice.reducer;

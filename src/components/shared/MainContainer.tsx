@@ -1,26 +1,39 @@
 import { ReactNode } from "react";
-import { Container } from "@mui/material";
+import { Container, Paper } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import User from "./User";
-import ChannelsContainer from "./ChannelsContainer";
+import ServersContainer from "./ServersContainer";
 
 interface MainContainerProps {
-  children: ReactNode;
+  managmentPanel: ReactNode;
+  page: ReactNode;
 }
 
-const MainContainer: React.FC<MainContainerProps> = ({ children }) => {
+const MainContainer: React.FC<MainContainerProps> = ({
+  page,
+  managmentPanel,
+}) => {
   return (
-    <Container sx={{ p: 1, height: "100dvh" }}>
-      <Grid container sx={{ height: "100%" }} spacing={2}>
+    <Container sx={{ p: 1, height: "100dvh" }} maxWidth="xl">
+      <Grid container spacing={1}>
+        <Grid size={1}>
+          <ServersContainer />
+        </Grid>
         <Grid size={{ xs: 5, md: 3 }} container direction="column" spacing={1}>
           <Grid sx={{ flexGrow: 1 }} size={12}>
-            <ChannelsContainer />
+            <Paper sx={{ p: 1, height: "100%" }} elevation={4}>
+              {managmentPanel}
+            </Paper>
           </Grid>
           <Grid size={12}>
             <User />
           </Grid>
         </Grid>
-        <Grid size={{ xs: 7, md: 9 }}>{children}</Grid>
+        <Grid size={{ xs: 6, md: 8 }}>
+          <Paper sx={{ p: 1, height: "100%", overflowY: "auto" }} elevation={4}>
+            {page}
+          </Paper>
+        </Grid>
       </Grid>
     </Container>
   );

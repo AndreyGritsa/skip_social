@@ -3,7 +3,7 @@ import { Avatar, Badge } from "@mui/material";
 interface CustomAvatarProps {
   src: string | undefined;
   alt: string;
-  status: "online" | "away";
+  status?: "online" | "away";
 }
 
 const getStatusColor = (status: string): "success" | "warning" => {
@@ -20,7 +20,7 @@ const getStatusColor = (status: string): "success" | "warning" => {
 const CustomAvatar = ({ src, alt, status }: CustomAvatarProps) => {
   return (
     <Badge
-      color={getStatusColor(status)}
+      color={status ? getStatusColor(status) : "default"}
       overlap="circular"
       variant="dot"
       anchorOrigin={{ vertical: "bottom" }}
