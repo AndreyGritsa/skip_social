@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Container, Paper } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import User from "./User";
-import ServersContainer from "./ServersContainer";
+import ServersContainer from "../server/ServersContainer";
 
 interface MainContainerProps {
   managmentPanel: ReactNode;

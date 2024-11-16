@@ -14,7 +14,7 @@ import { useState } from "react";
 import SendIcon from "@mui/icons-material/Send";
 import { addMessage } from "../../features/channels/channelsSlice";
 import { useEffect } from "react";
-import { setActiveChannel } from "../../features/active_channel/activeChannelSlice";
+import { setActiveChannel } from "../../features/active/activeSlice";
 import { format } from "date-fns";
 import { reorderChannels } from "../../features/channels/channelsSlice";
 
@@ -45,7 +45,7 @@ const ChannelContainer = () => {
       return;
     } else if (channelId) {
       dispatch(
-        addMessage({ channelId, content: messageInput, author: user.name })
+        addMessage({ channelId, content: messageInput, author: { ...user } })
       );
       dispatch(reorderChannels(channelId));
       setMessageInput("");
@@ -88,7 +88,7 @@ const ChannelContainer = () => {
               <Paper sx={{ p: 1 }}>
                 <Typography variant="body1">{message.content}</Typography>
                 <Typography variant="caption" color="textSecondary">
-                  {message.author} -{" "}
+                  {message.author.name} -{" "}
                   {format(new Date(message.timestamp), "MMMM d, yyyy")}
                 </Typography>
               </Paper>

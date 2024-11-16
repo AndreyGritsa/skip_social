@@ -9,7 +9,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import HomeIcon from "@mui/icons-material/Home";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../app/hooks";
-import { setActiveChannel } from "../../features/active_channel/activeChannelSlice";
+import { setActiveChannel } from "../../features/active/activeSlice";
 
 const ChannelsNavigation = () => {
   const location = useLocation();

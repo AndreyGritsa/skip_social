@@ -1,9 +1,10 @@
 import { Route, Routes } from "react-router-dom";
+import ServerRoomPage from "../pages/ServerRoomPage";
 
 const ServerRoutes = () => {
   return (
     <Routes>
-      <Route path="/:serverId" element={<div>Server Page</div>} />
+      <Route path=":serverId/:roomId" element={<ServerRoomPage />} />
     </Routes>
   );
 };

@@ -7,8 +7,8 @@ import {
 import { Channel } from "../../features/channels/channelsSlice";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../app/hooks";
-import { setActiveChannel } from "../../features/active_channel/activeChannelSlice";
-import CustomAvatar from "./CustomAvatar";
+import { setActiveChannel } from "../../features/active/activeSlice";
+import CustomAvatar from "../shared/CustomAvatar";
 import { Friend } from "../../features/friends/friendsSlice";
 import { addNewChannel } from "../../features/channels/channelsSlice";
 import { store } from "../../app/store";
@@ -16,7 +16,7 @@ import { store } from "../../app/store";
 const SingleChannel = ({ ...props }: Channel | Friend) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const activeChannel = useAppSelector((state) => state.activeChannel.id);
+  const activeChannel = useAppSelector((state) => state.active.channel);
 
   const handleNavigation = (id: string) => {
     // Check if the channel exists in the store

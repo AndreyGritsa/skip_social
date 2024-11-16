@@ -1,6 +1,6 @@
 import { Box, List } from "@mui/material";
 import { useAppSelector } from "../../app/hooks";
-import SingleChannel from "../shared/SingleChannel";
+import SingleChannel from "../channel/SingleChannel";
 
 interface FriendsTabPanelProps {
   online: boolean;

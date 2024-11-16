@@ -2,11 +2,11 @@ import PersonalRoutes from "./routes/PersonalRoutes";
 import ServerRoutes from "./routes/ServerRoutes";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainContainer from "./components/shared/MainContainer";
-import ChannelsContainer from "./components/shared/ChannelsContainer";
+import ChannelsContainer from "./components/channel/ChannelsContainer";
+import RoomsContainer from "./components/server/RoomsContainer";
 
 function App() {
   return (
-    // TODO: move ServersContainer up so that it's not rerendered
     <BrowserRouter>
       <Routes>
         <Route
@@ -23,7 +23,7 @@ function App() {
           element={
             <MainContainer
               page={<ServerRoutes />}
-              managmentPanel={<div>Managment</div>}
+              managmentPanel={<RoomsContainer />}
             />
           }
         />

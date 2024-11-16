@@ -5,7 +5,7 @@ import { User } from "../user/userSlice";
 export interface Message {
   id: string;
   content: string;
-  author: string;
+  author: User;
   timestamp: string;
 }
 
@@ -32,7 +32,7 @@ export const channelsSlice = createSlice({
       action: PayloadAction<{
         channelId: string;
         content: string;
-        author: string;
+        author: User;
       }>
     ) => {
       const { channelId, content, author } = action.payload;
