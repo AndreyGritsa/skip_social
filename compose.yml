@@ -1,10 +1,74 @@
 services:
-  app:
+  postgres:
+    image: postgres:16.4
+    container_name: postgres_social
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend_network
+
+  frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: social_client
     ports:
       - "3000:3000"
     volumes:
-      - .:/app
+      - ./frontend:/app
+    networks:
+      - frontend_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: soicial_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    networks:
+      - backend_network
+    depends_on:
+      - postgres
+    environment:
+      DJANGO_SUPERUSER_USERNAME: admin
+      DJANGO_SUPERUSER_EMAIL: admin@admin.com
+      DJANGO_SUPERUSER_PASSWORD: admin
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py createsuperuser --noinput 
+             python manage.py runserver 0.0.0.0:8000"
+
+  nginx:
+    image: nginx:1.27
+    container_name: nginx_social
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - backend_network
+      - frontend_network
+      - reactive_service_network
+    depends_on:
+      - backend
+
+    # TODO: reactive_service:
+
+networks:
+  backend_network:
+    driver: bridge
+  frontend_network:
+    driver: bridge
+  reactive_service_network:
+    driver: bridge
+
+volumes:
+  postgres_data:

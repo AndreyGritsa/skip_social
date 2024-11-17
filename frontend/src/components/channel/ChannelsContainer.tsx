@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import ChannelsNavigation from "./ChannelsNavigation";
-import Channels from "../channel/Channels";
+import Channels from "./Channels";
 
 const ChannelsContainer = () => {
   return (

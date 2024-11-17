@@ -3,7 +3,7 @@ import { Avatar, Badge } from "@mui/material";
 interface CustomAvatarProps {
   src: string | undefined;
   alt: string;
-  status?: "online" | "away";
+  status?: string;
 }
 
 const getStatusColor = (status: string): "success" | "warning" => {

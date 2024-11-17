@@ -8,9 +8,9 @@ describe("user reducer", () => {
   };
   it("should return the initial state", () => {
     expect(userReducer(undefined, { type: "unknown" })).toEqual({
-      id: "1",
-      name: "Admin",
-      status: "online",
+      id: "",
+      name: "",
+      status: "",
     });
   });
 });
