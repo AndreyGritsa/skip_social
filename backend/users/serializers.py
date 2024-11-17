@@ -22,4 +22,4 @@ class FriendSerialier(serializers.ModelSerializer):
 
     def get_friends(self, obj):
         friends = obj.friends.all()
-        return [{'username': friend.user.username, 'status': friend.status} for friend in friends]
+        return [{'name': friend.user.username, 'status': friend.status, 'id': friend.id} for friend in friends]

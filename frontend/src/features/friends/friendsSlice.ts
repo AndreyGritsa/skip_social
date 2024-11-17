@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { User } from "../user/userSlice";
 
 export const fakeFriendsData = [
@@ -17,13 +17,19 @@ export interface FriendsState {
 
 // fake initial state, should be empty
 const initialState: FriendsState = {
-  friends: fakeFriendsData,
+  friends: [],
 };
 
 export const friendsSlice = createSlice({
   name: "friends",
   initialState,
-  reducers: {},
+  reducers: {
+    setFriends(state, action: PayloadAction<Friend[]>) {
+      state.friends = action.payload;
+    },
+  },
 });
+
+export const { setFriends } = friendsSlice.actions;
 
 export default friendsSlice.reducer;
