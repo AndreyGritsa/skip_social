@@ -1,11 +1,20 @@
 {
-  "name": "reactive_service",
+  "name": "reactive-social",
+  "type": "module",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "SkipLabs",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "postgres": "^3.4.5",
+    "skip-wasm": "^0.0.4",
+    "@skipruntime/server": "^0.0.4"
+  },
+  "devDependencies": {
+    "@skiplabs/eslint-config": "^0.0.1",
+    "@skiplabs/tsconfig": "^0.0.1"
+  }
 }
