@@ -7,16 +7,23 @@ import type {
   NonEmptyIterator,
 } from "@skipruntime/api";
 
+type User = {
+  id: string;
+  username: string;
+};
+
 type Profile = {
   id: string;
-  name: string;
   status: string;
+  user_id: string;
 };
+
+type ModifiedProfile = Profile & { name: string };
 
 type FriendRequest = {
   id: string;
-  friend_id_from: string;
-  friend_id_to: string;
+  from_profile_id: string;
+  to_profile_id: string;
 };
 
 // type Group = {
@@ -30,60 +37,163 @@ type GroupMember = {
 };
 
 type InputCollection = {
+  users: EagerCollection<string, User>;
   profiles: EagerCollection<string, Profile>;
   friendRequests: EagerCollection<string, FriendRequest>;
   groupMembers: EagerCollection<string, GroupMember>;
 };
 
-type OutputCollection = {
-  friends: EagerCollection<string, string>;
+type ResourcesCollection = {
+  friends: EagerCollection<string, ModifiedProfile>;
   friendIndex: EagerCollection<string, boolean>;
   groupIndex: EagerCollection<string, boolean>;
+  modifiedProfiles: EagerCollection<string, ModifiedProfile>;
+  oneSideFriendRequests: EagerCollection<string, ModifiedProfile>;
 };
-
-type FriendIndexCollection = {
-  friendIndex: EagerCollection<string, boolean>;
-};
-
-// http://service.com/service/friendindex?id_1=1&id_2=2
 
 export function SocialSkipService(
+  users: Entry<string, User>[],
   profiles: Entry<string, Profile>[],
   friendRequests: Entry<string, FriendRequest>[],
   groupMembers: Entry<string, GroupMember>[]
-): SkipService<InputCollection, OutputCollection> {
+): SkipService<InputCollection, ResourcesCollection> {
   return {
-    initialData: { profiles, friendRequests, groupMembers },
+    initialData: { users, profiles, friendRequests, groupMembers },
     resources: {
       friends: FriendsResource,
       friendIndex: FriendsIndexResource,
       groupIndex: GroupMembersIndexResource,
+      modifiedProfiles: ModifiedProfileResource,
+      oneSideFriendRequests: OneSideFriendRequestResource,
     },
     createGraph: (inputCollections) => {
+      const modifiedProfiles = inputCollections.profiles.map(
+        ModifiedProfileMapper,
+        inputCollections.users
+      );
       inputCollections.friendRequests
         .map(FriendRequestUniquePhase1)
         .map(FriendRequestUniquePhase2);
       const friendRequests =
         inputCollections.friendRequests.map(FriendRequestMapper);
       const friendIndex = friendRequests.map(FriendRequestIndex);
-      const friends = friendRequests.map(FriendRequestIntersect);
-
       const groupIndex = inputCollections.groupMembers.map(
         GroupMemberIndexMapper
+      );
+      const friends = friendRequests
+        .map(FriendRequestIntersectPhase1)
+        .map(FriendRequestIntersectPhase2, modifiedProfiles);
+      const oneSideFriendRequests = friendRequests.map(
+        OneSideFriendRequestMapper,
+        modifiedProfiles
       );
 
       return {
         friends,
         friendIndex,
         groupIndex,
+        modifiedProfiles,
+        oneSideFriendRequests,
       };
     },
   };
 }
 
-class FriendsResource implements Resource<OutputCollection> {
-  instantiate(collections: OutputCollection): OutputCollection["friends"] {
-    return collections.friends;
+class OneSideFriendRequestMapper
+  implements Mapper<string, FriendRequest, string, ModifiedProfile>
+{
+  constructor(
+    private modifiedProfiles: EagerCollection<string, ModifiedProfile>
+  ) {}
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<FriendRequest>
+  ): Iterable<[string, ModifiedProfile]> {
+    console.assert(typeof key === "string");
+    let array = values.toArray();
+    if (array.length === 1) {
+      const profile = this.modifiedProfiles.getUnique(array[0]!.to_profile_id);
+      return [[array[0]!.to_profile_id, profile]];
+    }
+    return [];
+  }
+}
+
+class ModifiedProfileMapper
+  implements Mapper<string, Profile, string, ModifiedProfile>
+{
+  constructor(private users: EagerCollection<string, User>) {}
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<Profile>
+  ): Iterable<[string, ModifiedProfile]> {
+    const profile = values.getUnique();
+    const user = this.users.getUnique(profile.user_id);
+    return [[key, { ...profile, name: user.username }]];
+  }
+}
+
+class FriendRequestIntersectPhase2
+  implements Mapper<string, string, string, ModifiedProfile>
+{
+  constructor(
+    private modifiedProfiles: EagerCollection<string, ModifiedProfile>
+  ) {}
+
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<string>
+  ): Iterable<[string, ModifiedProfile]> {
+    const profile1 = this.modifiedProfiles.getUnique(key);
+    const profile2Id = values.getUnique();
+    const profile2 = this.modifiedProfiles.getUnique(profile2Id);
+
+    return [
+      [key, profile2],
+      [profile2Id, profile1],
+    ];
+  }
+}
+
+class OneSideFriendRequestResource implements Resource {
+  constructor(private params: Record<string, string>) {}
+  instantiate(
+    collections: ResourcesCollection
+  ): EagerCollection<string, ModifiedProfile> {
+    const id = this.params["profile_id"];
+    if (!id) {
+      throw new Error("profile_id must be provided");
+    }
+
+    return collections.oneSideFriendRequests.slice([id, id]);
+  }
+}
+
+class ModifiedProfileResource implements Resource {
+  constructor(private params: Record<string, string>) {}
+  instantiate(
+    collections: ResourcesCollection
+  ): EagerCollection<string, ModifiedProfile> {
+    const id = this.params["profile_id"];
+    if (!id) {
+      throw new Error("profile_id must be provided");
+    }
+
+    return collections.modifiedProfiles.slice([id, id]);
+  }
+}
+
+class FriendsResource implements Resource {
+  constructor(private params: Record<string, string>) {}
+  instantiate(
+    collections: ResourcesCollection
+  ): EagerCollection<string, ModifiedProfile> {
+    const id = this.params["profile_id"];
+    if (!id) {
+      throw new Error("profile_id must be provided");
+    }
+
+    return collections.friends.slice([id, id]);
   }
 }
 
@@ -91,7 +201,7 @@ class FriendsIndexResource implements Resource {
   constructor(private params: Record<string, string>) {}
 
   instantiate(
-    collections: FriendIndexCollection
+    collections: ResourcesCollection
   ): EagerCollection<string, boolean> {
     let id_1 = this.params["id_1"];
     let id_2 = this.params["id_2"];
@@ -115,7 +225,7 @@ class GroupMembersIndexResource implements Resource {
   constructor(private params: Record<string, string>) {}
 
   instantiate(
-    collections: FriendIndexCollection
+    collections: ResourcesCollection
   ): EagerCollection<string, boolean> {
     const profile_id = this.params["profile_id"];
     const group_id = this.params["group_id"];
@@ -129,7 +239,7 @@ class GroupMembersIndexResource implements Resource {
   }
 }
 
-class FriendRequestIntersect {
+class FriendRequestIntersectPhase1 {
   mapEntry(
     key: string,
     values: NonEmptyIterator<FriendRequest>
@@ -137,15 +247,17 @@ class FriendRequestIntersect {
     console.log(key);
     let array = values.toArray();
     if (array.length >= 2) {
-      console.assert(array[0]!.friend_id_from === array[1]!.friend_id_to);
-      console.assert(array[1]!.friend_id_from === array[0]!.friend_id_to);
-      return [[array[0]!.friend_id_from, array[0]!.friend_id_to]];
+      console.assert(array[0]!.from_profile_id === array[1]!.to_profile_id);
+      console.assert(array[1]!.from_profile_id === array[0]!.to_profile_id);
+      return [[array[0]!.from_profile_id, array[0]!.to_profile_id]];
     }
     return [];
   }
 }
 
-class FriendRequestIndex {
+class FriendRequestIndex
+  implements Mapper<string, FriendRequest, string, boolean>
+{
   mapEntry(
     key: string,
     values: NonEmptyIterator<FriendRequest>
@@ -165,10 +277,10 @@ class FriendRequestUniquePhase1
     key: string,
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, FriendRequest]> {
-    console.log(key);
+    console.assert(typeof key === "string");
     let result: [string, FriendRequest][] = [];
     for (const value of values) {
-      result.push([`${value.friend_id_from}/${value.friend_id_to}`, value]);
+      result.push([`${value.from_profile_id}/${value.to_profile_id}`, value]);
     }
     return result;
   }
@@ -181,9 +293,8 @@ class FriendRequestUniquePhase2
     key: string,
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, FriendRequest]> {
-    console.log(key);
     if (values.toArray().length > 1) {
-      throw new Error("More than one friend requests detected");
+      throw new Error(`More than one friend requests detected for ${key}`);
     }
     return [];
   }
@@ -196,11 +307,11 @@ class FriendRequestMapper
     key: string,
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, FriendRequest]> {
-    console.log(key);
+    console.assert(typeof key === "string");
     const result: [string, FriendRequest][] = [];
     for (const value of values) {
-      let from = value.friend_id_from;
-      let to = value.friend_id_to;
+      let from = value.from_profile_id;
+      let to = value.to_profile_id;
       if (from > to) {
         let tmp = from;
         from = to;

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme, Tab, Tabs, Box, TextField, Button } from "@mui/material";
 import FriendsTabPanel from "./FriendsTabPanel";
 import FriendRequests from "./FriendsRequests";
 import { usePostFriendRequestMutation } from "../../services/endpoints/users";
 import { useAppSelector } from "../../app/hooks";
+import { Friend } from "../../features/friends/friendsSlice";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -40,6 +41,26 @@ const FriendsTabs = () => {
   const theme = useTheme();
   const [triggerPostFriendRequest] = usePostFriendRequestMutation();
   const user = useAppSelector((state) => state.user);
+
+  // useEffect(() => {
+  //   const evSource = new EventSource("/api/users/friend?profile_id=3");
+  //   evSource.addEventListener("init", (e: MessageEvent<string>) => {
+  //     const data = JSON.parse(e.data);
+  //     // const updatedPosts = data[0][1] as Friend[];
+  //     // setPosts(updatedPosts);
+  //     console.log("init", data);
+  //   });
+  //   evSource.addEventListener("update", (e: MessageEvent<string>) => {
+  //     const data = JSON.parse(e.data);
+  //     // const updatedPosts = data[0][1] as Friend[];
+  //     // setPosts(updatedPosts);
+  //     console.log("update", data);
+  //   });
+
+  //   return () => {
+  //     evSource.close();
+  //   };
+  // }, []);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
