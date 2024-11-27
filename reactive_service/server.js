@@ -18,8 +18,9 @@ async function selectAll(table) {
 }
 
 // Initial values.
+const users = await selectAll("auth_user");
 const profiles = await selectAll("users_profile");
 const friendRequests = await selectAll("users_friendrequest");
 const servers = await selectAll("servers_server");
 
-runService(SocialSkipService(profiles, friendRequests, servers));
+runService(SocialSkipService(users, profiles, friendRequests, servers));

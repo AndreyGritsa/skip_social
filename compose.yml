@@ -16,9 +16,10 @@ services:
     build:
       context: ./www
       dockerfile: Dockerfile
-    # container_name: social_client
     volumes:
       - ./www:/app
+    environment:
+      REACT_APP_PUBLIC_BACKEND_URL: https://localhost/api/
 
   # Web application
   web:
@@ -26,7 +27,6 @@ services:
     build:
       context: ./web_service
       dockerfile: Dockerfile
-    # container_name: soicial_backend
     volumes:
       - ./web_service:/app
     depends_on:
@@ -39,6 +39,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_HOST: ${DB_HOST}
+      REACTIVE_SERVICE_URL: http://reactive_cache:8081/v1
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&

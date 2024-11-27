@@ -141,5 +141,7 @@ STATIC_ROOT = os.path.join(
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # TODO: not recommended for production
+DEBUG=True
 CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = ['https://localhost']
 

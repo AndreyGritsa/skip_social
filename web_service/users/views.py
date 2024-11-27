@@ -2,9 +2,28 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Profile, FriendRequest
-from .serializers import ProfileSerializer, FriendSerializer, FriendRequestSerializer
+from .serializers import ProfileSerializer, FriendRequestSerializer
 import requests
-from django.http import StreamingHttpResponse
+import os
+from django.shortcuts import redirect
+from rest_framework.negotiation import BaseContentNegotiation
+
+REACTIVE_SERVICE_URL = os.getenv('REACTIVE_SERVICE_URL')
+
+
+class IgnoreClientContentNegotiation(BaseContentNegotiation):
+    # TODO: Find better sollution to accept text/event-stream
+    def select_parser(self, request, parsers):
+        """
+        Select the first parser in the `.parser_classes` list.
+        """
+        return parsers[0]
+
+    def select_renderer(self, request, renderers, format_suffix):
+        """
+        Select the first renderer in the `.renderer_classes` list.
+        """
+        return (renderers[0], renderers[0].media_type)
 
 
 class UserAPIView(APIView):
@@ -41,54 +60,63 @@ class UserAPIView(APIView):
                 return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
         return Response({'error': 'Profile ID or status not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class FriendAPIView(APIView):
+    content_negotiation_class = IgnoreClientContentNegotiation
     def get(self, request):
         # TODO: for testing purposes no auth here
         profile_id = request.query_params.get('profile_id', None)
+        if not profile_id:
+            return Response({'error': 'Profile ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Normally we would do it like this
-        if profile_id is not None:
-            try:
-                profile = Profile.objects.get(id=int(profile_id))
-                serializer = FriendSerializer(profile)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            except Profile.DoesNotExist:
-                return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'error': 'Profile ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
-    
-        # # Reactive version ?
-        # # Proxy the request to the reactive service
-        # proxy_url = f"http://nginx_social/reactive/friends/?profile_id={profile_id}"
-        # headers = {
-        #     'Host': request.get_host(),
-        #     'X-Real-IP': request.META.get('REMOTE_ADDR'),
-        #     'X-Forwarded-For': request.META.get('HTTP_X_FORWARDED_FOR'),
-        #     'X-Forwarded-Proto': request.scheme,
-        # }
-        # proxy_response = requests.get(proxy_url, headers=headers, stream=True)
-        
-        # # Stream the response from the reactive service back to the client
-        # return StreamingHttpResponse(
-        #     proxy_response.raw,
-        #     status=proxy_response.status_code,
-        #     content_type=proxy_response.headers.get('Content-Type')
-        # )
+        if 'text/event-stream' in request.headers.get('Accept'):
+            resp = requests.post(
+                f"{REACTIVE_SERVICE_URL}/streams",
+                json={
+                    'resource': "friends",
+                    'params': {
+                        'profile_id': profile_id
+                        }
+                },
+            )
+            uuid = resp.text
+
+            return redirect(f"/streams/{uuid}", code=307)
+
+        else:
+            resp = requests.get(
+                f"{REACTIVE_SERVICE_URL}/resources/friends", params={'profile_id': profile_id}
+            )
+            print(resp.json()[0][1])
+            return Response(resp.json()[0][1], status=status.HTTP_200_OK)
 
 
 class FriendRequestAPIView(APIView):
     def get(self, request):
         profile_id = request.query_params.get('profile_id')
-        if profile_id is not None:
-            try:
-                profile = Profile.objects.get(id=int(profile_id))
-                friend_requests = FriendRequest.objects.filter(to_profile=profile)
-                for friend_request in friend_requests:
-                    print(friend_request)
-                serializer = FriendRequestSerializer(friend_requests, many=True)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            except Profile.DoesNotExist:
-                return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'error': 'Profile ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
+        if not profile_id:
+            return Response({'error': 'Profile ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if 'text/event-stream' in request.headers.get('Accept'):
+            resp = requests.post(
+                f"{REACTIVE_SERVICE_URL}/streams",
+                json={
+                    'resource': "onesidefriendrequests",
+                    'params': {
+                        'profile_id': profile_id
+                        }
+                },
+            )
+            uuid = resp.text
+
+            return redirect(f"/streams/{uuid}", code=307)
+
+        else:
+            resp = requests.get(
+                f"{REACTIVE_SERVICE_URL}/resources/onesidefriendrequests", params={'profile_id': profile_id}
+            )
+            print(resp.json()[0][1])
+            return Response(resp.json()[0][1], status=status.HTTP_200_OK)
 
     def post(self, request):
         to_profile = request.data.get("to_profile")
