@@ -7,8 +7,14 @@ import requests
 import os
 from django.shortcuts import redirect
 from rest_framework.negotiation import BaseContentNegotiation
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
 
 REACTIVE_SERVICE_URL = os.getenv('REACTIVE_SERVICE_URL')
+
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    def enforce_csrf(self, request):
+        return  # To not perform the csrf check
 
 
 class IgnoreClientContentNegotiation(BaseContentNegotiation):
@@ -27,17 +33,37 @@ class IgnoreClientContentNegotiation(BaseContentNegotiation):
 
 
 class UserAPIView(APIView):
+    content_negotiation_class = IgnoreClientContentNegotiation
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     def get(self, request):
         # TODO: for testing purposes no auth here
         profile_id = request.query_params.get('profile_id', None)
-        if profile_id is not None:
-            try:
-                profile = Profile.objects.get(id=profile_id)
-                serializer = ProfileSerializer(profile)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            except Profile.DoesNotExist:
-                return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'error': 'Profile ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
+        if not profile_id:
+            return Response({'error': 'Profile ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if 'text/event-stream' in request.headers.get('Accept'):
+            resp = requests.post(
+                f"{REACTIVE_SERVICE_URL}/streams",
+                json={
+                    'resource': "modifiedProfiles",
+                    'params': {
+                        'profile_id': profile_id
+                        }
+                },
+            )
+            uuid = resp.text
+
+            return redirect(f"/streams/{uuid}", code=307)
+
+        else:
+            resp = requests.get(
+                f"{REACTIVE_SERVICE_URL}/resources/modifiedProfiles", params={'profile_id': profile_id}
+            )
+            print(f"Profile with id: {profile_id}")
+            print(resp.json())
+            if resp.json():
+                return Response(resp.json()[0][1], status=status.HTTP_200_OK)
+            return Response([], status=status.HTTP_200_OK)
     
     def patch(self, request):
         # TODO: for testing purposes no auth here
@@ -52,8 +78,12 @@ class UserAPIView(APIView):
                 profile.save()
                 serializer = ProfileSerializer(profile)
 
-                # Write to reactive collections
-                # requests.put()
+                # Write to reactive input collections
+                requests.put(
+                    f"{REACTIVE_SERVICE_URL}/inputs/profiles/{profile.id}",
+                    json=[{"status": profile.status, "id": profile.id, "user_id": profile.user.id}]
+                )
+                
 
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except Profile.DoesNotExist:
@@ -63,6 +93,7 @@ class UserAPIView(APIView):
 
 class FriendAPIView(APIView):
     content_negotiation_class = IgnoreClientContentNegotiation
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     def get(self, request):
         # TODO: for testing purposes no auth here
         profile_id = request.query_params.get('profile_id', None)
@@ -87,11 +118,16 @@ class FriendAPIView(APIView):
             resp = requests.get(
                 f"{REACTIVE_SERVICE_URL}/resources/friends", params={'profile_id': profile_id}
             )
-            print(resp.json()[0][1])
-            return Response(resp.json()[0][1], status=status.HTTP_200_OK)
+            print(f"Friends for user with id: {profile_id}")
+            print(resp.json())
+            if resp.json():
+                return Response(resp.json()[0][1], status=status.HTTP_200_OK)
+            return Response([], status=status.HTTP_200_OK)
 
 
 class FriendRequestAPIView(APIView):
+    content_negotiation_class = IgnoreClientContentNegotiation
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     def get(self, request):
         profile_id = request.query_params.get('profile_id')
         if not profile_id:
@@ -101,7 +137,7 @@ class FriendRequestAPIView(APIView):
             resp = requests.post(
                 f"{REACTIVE_SERVICE_URL}/streams",
                 json={
-                    'resource': "onesidefriendrequests",
+                    'resource': "oneSideFriendRequests",
                     'params': {
                         'profile_id': profile_id
                         }
@@ -113,16 +149,19 @@ class FriendRequestAPIView(APIView):
 
         else:
             resp = requests.get(
-                f"{REACTIVE_SERVICE_URL}/resources/onesidefriendrequests", params={'profile_id': profile_id}
+                f"{REACTIVE_SERVICE_URL}/resources/oneSideFriendRequests", params={'profile_id': profile_id}
             )
-            print(resp.json()[0][1])
-            return Response(resp.json()[0][1], status=status.HTTP_200_OK)
+            print(f"One side friend requests for user with id: {profile_id}", )
+            print(resp.json())
+            if resp.json():
+                return Response(resp.json()[0][1], status=status.HTTP_200_OK)
+            return Response([], status=status.HTTP_200_OK)
 
     def post(self, request):
         to_profile = request.data.get("to_profile")
         # TODO: for testing purposes no auth here
         profile_id = request.data.get('from_profile')
-        if to_profile is not None and profile_id is not None:
+        if to_profile and profile_id:
             try:
                 profile_from = Profile.objects.get(id=int(profile_id))
                 profile_to = Profile.objects.get(user__username=to_profile)
@@ -137,6 +176,13 @@ class FriendRequestAPIView(APIView):
 
                 friend_request = FriendRequest.objects.create(from_profile=profile_from, to_profile=profile_to)
                 serializer = FriendRequestSerializer(friend_request)
+
+                # Write to reactive input collections
+                requests.put(
+                    f"{REACTIVE_SERVICE_URL}/inputs/friendRequests/{friend_request.id}",
+                    json=[serializer.data]
+                )
+
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except Profile.DoesNotExist:
                 return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)

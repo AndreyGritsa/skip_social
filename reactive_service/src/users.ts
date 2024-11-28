@@ -169,7 +169,9 @@ class OneSideFriendRequestMapper
     console.assert(typeof key === "string");
     let array = values.toArray();
     if (array.length === 1) {
-      const profile = this.modifiedProfiles.getUnique(array[0]!.to_profile_id);
+      const profile = this.modifiedProfiles.getUnique(
+        array[0]!.from_profile_id
+      );
       return [[array[0]!.to_profile_id, profile]];
     }
     return [];
