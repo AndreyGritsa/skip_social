@@ -24,7 +24,7 @@ const UserSettingsPopper = () => {
     null
   );
   const [open, setOpen] = React.useState<boolean>(false);
-  const [status, setStatus] = React.useState<string>(user.status);
+  const [status, setStatus] = React.useState<string>("");
   const [triggerStatusMutation] = useSetStatusMutation();
 
   const handleChange = (event: SelectChangeEvent) => {
@@ -46,6 +46,10 @@ const UserSettingsPopper = () => {
     }
     setOpen(!open);
   };
+
+  React.useEffect(() => {
+    setStatus(user.status);
+  }, [user]);
 
   return (
     <Box sx={{ ml: "auto", display: "flex", direction: "column" }}>

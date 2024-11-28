@@ -17,8 +17,9 @@ const FriendRequests = () => {
   const user = useAppSelector((state) => state.user);
   // TODO: '3' is used for simplicity, should be replaced with user.id
   const userFakeId = "3";
-  const { data: friendRequests, refetch: refetchFriendRequest } =
-    useGetFriendRequestsQuery(user.id ? user.id : userFakeId);
+  const { data: friendRequests } = useGetFriendRequestsQuery(
+    user.id ? user.id : userFakeId
+  );
   const [triggerPostFriendRequest] = usePostFriendRequestMutation();
 
   const handleAcceptRequest = (name: string) => {
@@ -30,9 +31,6 @@ const FriendRequests = () => {
       to_profile: name,
     })
       .unwrap()
-      .then(() => {
-        refetchFriendRequest();
-      })
       .catch((error) => {
         console.error("Error accepting friend request:", error);
       });
@@ -50,7 +48,7 @@ const FriendRequests = () => {
                 edge="end"
                 aria-label="accept"
                 color="success"
-                onClick={() => handleAcceptRequest(request.from_profile)}
+                onClick={() => handleAcceptRequest(request.name)}
               >
                 <CheckIcon />
               </IconButton>
@@ -58,7 +56,7 @@ const FriendRequests = () => {
                 edge="end"
                 aria-label="decline"
                 color="error"
-                onClick={() => handleDeclineRequest(request.from_profile)}
+                onClick={() => handleDeclineRequest(request.name)}
               >
                 <CloseIcon />
               </IconButton>
@@ -66,9 +64,9 @@ const FriendRequests = () => {
           }
         >
           <ListItemAvatar>
-            <Avatar src={request.from_profile} alt={request.from_profile} />
+            <Avatar src={request.name} alt={request.name} />
           </ListItemAvatar>
-          <ListItemText primary={request.from_profile} />
+          <ListItemText primary={request.name} />
         </ListItem>
       ))}
     </List>
