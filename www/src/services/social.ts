@@ -7,7 +7,6 @@ const socialApi = createApi({
   }),
   refetchOnFocus: false,
   endpoints: () => ({}),
-  tagTypes: ["friends"],
 });
 
 export default socialApi;
