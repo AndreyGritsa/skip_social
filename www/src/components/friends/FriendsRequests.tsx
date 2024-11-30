@@ -9,9 +9,13 @@ import {
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import { useGetFriendRequestsQuery } from "../../services/endpoints/users";
+import {
+  useGetFriendRequestsQuery,
+  usePostFriendRequestMutation,
+  useCloseFriendRequestsEventSourceMutation,
+} from "../../services/endpoints/users";
 import { useAppSelector } from "../../app/hooks";
-import { usePostFriendRequestMutation } from "../../services/endpoints/users";
+import { useEffect } from "react";
 
 const FriendRequests = () => {
   const user = useAppSelector((state) => state.user);
@@ -21,6 +25,15 @@ const FriendRequests = () => {
     user.id ? user.id : userFakeId
   );
   const [triggerPostFriendRequest] = usePostFriendRequestMutation();
+  const [triggerCloseFriendRequestsEventSource] =
+    useCloseFriendRequestsEventSourceMutation();
+
+  useEffect(() => {
+    return () => {
+      // close EventSource when component is unmounted
+      triggerCloseFriendRequestsEventSource();
+    };
+  }, []);
 
   const handleAcceptRequest = (name: string) => {
     console.log("Accepting friend request from:", name);

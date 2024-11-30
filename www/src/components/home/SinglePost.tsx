@@ -25,7 +25,7 @@ import { v4 as uuidv4 } from "uuid";
 import CommentDialog from "./CommentsDialog";
 
 const SinglePost = ({ ...props }: Post) => {
-  const formattedDate = format(new Date(props.timestamp), "MMMM d, yyyy");
+  const formattedDate = format(new Date(props.created_at), "MMMM d, yyyy");
   const [comment, setComment] = useState<string>("");
   const [commentActive, setCommentActive] = useState<boolean>(false);
   const dispatch = useAppDispatch();

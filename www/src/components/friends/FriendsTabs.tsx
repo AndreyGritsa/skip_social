@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTheme, Tab, Tabs, Box, TextField, Button } from "@mui/material";
 import FriendsTabPanel from "./FriendsTabPanel";
 import FriendRequests from "./FriendsRequests";
 import { usePostFriendRequestMutation } from "../../services/endpoints/users";
 import { useAppSelector } from "../../app/hooks";
-import { Friend } from "../../features/friends/friendsSlice";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -19,8 +18,8 @@ function CustomTabPanel(props: TabPanelProps) {
     <div
       role="tabpanel"
       hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
+      id={`friends-tabpanel-${index}`}
+      aria-labelledby={`friends-tab-${index}`}
       {...other}
     >
       {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
@@ -30,8 +29,8 @@ function CustomTabPanel(props: TabPanelProps) {
 
 function a11yProps(index: number) {
   return {
-    id: `simple-tab-${index}`,
-    "aria-controls": `simple-tabpanel-${index}`,
+    id: `friends-tab-${index}`,
+    "aria-controls": `friends-tabpanel-${index}`,
   };
 }
 
@@ -42,34 +41,13 @@ const FriendsTabs = () => {
   const [triggerPostFriendRequest] = usePostFriendRequestMutation();
   const user = useAppSelector((state) => state.user);
 
-  // useEffect(() => {
-  //   const evSource = new EventSource("/api/users/friend?profile_id=3");
-  //   evSource.addEventListener("init", (e: MessageEvent<string>) => {
-  //     const data = JSON.parse(e.data);
-  //     // const updatedPosts = data[0][1] as Friend[];
-  //     // setPosts(updatedPosts);
-  //     console.log("init", data);
-  //   });
-  //   evSource.addEventListener("update", (e: MessageEvent<string>) => {
-  //     const data = JSON.parse(e.data);
-  //     // const updatedPosts = data[0][1] as Friend[];
-  //     // setPosts(updatedPosts);
-  //     console.log("update", data);
-  //   });
-
-  //   return () => {
-  //     evSource.close();
-  //   };
-  // }, []);
-
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
   const handleSendFriendRequest = () => {
-    const fromProfileId = user.id && user.id.trim() !== "" ? user.id : "3";
     triggerPostFriendRequest({
-      from_profile: fromProfileId,
+      from_profile: user.id,
       to_profile: userRequestName,
     })
       .unwrap()

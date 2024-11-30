@@ -23,5 +23,6 @@ admin.site.site_title = 'Reactive Social Admin'
 
 urlpatterns = [
     path('api/admin/', admin.site.urls),
-    path('api/users/', include("users.urls"))
+    path('api/users/', include("users.urls")),
+    path('api/posts/', include("posts.urls")),
 ]
