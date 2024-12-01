@@ -42,6 +42,7 @@ const SinglePost = ({ ...props }: Post) => {
         postId: props.id,
         content: comment,
         author: { ...user },
+        postType: "posts", // TODO: not always posts, handle myPosts
       })
     );
     setComment("");
@@ -51,14 +52,20 @@ const SinglePost = ({ ...props }: Post) => {
   return (
     <Card sx={{ maxWidth: 650 }}>
       <CardHeader
-        avatar={<Avatar>{props.author[0].toUpperCase()}</Avatar>}
+        avatar={
+          <Avatar>
+            {props.author ? props.author[0].toUpperCase() : user.name[0]}
+          </Avatar>
+        }
         action={
           <IconButton aria-label="settings">
             <MoreVertIcon />
           </IconButton>
         }
         title={props.title}
-        subheader={`${props.author} - ${formattedDate}`}
+        subheader={`${
+          props.author ? props.author : user.name
+        } - ${formattedDate}`}
       />
       <CardContent>
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
