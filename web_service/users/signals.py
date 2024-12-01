@@ -12,16 +12,16 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
 
-@receiver(post_save, sender=FriendRequest)
-def create_friendship(sender, instance, created, **kwargs):
-    if created:
-        # Check if a reciprocal friend request exists
-        reciprocal_request = FriendRequest.objects.filter(
-            from_profile=instance.to_profile,
-            to_profile=instance.from_profile
-        ).exists()
+# @receiver(post_save, sender=FriendRequest)
+# def create_friendship(sender, instance, created, **kwargs):
+#     if created:
+#         # Check if a reciprocal friend request exists
+#         reciprocal_request = FriendRequest.objects.filter(
+#             from_profile=instance.to_profile,
+#             to_profile=instance.from_profile
+#         ).exists()
 
-        if reciprocal_request:
-            # Add each profile to the other's friends list
-            instance.from_profile.friends.add(instance.to_profile)
-            instance.to_profile.friends.add(instance.from_profile)
+#         if reciprocal_request:
+#             # Add each profile to the other's friends list
+#             instance.from_profile.friends.add(instance.to_profile)
+#             instance.to_profile.friends.add(instance.from_profile)

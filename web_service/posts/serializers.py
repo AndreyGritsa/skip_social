@@ -4,9 +4,13 @@ from rest_framework import serializers
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ['id', 'author_id', 'content', 'created_at']
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        return {key: str(value) for key, value in representation.items()}
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['id', 'post_id', 'author_id', 'content', 'created_at']
+        fields = '__all__'

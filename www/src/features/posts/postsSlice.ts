@@ -9,22 +9,24 @@ export interface Post {
   id: string;
   title: string;
   content: string;
-  author: string;
+  author?: string;
   created_at: string;
   comments?: Comment[];
 }
 
 export interface CommentWithPostId extends Comment {
   postId: string;
+  postType: "posts" | "myPosts";
 }
 
 export interface PostsState {
   posts: Post[];
+  myPosts: Post[];
 }
 
-// fake initial state, should be empty
 const initialState: PostsState = {
   posts: [],
+  myPosts: [],
 };
 
 export const postsSlice = createSlice({
@@ -32,8 +34,8 @@ export const postsSlice = createSlice({
   initialState,
   reducers: {
     addComment: (state, action: PayloadAction<CommentWithPostId>) => {
-      const { postId, ...comment } = action.payload;
-      const post = state.posts.find((post) => post.id === postId);
+      const { postId, postType, ...comment } = action.payload;
+      const post = state[postType].find((post) => post.id === postId);
       if (post) {
         if (!post.comments) {
           post.comments = [];
@@ -41,9 +43,12 @@ export const postsSlice = createSlice({
         post.comments.push(comment);
       }
     },
-    setPosts: (state, action: PayloadAction<Post[]>) => {
-      if (action.payload[0] !== undefined) {
-        state.posts = action.payload;
+    setPosts: (
+      state,
+      action: PayloadAction<{ posts: Post[]; postType: "posts" | "myPosts" }>
+    ) => {
+      if (action.payload.posts[0] !== undefined) {
+        state[action.payload.postType] = action.payload.posts;
       }
     },
   },

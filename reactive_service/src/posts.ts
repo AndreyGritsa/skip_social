@@ -9,18 +9,20 @@ import type { ModifiedProfile } from "./users.js";
 
 // types
 
-type Post = {
+export type Post = {
   id: string;
   title: string;
-  author_id: string;
+  author: string;
   content: string;
   created_at: string;
+  author_id?: string;
 };
 
 export type ModifiedPost = Post & { author: string };
 
 type OutputCollection = {
   friendsPosts: EagerCollection<string, ModifiedPost>;
+  authorPosts: EagerCollection<string, Post>;
 };
 
 type PostsInputCollection = InputCollection & {
@@ -28,6 +30,35 @@ type PostsInputCollection = InputCollection & {
 };
 
 // mappers
+class ZeroPostMapper implements Mapper<string, Post, string, Post> {
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<Post>
+  ): Iterable<[string, Post]> {
+    console.assert(typeof key === "string");
+    return [["0", values.getUnique()]];
+  }
+}
+
+class SortedPostsMapper implements Mapper<string, Post, string, Post> {
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<Post>
+  ): Iterable<[string, Post]> {
+    console.assert(typeof key === "string");
+
+    const postsArray = values.toArray();
+
+    const sortedPosts = postsArray.sort((a, b) => {
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      ); // Sort by created_at in descending order
+    });
+
+    return sortedPosts.map((post) => [post.id, post]);
+  }
+}
+
 class PostsMapper implements Mapper<string, Post, string, Post> {
   mapEntry(
     key: string,
@@ -35,7 +66,13 @@ class PostsMapper implements Mapper<string, Post, string, Post> {
   ): Iterable<[string, Post]> {
     console.assert(typeof key === "string");
     const post = values.getUnique();
-    const authorId = post.author_id;
+    let authorId = post.author;
+    if (authorId === undefined) {
+      authorId = post.author_id as string;
+    }
+
+    console.log(`PostsMapper: key=${key}, post=${post}, profileId=${authorId}`);
+
     return [[authorId, post]];
   }
 }
@@ -64,7 +101,9 @@ class FriendsPostsMapper
 
 export class FriendsPostsResource implements Resource {
   constructor(private params: Record<string, string>) {}
-  instantiate(collections: ResourcesCollection): EagerCollection<string, Post> {
+  instantiate(
+    collections: ResourcesCollection
+  ): EagerCollection<string, ModifiedPost> {
     const profileId = this.params["profile_id"];
     if (profileId === undefined) {
       throw new Error("profile_id parameter is required");
@@ -74,14 +113,29 @@ export class FriendsPostsResource implements Resource {
   }
 }
 
+export class AuthorPostsResource implements Resource {
+  constructor(private params: Record<string, string>) {}
+  instantiate(collections: ResourcesCollection): EagerCollection<string, Post> {
+    const profileId = this.params["profile_id"];
+    if (profileId === undefined) {
+      throw new Error("profile_id parameter is required");
+    }
+
+    return collections.authorPosts.slice([profileId, profileId]);
+  }
+}
+
 // main function
 export const createPostsCollections = (
   inputCollections: PostsInputCollection
 ): OutputCollection => {
-  const authorPosts = inputCollections.posts.map(PostsMapper);
+  const authorPosts = inputCollections.posts
+    .map(ZeroPostMapper)
+    .map(SortedPostsMapper)
+    .map(PostsMapper);
   const friendsPosts = inputCollections.friends.map(
     FriendsPostsMapper,
     authorPosts
   );
-  return { friendsPosts };
+  return { friendsPosts, authorPosts };
 };
