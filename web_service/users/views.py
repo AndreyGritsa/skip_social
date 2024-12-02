@@ -123,6 +123,40 @@ class FriendAPIView(APIView):
             if resp.json():
                 return Response(resp.json()[0][1], status=status.HTTP_200_OK)
             return Response([], status=status.HTTP_200_OK)
+        
+    # TODO: for testing purposes put but should be delete
+    def put(self, request):
+        profile_id = request.data['profile_id']
+        friend_id = request.data['friend_id']
+        if not profile_id or not friend_id:
+            return Response({'error': 'Profile ID or friend ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        profile = Profile.objects.get(id=int(profile_id))
+        friend = Profile.objects.get(id=int(friend_id))
+        if friend in profile.friends.all():
+            profile.friends.remove(friend)
+            friend.friends.remove(profile)
+            friend.save()
+            profile.save()
+            serializer = ProfileSerializer(profile)
+
+            request1 = FriendRequest.objects.get(from_profile=profile, to_profile=friend)
+            request2 = FriendRequest.objects.get(from_profile=friend, to_profile=profile)
+
+            # Write to reactive input collections
+            requests.put(
+                f"{REACTIVE_SERVICE_URL}/inputs/friendRequests/{request1.id}",
+                json=[]
+            )
+            requests.put(
+                f"{REACTIVE_SERVICE_URL}/inputs/friendRequests/{request2.id}",
+                json=[]
+            )
+
+            request1.delete()
+            request2.delete()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({'error': 'Friend not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class FriendRequestAPIView(APIView):
@@ -177,10 +211,17 @@ class FriendRequestAPIView(APIView):
                 friend_request = FriendRequest.objects.create(from_profile=profile_from, to_profile=profile_to)
                 serializer = FriendRequestSerializer(friend_request)
 
+                collections_data = {
+                    "id": str(serializer.data["id"]),
+                    "from_profile_id": str(serializer.data["from_profile"]),
+                    "to_profile_id": str(serializer.data["to_profile"])
+                }
+                print(collections_data)
+
                 # Write to reactive input collections
                 requests.put(
                     f"{REACTIVE_SERVICE_URL}/inputs/friendRequests/{friend_request.id}",
-                    json=[serializer.data]
+                    json=[collections_data]
                 )
 
                 return Response(serializer.data, status=status.HTTP_200_OK)

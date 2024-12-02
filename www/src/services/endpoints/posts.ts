@@ -4,8 +4,8 @@ import { setPosts } from "../../features/posts/postsSlice";
 
 interface PostsResponse extends Post {}
 
-let postsEventSource: EventSource | null = null;
-let myPostsEventSource: EventSource | null = null;
+export let postsEventSource: EventSource | null = null;
+export let myPostsEventSource: EventSource | null = null;
 
 export const extendedSocialSlice = socialApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -38,9 +38,13 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
           const data = JSON.parse(e.data);
           console.log("Posts init data", data);
           try {
-            console.log("posts data", data);
             const posts = data[0][1] as PostsResponse[];
-            dispatch(setPosts({ posts: posts.reverse(), postType: "posts" }));
+            dispatch(
+              setPosts({
+                posts: posts.reverse(),
+                postType: "posts",
+              })
+            );
           } catch (error) {
             console.error("Error updating friend requests:", error);
           }
@@ -54,7 +58,13 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
             console.log("Posts update data", data);
             try {
               const posts = data[0][1] as PostsResponse[];
-              dispatch(setPosts({ posts: posts.reverse(), postType: "posts" }));
+              console.log(`posts`, posts);
+              dispatch(
+                setPosts({
+                  posts: posts.reverse(),
+                  postType: "posts",
+                })
+              );
             } catch (error) {
               console.error("Error updating friend requests:", error);
             }
@@ -137,7 +147,7 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         // Clean up the EventSource when the cache entry is removed
         await cacheEntryRemoved;
         myPostsEventSource.close();
-        postsEventSource = null;
+        myPostsEventSource = null;
       },
     }),
     newPost: builder.mutation<

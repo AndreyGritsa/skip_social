@@ -3,6 +3,7 @@ import {
   ListItemAvatar,
   ListItemText,
   ListItemButton,
+  IconButton,
 } from "@mui/material";
 import { Channel } from "../../features/channels/channelsSlice";
 import { useNavigate } from "react-router-dom";
@@ -12,11 +13,19 @@ import CustomAvatar from "../shared/CustomAvatar";
 import { Friend } from "../../features/friends/friendsSlice";
 import { addNewChannel } from "../../features/channels/channelsSlice";
 import { store } from "../../app/store";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useDeleteFriendMutation } from "../../services/endpoints/users";
+
+const isFriend = (props: Channel | Friend): props is Friend => {
+  return (props as Channel).messages === undefined;
+};
 
 const SingleChannel = ({ ...props }: Channel | Friend) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const activeChannel = useAppSelector((state) => state.active.channel);
+  const user = useAppSelector((state) => state.user);
+  const [deleteFriend] = useDeleteFriendMutation();
 
   const handleNavigation = (id: string) => {
     // Check if the channel exists in the store
@@ -40,6 +49,10 @@ const SingleChannel = ({ ...props }: Channel | Friend) => {
     navigate(`/channel/${id}`);
   };
 
+  const handleDeleteFriend = () => {
+    deleteFriend({ profile_id: user.id, friend_id: props.id });
+  };
+
   return (
     <ListItem>
       <ListItemButton
@@ -55,6 +68,12 @@ const SingleChannel = ({ ...props }: Channel | Friend) => {
         </ListItemAvatar>
         <ListItemText primary={props.name} />
       </ListItemButton>
+
+      {isFriend(props) && (
+        <IconButton onClick={handleDeleteFriend}>
+          <DeleteIcon />
+        </IconButton>
+      )}
     </ListItem>
   );
 };

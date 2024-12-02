@@ -24,8 +24,9 @@ class FriendSerializer(serializers.ModelSerializer):
         friends = obj.friends.all()
         return [{'name': friend.user.username, 'status': friend.status, 'id': friend.id} for friend in friends]
     
+    
 class FriendRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = FriendRequest
-        fields = ['id', 'from_profile_id', 'to_profile_id']
+        fields = '__all__'
    
