@@ -132,6 +132,7 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
           "init",
           (e: MessageEvent<string>) => {
             const data = JSON.parse(e.data);
+            console.log(`Friend requests init:`, data);
             try {
               const friendRequests = data[0][1] as UserResponse[];
               updateCachedData((draft) => {
@@ -149,6 +150,7 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
           "update",
           (e: MessageEvent<string>) => {
             const data = JSON.parse(e.data);
+            console.log(`Friend requests update:`, data);
             try {
               const friendRequests = data[0][1] as UserResponse[];
               updateCachedData((draft) => {
@@ -183,6 +185,16 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         body: data,
       }),
     }),
+    deleteFriend: builder.mutation<
+      any,
+      { profile_id: string; friend_id: string }
+    >({
+      query: (data) => ({
+        url: `users/friend`,
+        method: "PUT",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -193,4 +205,5 @@ export const {
   useGetFriendRequestsQuery,
   useCloseFriendRequestsEventSourceMutation,
   usePostFriendRequestMutation,
+  useDeleteFriendMutation,
 } = extendedSocialSlice;

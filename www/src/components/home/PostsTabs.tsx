@@ -11,6 +11,7 @@ import {
 } from "../../services/endpoints/posts";
 import { useEffect } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { postsEventSource } from "../../services/endpoints/posts";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -46,27 +47,33 @@ const PostsTabs = () => {
   const user = useAppSelector((state) => state.user);
   const posts = useAppSelector((state) => state.posts.posts);
   const myPosts = useAppSelector((state) => state.posts.myPosts);
-  const { refetch, isLoading } = useGetPostsQuery(
+  const { refetch, isUninitialized } = useGetPostsQuery(
     user.id ? user.id : skipToken
   );
-  const { refetch: refetchMyPosts, isLoading: isLoadingMyPosts } =
+  const { refetch: refetchMyPosts, isUninitialized: isMyPostsUninitialized } =
     useGetMyPostsQuery(user.id ? user.id : skipToken);
   const [triggerClosePostsEventSource] = useClosePostsEventSourceMutation();
 
-  useEffect(() => {
-    return () => {
-      triggerClosePostsEventSource();
-    };
-  }, []);
+  // TODO: stupid so far, find working solution
+  // useEffect(() => {
+  //   if (!isUninitialized && !postsEventSource) {
+  //     refetch();
+  //   }
+  //   if (!isMyPostsUninitialized) {
+  //     refetchMyPosts();
+  //   }
 
-  useEffect(() => {
-    if (!isLoading && user.id) {
-      refetch();
-    }
-    if (!isLoadingMyPosts && user.id) {
-      refetchMyPosts();
-    }
-  }, [user]);
+  //   return () => {
+  //     triggerClosePostsEventSource();
+  //   };
+  // }, [
+  //   user.id,
+  //   refetch,
+  //   refetchMyPosts,
+  //   isUninitialized,
+  //   isMyPostsUninitialized,
+  //   triggerClosePostsEventSource,
+  // ]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);

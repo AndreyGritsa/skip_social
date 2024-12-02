@@ -16,14 +16,15 @@ import {
 } from "../../services/endpoints/users";
 import { useAppSelector } from "../../app/hooks";
 import { useEffect } from "react";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 const FriendRequests = () => {
   const user = useAppSelector((state) => state.user);
-  // TODO: '3' is used for simplicity, should be replaced with user.id
-  const userFakeId = "3";
-  const { data: friendRequests } = useGetFriendRequestsQuery(
-    user.id ? user.id : userFakeId
-  );
+  const {
+    data: friendRequests,
+    refetch,
+    isLoading,
+  } = useGetFriendRequestsQuery(user.id ? user.id : skipToken);
   const [triggerPostFriendRequest] = usePostFriendRequestMutation();
   const [triggerCloseFriendRequestsEventSource] =
     useCloseFriendRequestsEventSourceMutation();
@@ -31,16 +32,14 @@ const FriendRequests = () => {
   useEffect(() => {
     return () => {
       // close EventSource when component is unmounted
-      triggerCloseFriendRequestsEventSource();
+      // triggerCloseFriendRequestsEventSource();
     };
   }, []);
 
   const handleAcceptRequest = (name: string) => {
     console.log("Accepting friend request from:", name);
-    const fromProfileId =
-      user.id && user.id.trim() !== "" ? user.id : userFakeId;
     triggerPostFriendRequest({
-      from_profile: fromProfileId,
+      from_profile: user.id,
       to_profile: name,
     })
       .unwrap()

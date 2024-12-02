@@ -47,8 +47,13 @@ export const postsSlice = createSlice({
       state,
       action: PayloadAction<{ posts: Post[]; postType: "posts" | "myPosts" }>
     ) => {
-      if (action.payload.posts[0] !== undefined) {
+      if (
+        action.payload.posts.length > 0 &&
+        action.payload.posts[0] !== undefined
+      ) {
         state[action.payload.postType] = action.payload.posts;
+      } else if (action.payload.posts.length === 0) {
+        state[action.payload.postType] = [];
       }
     },
   },
