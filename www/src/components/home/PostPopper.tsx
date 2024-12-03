@@ -2,10 +2,11 @@ import * as React from "react";
 import { IconButton, Box, Popper, Fade, Paper, Button } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 import { useDeletePostMutation } from "../../services/endpoints/posts";
+import EditPostDialog from "./EditPostDialog";
+import { Post } from "../../features/posts/postsSlice";
 
-const PostPopper = ({ postId }: { postId: string }) => {
+const PostPopper = ({ ...props }: Post) => {
   const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(
     null
   );
@@ -18,7 +19,7 @@ const PostPopper = ({ postId }: { postId: string }) => {
   };
 
   const handleDelete = () => {
-    triggerDeletePost(postId)
+    triggerDeletePost(props.id)
       .unwrap()
       .catch((error) => console.error(error));
     setOpen(!open);
@@ -40,9 +41,7 @@ const PostPopper = ({ postId }: { postId: string }) => {
               >
                 Delete
               </Button>
-              <Button fullWidth variant="outlined" startIcon={<EditIcon />}>
-                Edit
-              </Button>
+              <EditPostDialog post={props} setOpenPopper={setOpen} />
             </Paper>
           </Fade>
         )}

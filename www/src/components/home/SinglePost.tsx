@@ -1,5 +1,4 @@
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import SendIcon from "@mui/icons-material/Send";
 import {
   Card,
@@ -62,7 +61,7 @@ const SinglePost = ({ ...props }: PostProps) => {
             {props.author ? props.author[0].toUpperCase() : user.name[0]}
           </Avatar>
         }
-        action={props.editable && <PostPopper postId={props.id} />}
+        action={props.editable && <PostPopper {...props} />}
         title={props.title}
         subheader={`${
           props.author ? props.author : user.name
