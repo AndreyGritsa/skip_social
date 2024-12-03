@@ -117,7 +117,7 @@ const PostsTabs = () => {
         >
           {myPosts.map((element, index) => (
             <Grid key={index} size={{ xs: 12, md: 8 }}>
-              <SinglePost {...element} />
+              <SinglePost {...element} editable={true} />
             </Grid>
           ))}
         </Grid>

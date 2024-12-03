@@ -23,8 +23,13 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { addComment } from "../../features/posts/postsSlice";
 import { v4 as uuidv4 } from "uuid";
 import CommentDialog from "./CommentsDialog";
+import PostPopper from "./PostPopper";
 
-const SinglePost = ({ ...props }: Post) => {
+interface PostProps extends Post {
+  editable?: boolean;
+}
+
+const SinglePost = ({ ...props }: PostProps) => {
   const formattedDate = format(new Date(props.created_at), "MMMM d, yyyy");
   const [comment, setComment] = useState<string>("");
   const [commentActive, setCommentActive] = useState<boolean>(false);
@@ -57,11 +62,7 @@ const SinglePost = ({ ...props }: Post) => {
             {props.author ? props.author[0].toUpperCase() : user.name[0]}
           </Avatar>
         }
-        action={
-          <IconButton aria-label="settings">
-            <MoreVertIcon />
-          </IconButton>
-        }
+        action={props.editable && <PostPopper postId={props.id} />}
         title={props.title}
         subheader={`${
           props.author ? props.author : user.name
