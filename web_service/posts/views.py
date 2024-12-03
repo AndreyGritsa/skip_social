@@ -93,10 +93,16 @@ class PostAPIView(APIView):
     #         return Response(serializer.data)
     #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    # def delete(self, request, pk):
-    #     post = Post.objects.get(pk=pk)
-    #     post.delete()
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
+    def delete(self, request, pk):
+        post = Post.objects.get(pk=pk)
+        post.delete()
+
+        requests.put(
+            f"{REACTIVE_SERVICE_URL}/inputs/posts/{pk}",
+            json=[]
+        )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
     
 
 class CommentAPIView(APIView):
