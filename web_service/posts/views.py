@@ -66,16 +66,6 @@ class PostAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
 
-            collections_data = {
-                "id": serializer.data["id"],
-                "author": serializer.data["author"],
-                "title": serializer.data["title"],
-                "content": serializer.data["content"],
-                "created_at": serializer.data["created_at"]
-            }
-
-            print(f"collections_data: {collections_data}")
-
             # Write to reactive input collections
             requests.put(
                 f"{REACTIVE_SERVICE_URL}/inputs/posts/{serializer.data['id']}",
@@ -85,13 +75,21 @@ class PostAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    # def put(self, request, pk):
-    #     post = Post.objects.get(pk=pk)
-    #     serializer = PostSerializer(post, data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, pk):
+        post = Post.objects.get(pk=pk)
+        data = {**request.data, 'author': post.author.id,}
+        serializer = PostSerializer(post, data=data)
+        if serializer.is_valid():
+            serializer.save()
+
+            # Write to reactive input collections
+            requests.put(
+                f"{REACTIVE_SERVICE_URL}/inputs/posts/{pk}",
+                json=[serializer.data]
+            )
+
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, pk):
         post = Post.objects.get(pk=pk)

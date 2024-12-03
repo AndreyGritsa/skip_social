@@ -166,6 +166,13 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    updatePost: builder.mutation<void, Post>({
+      query: (data) => ({
+        url: `posts/${data.id}/`,
+        method: "PUT",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -175,4 +182,5 @@ export const {
   useGetMyPostsQuery,
   useNewPostMutation,
   useDeletePostMutation,
+  useUpdatePostMutation,
 } = extendedSocialSlice;
