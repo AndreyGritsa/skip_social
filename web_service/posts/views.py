@@ -66,10 +66,15 @@ class PostAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
 
+            collections_data = {
+                **serializer.data,
+                "author_id": profile_id
+            }
+
             # Write to reactive input collections
             requests.put(
                 f"{REACTIVE_SERVICE_URL}/inputs/posts/{serializer.data['id']}",
-                json=[serializer.data]
+                json=[collections_data]
             )
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -82,10 +87,15 @@ class PostAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
 
+            collections_data = {
+                **serializer.data,
+                "author_id": serializer.data['author']
+            }
+
             # Write to reactive input collections
             requests.put(
                 f"{REACTIVE_SERVICE_URL}/inputs/posts/{pk}",
-                json=[serializer.data]
+                json=[collections_data]
             )
 
             return Response(serializer.data)
@@ -112,12 +122,26 @@ class CommentAPIView(APIView):
     #     serializer = CommentSerializer(comments, many=True)
     #     return Response(serializer.data)
 
-    # def post(self, request):
-    #     serializer = CommentSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        serializer = CommentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+
+            collections_data = {
+                **serializer.data,
+                "post_id": str(request.data['post']),
+                "author_id": str(request.data['author'])
+            }
+
+            # write to reactive input collections
+            requests.put(
+                f"{REACTIVE_SERVICE_URL}/inputs/comments/{serializer.data['id']}",
+                json=[collections_data]
+            )
+
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     # def put(self, request, pk):
     #     comment = Comment.objects.get(pk=pk)
