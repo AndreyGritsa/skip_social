@@ -3,7 +3,8 @@ import { User } from "../user/userSlice";
 export interface Comment {
   id: string;
   content: string;
-  author: User;
+  author_id: string;
+  author: string;
 }
 export interface Post {
   id: string;
@@ -11,7 +12,8 @@ export interface Post {
   content: string;
   author?: string;
   created_at: string;
-  comments?: Comment[];
+  comments_amount: number;
+  last_comment?: Comment;
 }
 
 export interface CommentWithPostId extends Comment {
@@ -35,13 +37,13 @@ export const postsSlice = createSlice({
   reducers: {
     addComment: (state, action: PayloadAction<CommentWithPostId>) => {
       const { postId, postType, ...comment } = action.payload;
-      const post = state[postType].find((post) => post.id === postId);
-      if (post) {
-        if (!post.comments) {
-          post.comments = [];
-        }
-        post.comments.push(comment);
-      }
+      // const post = state[postType].find((post) => post.id === postId);
+      // if (post) {
+      //   if (!post.comments) {
+      //     post.comments = [];
+      //   }
+      //   post.comments.push(comment);
+      // }
     },
     setPosts: (
       state,

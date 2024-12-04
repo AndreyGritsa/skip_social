@@ -173,6 +173,16 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         body: data,
       }),
     }),
+    newComment: builder.mutation<
+      void,
+      { content: string; author: string; post: string }
+    >({
+      query: (data) => ({
+        url: "posts/comments/",
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -183,4 +193,5 @@ export const {
   useNewPostMutation,
   useDeletePostMutation,
   useUpdatePostMutation,
+  useNewCommentMutation,
 } = extendedSocialSlice;

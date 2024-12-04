@@ -18,11 +18,10 @@ import { Post } from "../../features/posts/postsSlice";
 import { format } from "date-fns";
 import { useState } from "react";
 import SingleComment from "./SingleComment";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { addComment } from "../../features/posts/postsSlice";
-import { v4 as uuidv4 } from "uuid";
+import { useAppSelector } from "../../app/hooks";
 import CommentDialog from "./CommentsDialog";
 import PostPopper from "./PostPopper";
+import { useNewCommentMutation } from "../../services/endpoints/posts";
 
 interface PostProps extends Post {
   editable?: boolean;
@@ -32,23 +31,23 @@ const SinglePost = ({ ...props }: PostProps) => {
   const formattedDate = format(new Date(props.created_at), "MMMM d, yyyy");
   const [comment, setComment] = useState<string>("");
   const [commentActive, setCommentActive] = useState<boolean>(false);
-  const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.user);
+  const [newComment] = useNewCommentMutation();
 
   const handleSendComment = () => {
     console.log("sending comment");
     if (!comment) {
       return;
     }
-    dispatch(
-      addComment({
-        id: uuidv4(),
-        postId: props.id,
-        content: comment,
-        author: { ...user },
-        postType: "posts", // TODO: not always posts, handle myPosts
-      })
-    );
+    newComment({
+      content: comment,
+      author: user.id,
+      post: props.id,
+    })
+      .unwrap()
+      .catch((error) => {
+        console.error("Error sending comment:", error);
+      });
     setComment("");
     setCommentActive(false);
   };
@@ -92,19 +91,22 @@ const SinglePost = ({ ...props }: PostProps) => {
           Comment
         </Button>
       </CardActions>
-      {props.comments || commentActive ? (
+      {props.last_comment || commentActive ? (
         <CardContent>
-          {props.comments && props.comments.length > 1 && (
+          {props.comments_amount > 1 && (
             <CommentDialog
-              comments={props.comments}
+              comments={Array.from(
+                { length: props.comments_amount },
+                (_) => props.last_comment!
+              )}
               setComment={setComment}
               handleSendComment={handleSendComment}
               comment={comment}
             />
           )}
-          {props.comments && (
+          {props.last_comment && (
             <List>
-              <SingleComment {...props.comments[props.comments.length - 1]} />
+              <SingleComment {...props.last_comment} />
             </List>
           )}
           {commentActive && (

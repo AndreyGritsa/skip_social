@@ -12,21 +12,34 @@ import type { ModifiedProfile } from "./users.js";
 export type Post = {
   id: string;
   title: string;
-  author: string;
   content: string;
   created_at: string;
-  author_id?: string;
+  author_id: string;
+  comments_amount: number;
+  last_comment?: Comment;
 };
 
 export type ModifiedPost = Post & { author: string };
 
+export type Comment = {
+  id: string;
+  content: string;
+  created_at: string;
+  author_id: string;
+  post_id: string;
+};
+
+export type ModifiedComment = Comment & { author: string };
+
 type OutputCollection = {
   friendsPosts: EagerCollection<string, ModifiedPost>;
   authorPosts: EagerCollection<string, Post>;
+  comments: EagerCollection<string, Comment>;
 };
 
 type PostsInputCollection = InputCollection & {
   friends: EagerCollection<string, ModifiedProfile>;
+  profiles: EagerCollection<string, ModifiedProfile>;
 };
 
 // mappers
@@ -60,20 +73,32 @@ class SortedPostsMapper implements Mapper<string, Post, string, Post> {
 }
 
 class PostsMapper implements Mapper<string, Post, string, Post> {
+  constructor(private comments: EagerCollection<string, Comment>) {}
   mapEntry(
     key: string,
     values: NonEmptyIterator<Post>
   ): Iterable<[string, Post]> {
     console.assert(typeof key === "string");
     const post = values.getUnique();
-    let authorId = post.author;
-    if (authorId === undefined) {
-      authorId = post.author_id as string;
+    const comments = this.comments.getArray(key);
+    const commentsAmount = comments.length;
+    console.log(`Comments amount: ${commentsAmount} for post: ${post}`);
+    let lastComment;
+    if (commentsAmount !== 0) {
+      console.log(`Last comment: ${comments[comments.length - 1]}`);
+      lastComment = comments[comments.length - 1];
     }
 
-    console.log(`PostsMapper: key=${key}, post=${post}, profileId=${authorId}`);
-
-    return [[authorId, post]];
+    return [
+      [
+        post.author_id,
+        {
+          ...post,
+          comments_amount: commentsAmount,
+          ...(lastComment && { last_comment: lastComment }),
+        },
+      ],
+    ];
   }
 }
 
@@ -81,6 +106,7 @@ class FriendsPostsMapper
   implements Mapper<string, ModifiedProfile, string, ModifiedPost>
 {
   constructor(private posts: EagerCollection<string, Post>) {}
+
   mapEntry(
     key: string,
     values: NonEmptyIterator<ModifiedProfile>
@@ -91,9 +117,31 @@ class FriendsPostsMapper
     const posts = this.posts.getArray(friend.id);
 
     for (const post of posts) {
-      result.push([key, { ...post, author: friend.name }]);
+      result.push([
+        key,
+        {
+          ...post,
+          author: friend.name,
+        },
+      ]);
     }
+
     return result;
+  }
+}
+
+class CommentMapper
+  implements Mapper<string, Comment, string, ModifiedComment>
+{
+  constructor(private profiles: EagerCollection<string, ModifiedProfile>) {}
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<Comment>
+  ): Iterable<[string, ModifiedComment]> {
+    console.assert(typeof key === "string");
+    const comment = values.getUnique();
+    const authorName = this.profiles.getUnique(comment.author_id).name;
+    return [[comment.post_id, { ...comment, author: authorName }]];
   }
 }
 
@@ -125,17 +173,35 @@ export class AuthorPostsResource implements Resource {
   }
 }
 
+export class CommentsResource implements Resource {
+  constructor(private params: Record<string, string>) {}
+  instantiate(
+    collections: ResourcesCollection
+  ): EagerCollection<string, Comment> {
+    const postId = this.params["post_id"];
+    if (postId === undefined) {
+      throw new Error("post_id parameter is required");
+    }
+
+    return collections.comments.slice([postId, postId]);
+  }
+}
+
 // main function
 export const createPostsCollections = (
   inputCollections: PostsInputCollection
 ): OutputCollection => {
+  const comments = inputCollections.comments.map(
+    CommentMapper,
+    inputCollections.profiles
+  );
   const authorPosts = inputCollections.posts
     .map(ZeroPostMapper)
     .map(SortedPostsMapper)
-    .map(PostsMapper);
+    .map(PostsMapper, comments);
   const friendsPosts = inputCollections.friends.map(
     FriendsPostsMapper,
     authorPosts
   );
-  return { friendsPosts, authorPosts };
+  return { friendsPosts, authorPosts, comments };
 };

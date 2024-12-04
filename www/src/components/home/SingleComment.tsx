@@ -6,10 +6,10 @@ const SingleComment = ({ ...props }: Comment) => {
   return (
     <ListItem alignItems="flex-start">
       <ListItemAvatar>
-        <Avatar alt={props.author.name} src="/" />
+        <Avatar alt={props.author} src="/" />
       </ListItemAvatar>
       <ListItemText
-        primary={props.author.name}
+        primary={props.author}
         secondary={<React.Fragment>{props.content}</React.Fragment>}
       />
     </ListItem>
