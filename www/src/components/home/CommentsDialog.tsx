@@ -5,7 +5,6 @@ import {
   InputAdornment,
   IconButton,
   DialogTitle,
-  DialogContentText,
   DialogContent,
   DialogActions,
   Dialog,
@@ -13,20 +12,31 @@ import {
 } from "@mui/material";
 import SingleComment from "./SingleComment";
 import SendIcon from "@mui/icons-material/Send";
-import { Comment } from "../../features/posts/postsSlice";
+import type { Comment } from "../../features/posts/postsSlice";
+import { useGetCommentsQuery } from "../../services/endpoints/posts";
 
 const CommentsDialog = ({
-  comments,
   comment,
   setComment,
   handleSendComment,
+  commentsAmount,
+  postId,
 }: {
-  comments: Comment[];
+  commentsAmount: number;
   comment: string;
   setComment: Function;
   handleSendComment: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  postId: string;
 }) => {
   const [open, setOpen] = React.useState(false);
+  const [comments, setComments] = React.useState<Comment[]>([]);
+  const { data } = useGetCommentsQuery(postId);
+
+  React.useEffect(() => {
+    if (data) {
+      setComments(data as unknown as Comment[]);
+    }
+  }, [data]);
 
   const handleClickOpen = () => () => {
     setOpen(!open);
@@ -36,20 +46,10 @@ const CommentsDialog = ({
     setOpen(false);
   };
 
-  const descriptionElementRef = React.useRef<HTMLElement>(null);
-  React.useEffect(() => {
-    if (open) {
-      const { current: descriptionElement } = descriptionElementRef;
-      if (descriptionElement !== null) {
-        descriptionElement.focus();
-      }
-    }
-  }, [open]);
-
   return (
     <React.Fragment>
       <Button size="small" onClick={handleClickOpen()}>
-        Show more comments: {comments.length - 1} more
+        Show more comments: {commentsAmount - 1} more
       </Button>
       <Dialog
         fullWidth
@@ -62,17 +62,11 @@ const CommentsDialog = ({
       >
         <DialogTitle id="scroll-dialog-title">Comments</DialogTitle>
         <DialogContent dividers={true}>
-          <DialogContentText
-            id="scroll-dialog-description"
-            ref={descriptionElementRef}
-            tabIndex={-1}
-          >
-            <List>
-              {comments.map((comment, key) => {
-                return <SingleComment key={key} {...comment} />;
-              })}
-            </List>
-          </DialogContentText>
+          <List>
+            {comments.map((comment, key) => {
+              return <SingleComment key={key} {...comment} />;
+            })}
+          </List>
         </DialogContent>
         <DialogActions>
           <TextField

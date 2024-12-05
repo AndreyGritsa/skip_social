@@ -117,10 +117,36 @@ class CommentAPIView(APIView):
     content_negotiation_class = IgnoreClientContentNegotiation
     authentication_classes = (CsrfExemptSessionAuthentication,)
 
-    # def get(self, request):
-    #     comments = Comment.objects.all()
-    #     serializer = CommentSerializer(comments, many=True)
-    #     return Response(serializer.data)
+    def get(self, request):
+        post_id = request.query_params.get('post_id')
+        if not post_id:
+            return Response({'error': 'Post ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
+    
+        if 'text/event-stream' in request.headers.get('Accept'):
+            print("Requesting comments stream")
+            resp = requests.post(
+                f"{REACTIVE_SERVICE_URL}/streams",
+                json={
+                    'resource': 'comments',
+                    'params': {
+                        'post_id': post_id
+                        }
+                },
+            )
+            uuid = resp.text
+
+            return redirect(f"/streams/{uuid}", code=307)
+
+        else:
+            resp = requests.get(
+                f"{REACTIVE_SERVICE_URL}/resources/comments", params={'post_id': post_id}
+            )
+            print(f"Comments for post id: {post_id}")
+            print(resp.json())
+
+            if resp.json():
+                return Response(resp.json()[0][1], status=status.HTTP_200_OK)
+            return Response([], status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = CommentSerializer(data=request.data)

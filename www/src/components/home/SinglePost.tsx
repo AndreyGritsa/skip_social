@@ -95,13 +95,11 @@ const SinglePost = ({ ...props }: PostProps) => {
         <CardContent>
           {props.comments_amount > 1 && (
             <CommentDialog
-              comments={Array.from(
-                { length: props.comments_amount },
-                (_) => props.last_comment!
-              )}
+              commentsAmount={props.comments_amount}
               setComment={setComment}
               handleSendComment={handleSendComment}
               comment={comment}
+              postId={props.id}
             />
           )}
           {props.last_comment && (

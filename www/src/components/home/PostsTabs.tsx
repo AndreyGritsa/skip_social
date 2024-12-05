@@ -11,7 +11,6 @@ import {
 } from "../../services/endpoints/posts";
 import { useEffect } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { postsEventSource } from "../../services/endpoints/posts";
 
 interface TabPanelProps {
   children?: React.ReactNode;

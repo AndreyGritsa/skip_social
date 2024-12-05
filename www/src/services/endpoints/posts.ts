@@ -4,8 +4,9 @@ import { setPosts } from "../../features/posts/postsSlice";
 
 interface PostsResponse extends Post {}
 
-export let postsEventSource: EventSource | null = null;
-export let myPostsEventSource: EventSource | null = null;
+let postsEventSource: EventSource | null = null;
+let myPostsEventSource: EventSource | null = null;
+let commentsEventSource: EventSource | null = null;
 
 export const extendedSocialSlice = socialApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -183,6 +184,66 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         body: data,
       }),
     }),
+    getComments: builder.query<Comment[], string>({
+      query: (postId) => `posts/comments/?post_id=${postId}`,
+      async onCacheEntryAdded(
+        arg,
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData }
+      ) {
+        commentsEventSource = new EventSource(
+          `/api/posts/comments/?post_id=${arg}`
+        );
+
+        // Handle the initial cache data
+        try {
+          await cacheDataLoaded;
+        } catch (error) {
+          console.error("Error loading cache data for comments:", error);
+        }
+
+        // Handle the "init" event
+        commentsEventSource.addEventListener(
+          "init",
+          (e: MessageEvent<string>) => {
+            const data = JSON.parse(e.data);
+            console.log("Comments init data", data);
+            try {
+              const comments = data[0][1] as Comment[];
+
+              updateCachedData((draft) => {
+                draft.length = 0;
+                comments.forEach((comment) => draft.push(comment as any));
+              });
+            } catch (error) {
+              console.error("Error updating comments:", error);
+            }
+          }
+        );
+
+        // Handle the "update" event
+        commentsEventSource.addEventListener(
+          "update",
+          (e: MessageEvent<string>) => {
+            const data = JSON.parse(e.data);
+            console.log("Comments update data", data);
+            try {
+              const comments = data[0][1] as Comment[];
+              updateCachedData((draft) => {
+                draft.length = 0;
+                comments.forEach((comment) => draft.push(comment as any));
+              });
+            } catch (error) {
+              console.error("Error updating comments:", error);
+            }
+          }
+        );
+
+        // Clean up the EventSource when the cache entry is removed
+        await cacheEntryRemoved;
+        commentsEventSource.close();
+        commentsEventSource = null;
+      },
+    }),
   }),
 });
 
@@ -194,4 +255,5 @@ export const {
   useDeletePostMutation,
   useUpdatePostMutation,
   useNewCommentMutation,
+  useGetCommentsQuery,
 } = extendedSocialSlice;
