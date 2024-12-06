@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'users',
     'servers',
     'posts',
+    'channels',
     'rest_framework',
     'corsheaders'
 ]
@@ -144,4 +145,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DEBUG=True
 CORS_ALLOW_ALL_ORIGINS = True
 CSRF_TRUSTED_ORIGINS = ['https://localhost']
+
+# Reactive service URL
+REACTIVE_SERVICE_URL = os.getenv('REACTIVE_SERVICE_URL')
 

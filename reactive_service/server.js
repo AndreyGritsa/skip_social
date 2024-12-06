@@ -29,7 +29,16 @@ const friendRequests = await selectAll("users_friendrequest");
 const servers = await selectAll("servers_server");
 const posts = await selectAll("posts_post");
 const comments = await selectAll("posts_comment");
+const channelParticipants = await selectAll("channels_channel_participants");
 
 runService(
-  SocialSkipService(users, profiles, friendRequests, servers, posts, comments)
+  SocialSkipService(
+    users,
+    profiles,
+    friendRequests,
+    servers,
+    posts,
+    comments,
+    channelParticipants
+  )
 );

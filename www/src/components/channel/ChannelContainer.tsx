@@ -76,6 +76,7 @@ const ChannelContainer = () => {
         }}
       >
         {channel &&
+          channel.messages &&
           channel.messages.map((message) => (
             <ListItem
               sx={{
