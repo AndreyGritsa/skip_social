@@ -6,9 +6,9 @@ from .serializers import PostSerializer, CommentSerializer
 from users.views import CsrfExemptSessionAuthentication, IgnoreClientContentNegotiation
 from django.shortcuts import redirect
 import requests
-import os
+from django.conf import settings
 
-REACTIVE_SERVICE_URL = os.getenv('REACTIVE_SERVICE_URL')
+REACTIVE_SERVICE_URL = settings.REACTIVE_SERVICE_URL
 
 
 class PostAPIView(APIView):
@@ -123,7 +123,6 @@ class CommentAPIView(APIView):
             return Response({'error': 'Post ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
     
         if 'text/event-stream' in request.headers.get('Accept'):
-            print("Requesting comments stream")
             resp = requests.post(
                 f"{REACTIVE_SERVICE_URL}/streams",
                 json={

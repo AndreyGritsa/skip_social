@@ -4,12 +4,12 @@ from rest_framework.response import Response
 from .models import Profile, FriendRequest
 from .serializers import ProfileSerializer, FriendRequestSerializer
 import requests
-import os
 from django.shortcuts import redirect
 from rest_framework.negotiation import BaseContentNegotiation
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
+from django.conf import settings
 
-REACTIVE_SERVICE_URL = os.getenv('REACTIVE_SERVICE_URL')
+REACTIVE_SERVICE_URL = settings.REACTIVE_SERVICE_URL
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):

@@ -15,9 +15,10 @@ import { addNewChannel } from "../../features/channels/channelsSlice";
 import { store } from "../../app/store";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useDeleteFriendMutation } from "../../services/endpoints/users";
+import { useNewChannelMutation } from "../../services/endpoints/channels";
 
 const isFriend = (props: Channel | Friend): props is Friend => {
-  return (props as Channel).messages === undefined;
+  return (props as Friend).status !== undefined;
 };
 
 const SingleChannel = ({ ...props }: Channel | Friend) => {
@@ -26,27 +27,52 @@ const SingleChannel = ({ ...props }: Channel | Friend) => {
   const activeChannel = useAppSelector((state) => state.active.channel);
   const user = useAppSelector((state) => state.user);
   const [deleteFriend] = useDeleteFriendMutation();
+  const [newChannel] = useNewChannelMutation();
 
-  const handleNavigation = (id: string) => {
+  const name = isFriend(props)
+    ? props.name
+    : props.participants.filter((participant) => participant.id !== user.id)[0]
+        .name;
+
+  const status = isFriend(props)
+    ? props.status
+    : props.participants.filter((participant) => participant.id !== user.id)[0]
+        .status;
+
+  const handleNavigation = () => {
     // Check if the channel exists in the store
     // If not, add it to the store
     const state = store.getState();
     const channel = state.channels.channels.find(
-      (channel) => channel.id === id
+      (channel) =>
+        channel.participants.filter((participant) => participant.name === name)
+          .length > 0
     );
     if (!channel) {
-      dispatch(
-        addNewChannel({
-          id,
-          name: props.name,
-          status: props.status,
-          messages: [],
+      newChannel({
+        profile_id: user.id,
+        participant_id: props.id,
+      })
+        .unwrap()
+        .then((data) => {
+          console.log(`New channel created, id: ${data.id}`);
+          dispatch(setActiveChannel(data.id));
+          navigate(`/channel/${data.id}`);
         })
-      );
+        .catch((error) => console.error(error));
+      // dispatch(
+      //   addNewChannel({
+      //     id,
+      //     name: props.name,
+      //     status: props.status,
+      //     messages: [],
+      //   })
+      // );
+      return;
+    } else {
+      dispatch(setActiveChannel(channel.id));
+      navigate(`/channel/${channel.id}`);
     }
-
-    dispatch(setActiveChannel(id));
-    navigate(`/channel/${id}`);
   };
 
   const handleDeleteFriend = () => {
@@ -56,17 +82,13 @@ const SingleChannel = ({ ...props }: Channel | Friend) => {
   return (
     <ListItem>
       <ListItemButton
-        onClick={() => handleNavigation(props.id)}
+        onClick={() => handleNavigation()}
         selected={activeChannel === props.id}
       >
         <ListItemAvatar>
-          <CustomAvatar
-            alt={props.name}
-            src={undefined}
-            status={props.status}
-          />
+          <CustomAvatar alt={name} src={undefined} status={status} />
         </ListItemAvatar>
-        <ListItemText primary={props.name} />
+        <ListItemText primary={name} />
       </ListItemButton>
 
       {isFriend(props) && (

@@ -4,11 +4,10 @@ import channelsReducer, {
   reorderChannels,
   addNewChannel,
 } from "./channelsSlice";
-import fakeData from "./fakeData.json";
 
 describe("channels reducer", () => {
   const initialState: ChannelsState = {
-    channels: fakeData,
+    channels: [],
   };
   it("should return the initial state", () => {
     expect(channelsReducer(undefined, { type: "unknown" })).toEqual(
@@ -38,9 +37,8 @@ describe("channels reducer", () => {
       initialState,
       addNewChannel({
         id: "100",
-        name: "New Channel",
-        status: "online",
         messages: [],
+        participants: [],
       })
     );
     expect(actual.channels[0].id).toEqual("100");

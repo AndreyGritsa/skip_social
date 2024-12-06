@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import fakeData from "./fakeData.json";
 import { User } from "../user/userSlice";
 
 export interface Message {
@@ -9,8 +8,13 @@ export interface Message {
   timestamp: string;
 }
 
-export interface Channel extends User {
+export interface ChannelUser extends User {
   status: string;
+}
+
+export interface Channel {
+  id: string;
+  participants: ChannelUser[];
   messages: Message[];
 }
 
@@ -20,7 +24,7 @@ export interface ChannelsState {
 
 // fake initial state, should be empty
 const initialState: ChannelsState = {
-  channels: fakeData,
+  channels: [],
 };
 
 export const channelsSlice = createSlice({
@@ -64,10 +68,13 @@ export const channelsSlice = createSlice({
     addNewChannel: (state, action: PayloadAction<Channel>) => {
       state.channels.unshift(action.payload);
     },
+    setChannels: (state, action: PayloadAction<Channel[]>) => {
+      state.channels = action.payload;
+    },
   },
 });
 
-export const { addMessage, reorderChannels, addNewChannel } =
+export const { addMessage, reorderChannels, addNewChannel, setChannels } =
   channelsSlice.actions;
 
 export default channelsSlice.reducer;
