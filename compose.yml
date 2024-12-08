@@ -4,9 +4,9 @@ services:
     image: postgres:16.4
     container_name: postgres_social
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-social_db}
+      POSTGRES_USER: ${DB_USER:-social_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-social_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -19,7 +19,7 @@ services:
     volumes:
       - ./www:/app
     environment:
-      REACT_APP_PUBLIC_BACKEND_URL: https://localhost/api/
+      REACT_APP_PUBLIC_BACKEND_URL: ${REACT_APP_PUBLIC_BACKEND_URL:-https://localhost/api/}
 
   # Web application
   web:
@@ -32,18 +32,18 @@ services:
     depends_on:
       - postgres
     environment:
-      DJANGO_SUPERUSER_USERNAME: admin
-      DJANGO_SUPERUSER_EMAIL: admin@admin.com
-      DJANGO_SUPERUSER_PASSWORD: admin
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_HOST: ${DB_HOST}
-      REACTIVE_SERVICE_URL: http://reactive_cache:8081/v1
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@admin.com}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin}
+      DB_NAME: ${DB_NAME:-social_db}
+      DB_USER: ${DB_USER:-social_user}
+      DB_PASSWORD: ${DB_PASSWORD:-social_password}
+      DB_HOST: ${DB_HOST:-postgres}
+      REACTIVE_SERVICE_URL: ${REACTIVE_SERVICE_URL:-http://reactive_cache:8081/v1}
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             python manage.py createsuperuser --noinput
+             python manage.py createsuperuser --noinput &&
              python manage.py runserver 0.0.0.0:3031"
 
   # Reverse proxy
@@ -64,10 +64,10 @@ services:
     image: reactive-social/skip-service
     build: ./reactive_service
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_HOST: ${DB_HOST}
+      POSTGRES_DB: ${DB_NAME:-social_db}
+      POSTGRES_USER: ${DB_USER:-social_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-social_password}
+      POSTGRES_HOST: ${DB_HOST:-postgres}
     depends_on:
       - postgres
 

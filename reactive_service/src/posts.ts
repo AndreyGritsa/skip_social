@@ -82,10 +82,8 @@ class PostsMapper implements Mapper<string, Post, string, Post> {
     const post = values.getUnique();
     const comments = this.comments.getArray(key);
     const commentsAmount = comments.length;
-    console.log(`Comments amount: ${commentsAmount} for post: ${post}`);
     let lastComment;
     if (commentsAmount !== 0) {
-      console.log(`Last comment: ${comments[comments.length - 1]}`);
       lastComment = comments[comments.length - 1];
     }
 
@@ -112,16 +110,16 @@ class FriendsPostsMapper
     values: NonEmptyIterator<ModifiedProfile>
   ): Iterable<[string, ModifiedPost]> {
     console.assert(typeof key === "string");
-    let result: [string, ModifiedPost][] = [];
-    const friend = values.getUnique();
-    const posts = this.posts.getArray(friend.id);
+    const result: [string, ModifiedPost][] = [];
+    const friend = values.next();
+    const posts = this.posts.getArray(friend!.id);
 
     for (const post of posts) {
       result.push([
         key,
         {
           ...post,
-          author: friend.name,
+          author: friend!.name,
         },
       ]);
     }
@@ -199,6 +197,7 @@ export const createPostsCollections = (
     .map(ZeroPostMapper)
     .map(SortedPostsMapper)
     .map(PostsMapper, comments);
+
   const friendsPosts = inputCollections.friends.map(
     FriendsPostsMapper,
     authorPosts

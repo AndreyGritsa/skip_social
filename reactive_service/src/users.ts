@@ -109,7 +109,7 @@ class FriendRequestIntersectPhase1Mapper {
     key: string,
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, string]> {
-    console.log(key);
+    console.assert(typeof key === "string");
     let array = values.toArray();
     if (array.length >= 2) {
       console.assert(array[0]!.from_profile_id === array[1]!.to_profile_id);
@@ -131,12 +131,13 @@ class FriendRequestIntersectPhase2Mapper
     key: string,
     values: NonEmptyIterator<string>
   ): Iterable<[string, ModifiedProfile]> {
-    const profile1 = this.modifiedProfiles.getUnique(key);
+    const profile1Id = key;
+    const profile1 = this.modifiedProfiles.getUnique(profile1Id);
     const profile2Id = values.getUnique();
     const profile2 = this.modifiedProfiles.getUnique(profile2Id);
 
     return [
-      [key, profile2],
+      [profile1Id, profile2],
       [profile2Id, profile1],
     ];
   }

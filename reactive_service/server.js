@@ -30,6 +30,7 @@ const servers = await selectAll("servers_server");
 const posts = await selectAll("posts_post");
 const comments = await selectAll("posts_comment");
 const channelParticipants = await selectAll("channels_channel_participants");
+const messages = await selectAll("channels_message");
 
 runService(
   SocialSkipService(
@@ -39,6 +40,7 @@ runService(
     servers,
     posts,
     comments,
-    channelParticipants
+    channelParticipants,
+    messages
   )
 );

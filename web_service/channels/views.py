@@ -38,8 +38,6 @@ class ChannelAPIView(APIView):
             resp = requests.get(
                 f"{REACTIVE_SERVICE_URL}/resources/channels", params={'profile_id': profile_id}
             )
-            print(f"Channels for profile_id: {profile_id}")
-            print(resp.json())
 
             if resp.json():
                 return Response(resp.json()[0][1], status=status.HTTP_200_OK)
@@ -93,10 +91,57 @@ class MessageAPIView(APIView):
     content_negotiation_class = IgnoreClientContentNegotiation
     authentication_classes = (CsrfExemptSessionAuthentication,)
     def get(self, request):
-        pass
+        channel_id = request.query_params.get('channel_id')
+        if not channel_id:
+            return Response({'error': 'channel_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if 'text/event-stream' in request.headers.get('Accept'):
+            resp = requests.post(
+                f"{REACTIVE_SERVICE_URL}/streams",
+                json={
+                    'resource': 'messages',
+                    'params': {
+                        'channel_id': channel_id
+                        }
+                },
+            )
+            uuid = resp.text
+
+            return redirect(f"/streams/{uuid}", code=307)
+        
+        else:
+            resp = requests.get(
+                f"{REACTIVE_SERVICE_URL}/resources/messages", params={'channel_id': channel_id}
+            )
+
+            if resp.json():
+                return Response(resp.json()[0][1], status=status.HTTP_200_OK)
+            return Response([], status=status.HTTP_200_OK)
 
     def post(self, request):
-        pass
+        channel_id = request.data.get('channel_id')
+        author_id = request.data.get('author_id')
+        content = request.data.get('content')
+        if not channel_id or not author_id or not content:
+            return Response({'error': 'channel_id, author_id and text are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        channel = Channel.objects.get(id=int(channel_id))
+        author = Profile.objects.get(id=int(author_id))
+        message = Message.objects.create(channel=channel, author=author, content=content)
+
+        # write to input collections
+        requests.put(
+            f"{REACTIVE_SERVICE_URL}/inputs/messages/{message.id}",
+            json=[{
+                'id': str(message.id),
+                'channel_id': str(channel.id),
+                'author_id': str(author.id),
+                'content': message.content,
+                'created_at': message.created_at.isoformat()
+            }]
+        )
+
+        return Response("created", status=status.HTTP_201_CREATED)
 
     def put(self, request):
         pass

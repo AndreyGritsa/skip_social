@@ -6,7 +6,7 @@ import Grid from "@mui/material/Grid2";
 import SinglePost from "./SinglePost";
 import {
   useGetPostsQuery,
-  useClosePostsEventSourceMutation,
+  useInvalidatePostsMutation,
   useGetMyPostsQuery,
 } from "../../services/endpoints/posts";
 import { useEffect } from "react";
@@ -46,33 +46,27 @@ const PostsTabs = () => {
   const user = useAppSelector((state) => state.user);
   const posts = useAppSelector((state) => state.posts.posts);
   const myPosts = useAppSelector((state) => state.posts.myPosts);
-  const { refetch, isUninitialized } = useGetPostsQuery(
+  const { refetch } = useGetPostsQuery(user.id ? user.id : skipToken);
+  const { refetch: refetchMyPosts } = useGetMyPostsQuery(
     user.id ? user.id : skipToken
   );
-  const { refetch: refetchMyPosts, isUninitialized: isMyPostsUninitialized } =
-    useGetMyPostsQuery(user.id ? user.id : skipToken);
-  const [triggerClosePostsEventSource] = useClosePostsEventSourceMutation();
+  const [invalidatePosts] = useInvalidatePostsMutation();
 
-  // TODO: stupid so far, find working solution
-  // useEffect(() => {
-  //   if (!isUninitialized && !postsEventSource) {
-  //     refetch();
-  //   }
-  //   if (!isMyPostsUninitialized) {
-  //     refetchMyPosts();
-  //   }
+  useEffect(() => {
+    // close the posts event sources when the component is unmounted
+    return () => {
+      invalidatePosts();
+    };
+  }, [invalidatePosts]);
 
-  //   return () => {
-  //     triggerClosePostsEventSource();
-  //   };
-  // }, [
-  //   user.id,
-  //   refetch,
-  //   refetchMyPosts,
-  //   isUninitialized,
-  //   isMyPostsUninitialized,
-  //   triggerClosePostsEventSource,
-  // ]);
+  useEffect(() => {
+    // on page reload, makes sure user is present
+    // before fetching posts
+    if (user.id) {
+      refetch();
+      refetchMyPosts();
+    }
+  }, [user.id, refetch, refetchMyPosts]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);

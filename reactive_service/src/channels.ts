@@ -20,8 +20,19 @@ export type ChannelParticipant = {
   profile_id: string;
 };
 
+export type Message = {
+  id: string;
+  channel_id: string;
+  author_id: string;
+  created_at: string;
+  content: string;
+};
+
+export type ModifiedMessage = Message & { author: string };
+
 type OutputCollection = {
   channels: EagerCollection<string, Channel>;
+  messages: EagerCollection<string, ModifiedMessage>;
 };
 
 type ChannelsInputCollection = InputCollection & {
@@ -38,10 +49,7 @@ class ProfileParticipantMapper
     values: NonEmptyIterator<ChannelParticipant>
   ): Iterable<[string, string]> {
     const participants = values.getUnique();
-    console.log(`participants ${participants}`);
-    console.log(
-      `participants table id ${key}, profile id ${participants.profile_id}`
-    );
+    console.log(`ProfileParticipantMapper: ${participants.profile_id}: ${key}`);
 
     return [[participants.profile_id, key]];
   }
@@ -64,30 +72,33 @@ class ChannelMapper implements Mapper<string, string, string, Channel> {
   constructor(
     private modifiedProfiles: EagerCollection<string, ModifiedProfile>,
     private channelParticipants: EagerCollection<string, ChannelParticipant>,
-    private channelProfiles: EagerCollection<string, string>
+    private channelIdProfileId: EagerCollection<string, string>
   ) {}
   mapEntry(
     key: string,
     values: NonEmptyIterator<string>
   ): Iterable<[string, Channel]> {
-    console.assert(typeof key === "string");
-    const value = values.getUnique();
-    const participantsArray: ModifiedProfile[] = [];
+    const result: [string, Channel][] = [];
     const profileId = key;
-    const participantTableId = value;
-    const channelId =
-      this.channelParticipants.getUnique(participantTableId).channel_id;
-    const channels = this.channelProfiles.getArray(channelId);
+    const participantTableIds = values.toArray();
+    for (const participantTableId of participantTableIds) {
+      const participantsArray: ModifiedProfile[] = [];
+      const channelId =
+        this.channelParticipants.getUnique(participantTableId).channel_id;
+      const channels = this.channelIdProfileId.getArray(channelId);
 
-    for (const channel of channels) {
-      const id = channel;
-      participantsArray.push(this.modifiedProfiles.getUnique(id));
+      for (const channel of channels) {
+        const id = channel;
+        participantsArray.push(this.modifiedProfiles.getUnique(id));
+      }
+      const channel: Channel = {
+        id: channelId,
+        participants: participantsArray,
+      };
+      result.push([profileId, channel]);
     }
-    const result: Channel = {
-      id: channelId,
-      participants: participantsArray,
-    };
-    return [[profileId, result]];
+
+    return result;
   }
 }
 
@@ -98,11 +109,32 @@ class ChannelNotOneParticipantMapper
     key: string,
     values: NonEmptyIterator<Channel>
   ): Iterable<[string, Channel]> {
-    const value = values.getUnique();
-    if (value.participants.length > 1) {
-      return [[key, value]];
+    const result: [string, Channel][] = [];
+    const value = values.toArray();
+    for (const v of value) {
+      if (v.participants.length > 1) {
+        result.push([key, v]);
+      }
     }
-    return [];
+    return result;
+  }
+}
+
+class MessageMapper
+  implements Mapper<string, Message, string, ModifiedMessage>
+{
+  constructor(
+    private modifiedProfiles: EagerCollection<string, ModifiedProfile>
+  ) {}
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<Message>
+  ): Iterable<[string, ModifiedMessage]> {
+    console.assert(typeof key === "string");
+    const value = values.getUnique();
+
+    const author = this.modifiedProfiles.getUnique(value.author_id);
+    return [[value.channel_id, { ...value, author: author.name }]];
   }
 }
 
@@ -122,21 +154,39 @@ export class ChannelsResource implements Resource {
   }
 }
 
+export class MessageResource implements Resource {
+  constructor(private params: Record<string, string>) {}
+  instantiate(
+    collections: ResourcesCollection
+  ): EagerCollection<string, ModifiedMessage> {
+    const channelId = this.params["channel_id"];
+    if (channelId === undefined) {
+      throw new Error("channel_id parameter is required");
+    }
+
+    return collections.messages.slice([channelId, channelId]).take(20);
+  }
+}
+
 // main function
 export const createChannelsCollections = (
   inputCollections: ChannelsInputCollection
 ): OutputCollection => {
-  const profileParticipants = inputCollections.channelParticipants.map(
+  const profileIdParticipantsId = inputCollections.channelParticipants.map(
     ProfileParticipantMapper
   );
-  const channelProfiles =
+  const channelIdProfileId =
     inputCollections.channelParticipants.map(ChannelProfileMapper);
-  const channelsRaw = profileParticipants.map(
+  const channelsRaw = profileIdParticipantsId.map(
     ChannelMapper,
     inputCollections.modifiedProfiles,
     inputCollections.channelParticipants,
-    channelProfiles
+    channelIdProfileId
   );
   const channels = channelsRaw.map(ChannelNotOneParticipantMapper);
-  return { channels };
+  const messages = inputCollections.messages.map(
+    MessageMapper,
+    inputCollections.modifiedProfiles
+  );
+  return { channels, messages };
 };

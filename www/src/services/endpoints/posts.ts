@@ -4,19 +4,16 @@ import { setPosts } from "../../features/posts/postsSlice";
 
 interface PostsResponse extends Post {}
 
-let postsEventSource: EventSource | null = null;
-let myPostsEventSource: EventSource | null = null;
-let commentsEventSource: EventSource | null = null;
-
 export const extendedSocialSlice = socialApi.injectEndpoints({
   endpoints: (builder) => ({
     getPosts: builder.query<PostsResponse[], string>({
+      providesTags: ["Posts"],
       query: (params) => `posts/?profile_id=${params}&type=posts`,
       async onCacheEntryAdded(
         arg,
         { cacheDataLoaded, cacheEntryRemoved, dispatch }
       ) {
-        postsEventSource = new EventSource(
+        const postsEventSource = new EventSource(
           `/api/posts/?profile_id=${arg}&type=posts`
         );
 
@@ -26,7 +23,7 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
           console.log("postsCacheData", postsCacheData);
           dispatch(
             setPosts({
-              posts: postsCacheData.data.map((post: Post) => post),
+              posts: postsCacheData.data.map((post: Post) => post).reverse(),
               postType: "posts",
             })
           );
@@ -74,25 +71,24 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
 
         // Clean up the EventSource when the cache entry is removed
         await cacheEntryRemoved;
+        console.log("Closing event source for posts");
         postsEventSource.close();
-        postsEventSource = null;
       },
     }),
-    closePostsEventSource: builder.mutation<void, void>({
+    invalidatePosts: builder.mutation<void, void>({
+      invalidatesTags: ["Posts"],
       queryFn: () => {
-        if (postsEventSource) postsEventSource.close();
-        if (myPostsEventSource) myPostsEventSource.close();
-        console.log("Closing event source for posts");
         return { data: undefined };
       },
     }),
     getMyPosts: builder.query<PostsResponse[], string>({
+      providesTags: ["Posts"],
       query: (params) => `posts/?profile_id=${params}&type=myPosts`,
       async onCacheEntryAdded(
         arg,
         { cacheDataLoaded, cacheEntryRemoved, dispatch }
       ) {
-        myPostsEventSource = new EventSource(
+        const myPostsEventSource = new EventSource(
           `/api/posts/?profile_id=${arg}&type=myPosts`
         );
 
@@ -102,7 +98,7 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
           console.log("myPostsCacheData", myPostsCacheData);
           dispatch(
             setPosts({
-              posts: myPostsCacheData.data.map((post: Post) => post),
+              posts: myPostsCacheData.data.map((post: Post) => post).reverse(),
               postType: "myPosts",
             })
           );
@@ -147,8 +143,8 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
 
         // Clean up the EventSource when the cache entry is removed
         await cacheEntryRemoved;
+        console.log("Closing event source for my posts");
         myPostsEventSource.close();
-        myPostsEventSource = null;
       },
     }),
     newPost: builder.mutation<
@@ -186,11 +182,12 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
     }),
     getComments: builder.query<Comment[], string>({
       query: (postId) => `posts/comments/?post_id=${postId}`,
+      providesTags: ["Comments"],
       async onCacheEntryAdded(
         arg,
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData }
       ) {
-        commentsEventSource = new EventSource(
+        const commentsEventSource = new EventSource(
           `/api/posts/comments/?post_id=${arg}`
         );
 
@@ -240,8 +237,14 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
 
         // Clean up the EventSource when the cache entry is removed
         await cacheEntryRemoved;
+        console.log("Closing event source for comments");
         commentsEventSource.close();
-        commentsEventSource = null;
+      },
+    }),
+    invalidateComments: builder.mutation<void, void>({
+      invalidatesTags: ["Comments"],
+      queryFn: () => {
+        return { data: undefined };
       },
     }),
   }),
@@ -249,11 +252,12 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
 
 export const {
   useGetPostsQuery,
-  useClosePostsEventSourceMutation,
+  useInvalidatePostsMutation,
   useGetMyPostsQuery,
   useNewPostMutation,
   useDeletePostMutation,
   useUpdatePostMutation,
   useNewCommentMutation,
   useGetCommentsQuery,
+  useInvalidateCommentsMutation,
 } = extendedSocialSlice;

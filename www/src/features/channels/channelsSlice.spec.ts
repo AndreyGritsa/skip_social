@@ -20,7 +20,7 @@ describe("channels reducer", () => {
       addMessage({
         channelId: "1",
         content: "Hello",
-        author: { id: "0", name: "Admin" },
+        author: "Admin",
       })
     );
     expect(actual.channels[0].messages[0].content).toEqual("Hello");

@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import fakeData from "./fakeData";
 import { User } from "../user/userSlice";
 import { Message } from "../channels/channelsSlice";
 
@@ -26,7 +25,7 @@ export interface ServersState {
 
 // fake initial state, should be empty
 const initialState: ServersState = {
-  servers: fakeData,
+  servers: [],
 };
 
 export const serversSlice = createSlice({

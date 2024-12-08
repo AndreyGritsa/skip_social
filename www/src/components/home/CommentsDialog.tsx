@@ -14,6 +14,8 @@ import SingleComment from "./SingleComment";
 import SendIcon from "@mui/icons-material/Send";
 import type { Comment } from "../../features/posts/postsSlice";
 import { useGetCommentsQuery } from "../../services/endpoints/posts";
+import { useInvalidateCommentsMutation } from "../../services/endpoints/posts";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 const CommentsDialog = ({
   comment,
@@ -30,13 +32,25 @@ const CommentsDialog = ({
 }) => {
   const [open, setOpen] = React.useState(false);
   const [comments, setComments] = React.useState<Comment[]>([]);
-  const { data } = useGetCommentsQuery(postId);
+  const { data, refetch } = useGetCommentsQuery(open ? postId : skipToken);
+  const [invalidateComments] = useInvalidateCommentsMutation();
 
   React.useEffect(() => {
     if (data) {
       setComments(data as unknown as Comment[]);
     }
   }, [data]);
+
+  React.useEffect(() => {
+    if (open) refetch();
+  }, [open, refetch]);
+
+  React.useEffect(() => {
+    // close the event source when the component is unmounted
+    return () => {
+      invalidateComments();
+    };
+  }, [invalidateComments]);
 
   const handleClickOpen = () => () => {
     setOpen(!open);

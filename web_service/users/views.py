@@ -59,8 +59,6 @@ class UserAPIView(APIView):
             resp = requests.get(
                 f"{REACTIVE_SERVICE_URL}/resources/modifiedProfiles", params={'profile_id': profile_id}
             )
-            print(f"Profile with id: {profile_id}")
-            print(resp.json())
             if resp.json():
                 return Response(resp.json()[0][1], status=status.HTTP_200_OK)
             return Response([], status=status.HTTP_200_OK)
@@ -69,7 +67,6 @@ class UserAPIView(APIView):
         # TODO: for testing purposes no auth here
         data = request.data
         if 'profile_id' in data and 'status' in data:
-            print(f"profile_id: {data['profile_id']}, new_status: {data['status']}")
             try:
                 profile_id = int(data['profile_id'])
                
@@ -118,8 +115,6 @@ class FriendAPIView(APIView):
             resp = requests.get(
                 f"{REACTIVE_SERVICE_URL}/resources/friends", params={'profile_id': profile_id}
             )
-            print(f"Friends for user with id: {profile_id}")
-            print(resp.json())
             if resp.json():
                 return Response(resp.json()[0][1], status=status.HTTP_200_OK)
             return Response([], status=status.HTTP_200_OK)
@@ -185,8 +180,6 @@ class FriendRequestAPIView(APIView):
             resp = requests.get(
                 f"{REACTIVE_SERVICE_URL}/resources/oneSideFriendRequests", params={'profile_id': profile_id}
             )
-            print(f"One side friend requests for user with id: {profile_id}", )
-            print(resp.json())
             if resp.json():
                 return Response(resp.json()[0][1], status=status.HTTP_200_OK)
             return Response([], status=status.HTTP_200_OK)
@@ -216,7 +209,6 @@ class FriendRequestAPIView(APIView):
                     "from_profile_id": str(serializer.data["from_profile"]),
                     "to_profile_id": str(serializer.data["to_profile"])
                 }
-                print(collections_data)
 
                 # Write to reactive input collections
                 requests.put(

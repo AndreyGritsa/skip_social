@@ -4,8 +4,8 @@ import { User } from "../user/userSlice";
 export interface Message {
   id: string;
   content: string;
-  author: User;
-  timestamp: string;
+  author: string;
+  created_at: string;
 }
 
 export interface ChannelUser extends User {
@@ -36,7 +36,7 @@ export const channelsSlice = createSlice({
       action: PayloadAction<{
         channelId: string;
         content: string;
-        author: User;
+        author: string;
       }>
     ) => {
       const { channelId, content, author } = action.payload;
@@ -49,7 +49,7 @@ export const channelsSlice = createSlice({
           id: timestamp,
           content,
           author,
-          timestamp,
+          created_at: timestamp,
         };
         channel.messages.unshift(newMessage);
       }
@@ -69,12 +69,33 @@ export const channelsSlice = createSlice({
       state.channels.unshift(action.payload);
     },
     setChannels: (state, action: PayloadAction<Channel[]>) => {
+      for (const channel of action.payload) {
+        if (!channel.messages) {
+          channel.messages = [];
+        }
+      }
       state.channels = action.payload;
+    },
+    setMessages: (
+      state,
+      action: PayloadAction<{ channelId: string; messages: Message[] }>
+    ) => {
+      const { channelId, messages } = action.payload;
+      const channel = state.channels.find((chan) => chan.id === channelId);
+
+      if (channel) {
+        channel.messages = messages;
+      }
     },
   },
 });
 
-export const { addMessage, reorderChannels, addNewChannel, setChannels } =
-  channelsSlice.actions;
+export const {
+  addMessage,
+  reorderChannels,
+  addNewChannel,
+  setChannels,
+  setMessages,
+} = channelsSlice.actions;
 
 export default channelsSlice.reducer;

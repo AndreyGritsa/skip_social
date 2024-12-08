@@ -41,8 +41,6 @@ class PostAPIView(APIView):
             resp = requests.get(
                 f"{REACTIVE_SERVICE_URL}/resources/{resources_name}", params={'profile_id': profile_id}
             )
-            print(f"{resources_name} posts for profile id: {profile_id}")
-            print(resp.json())
 
             if resp.json():
                 return Response(resp.json()[0][1], status=status.HTTP_200_OK)
@@ -52,7 +50,6 @@ class PostAPIView(APIView):
         profile_id = request.data["profile_id"]
         title = request.data["title"]
         content = request.data["content"]
-        print(f"Profile ID: {profile_id}, Title: {title}, Content: {content}")
         if not profile_id or not title or not content:
             return Response({'error': 'Profile ID, title or content not provided'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -140,8 +137,6 @@ class CommentAPIView(APIView):
             resp = requests.get(
                 f"{REACTIVE_SERVICE_URL}/resources/comments", params={'post_id': post_id}
             )
-            print(f"Comments for post id: {post_id}")
-            print(resp.json())
 
             if resp.json():
                 return Response(resp.json()[0][1], status=status.HTTP_200_OK)

@@ -17,6 +17,12 @@ import { useEffect } from "react";
 import { setActiveChannel } from "../../features/active/activeSlice";
 import { format } from "date-fns";
 import { reorderChannels } from "../../features/channels/channelsSlice";
+import {
+  useGetMessagesQuery,
+  useInvalidateMessagesMutation,
+  usePostMessageMutation,
+} from "../../services/endpoints/channels";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 const ChannelContainer = () => {
   const { channelId } = useParams<{ channelId: string }>();
@@ -26,6 +32,22 @@ const ChannelContainer = () => {
   const user = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
   const [messageInput, setMessageInput] = useState<string>("");
+  const { refetch } = useGetMessagesQuery(channel ? channelId! : skipToken);
+  const [invalidateMessages] = useInvalidateMessagesMutation();
+  const [postMessage] = usePostMessageMutation();
+
+  useEffect(() => {
+    // on page reload, makes sure channel is present
+    // before fetching messages
+    if (channel) refetch();
+  }, [refetch, channel]);
+
+  useEffect(() => {
+    // close the event source when the component is unmounted
+    return () => {
+      invalidateMessages();
+    };
+  }, [invalidateMessages]);
 
   useEffect(() => {
     // make sure the active channel is set when page is reloaded
@@ -45,8 +67,17 @@ const ChannelContainer = () => {
       return;
     } else if (channelId) {
       dispatch(
-        addMessage({ channelId, content: messageInput, author: { ...user } })
+        addMessage({ channelId, content: messageInput, author: user.name })
       );
+      postMessage({
+        channel_id: channelId,
+        author_id: user.id,
+        content: messageInput,
+      })
+        .unwrap()
+        .catch((error) => {
+          console.error("Error posting message:", error);
+        });
       dispatch(reorderChannels(channelId));
       setMessageInput("");
     }
@@ -89,8 +120,8 @@ const ChannelContainer = () => {
               <Paper sx={{ p: 1 }}>
                 <Typography variant="body1">{message.content}</Typography>
                 <Typography variant="caption" color="textSecondary">
-                  {message.author.name} -{" "}
-                  {format(new Date(message.timestamp), "MMMM d, yyyy")}
+                  {message.author} -{" "}
+                  {format(new Date(message.created_at), "MMMM d, yyyy")}
                 </Typography>
               </Paper>
             </ListItem>
