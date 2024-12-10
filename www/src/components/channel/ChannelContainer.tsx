@@ -75,9 +75,7 @@ const ChannelContainer = () => {
         content: messageInput,
       })
         .unwrap()
-        .catch((error) => {
-          console.error("Error posting message:", error);
-        });
+        .catch((error) => console.error("Error posting message:", error));
       dispatch(reorderChannels(channelId));
       setMessageInput("");
     }

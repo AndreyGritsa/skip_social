@@ -95,7 +95,12 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
           dispatch(
             setMessages({
               channelId: arg,
-              messages: messagesCacheData.data.reverse(),
+              messages: messagesCacheData.data.sort((a, b) => {
+                return (
+                  new Date(b.created_at).getTime() -
+                  new Date(a.created_at).getTime()
+                );
+              }),
             })
           );
         } catch (error) {
@@ -111,7 +116,15 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
             try {
               const messages = data[0][1] as Message[];
               dispatch(
-                setMessages({ channelId: arg, messages: messages.reverse() })
+                setMessages({
+                  channelId: arg,
+                  messages: messages.sort((a, b) => {
+                    return (
+                      new Date(b.created_at).getTime() -
+                      new Date(a.created_at).getTime()
+                    );
+                  }),
+                })
               );
             } catch (error) {
               console.error("Error updating messages:", error);
@@ -128,7 +141,15 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
             try {
               const messages = data[0][1] as Message[];
               dispatch(
-                setMessages({ channelId: arg, messages: messages.reverse() })
+                setMessages({
+                  channelId: arg,
+                  messages: messages.sort((a, b) => {
+                    return (
+                      new Date(b.created_at).getTime() -
+                      new Date(a.created_at).getTime()
+                    );
+                  }),
+                })
               );
             } catch (error) {
               console.error("Error updating messages:", error);

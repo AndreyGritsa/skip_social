@@ -54,9 +54,7 @@ const FriendsTabs = () => {
       .then(() => {
         setUserRequestName("");
       })
-      .catch((error) => {
-        console.error("Error sending friend request:", error);
-      });
+      .catch((error) => console.error("Error sending friend request:", error));
   };
 
   return (

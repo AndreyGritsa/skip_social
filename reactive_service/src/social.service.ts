@@ -1,6 +1,11 @@
 import type { EagerCollection, SkipService, Entry } from "@skipruntime/api";
 import type { User, Profile, ModifiedProfile, FriendRequest } from "./users.js";
-import type { ServerMember } from "./servers.js";
+import type {
+  ServerMember,
+  Server,
+  ServerChannel,
+  ModifiedServer,
+} from "./servers.js";
 import type { ModifiedPost, Post, Comment } from "./posts.js";
 import type {
   ChannelParticipant,
@@ -11,6 +16,7 @@ import type {
 import {
   ServerMembersIndexResource,
   createServersCollections,
+  ProfileServersResource,
 } from "./servers.js";
 import {
   FriendsResource,
@@ -40,6 +46,8 @@ export type InputCollection = {
   comments: EagerCollection<string, Comment>;
   channelParticipants: EagerCollection<string, ChannelParticipant>;
   messages: EagerCollection<string, Message>;
+  servers: EagerCollection<string, Server>;
+  serverChannels: EagerCollection<string, ServerChannel>;
 };
 
 export type ResourcesCollection = {
@@ -53,6 +61,7 @@ export type ResourcesCollection = {
   comments: EagerCollection<string, Comment>;
   channels: EagerCollection<string, Channel>;
   messages: EagerCollection<string, ModifiedMessage>;
+  profileServers: EagerCollection<string, ModifiedServer>;
 };
 
 export function SocialSkipService(
@@ -63,7 +72,9 @@ export function SocialSkipService(
   posts: Entry<string, Post>[],
   comments: Entry<string, Comment>[],
   channelParticipants: Entry<string, ChannelParticipant>[],
-  messages: Entry<string, Message>[]
+  messages: Entry<string, Message>[],
+  servers: Entry<string, Server>[],
+  serverChannels: Entry<string, ServerChannel>[]
 ): SkipService<InputCollection, ResourcesCollection> {
   return {
     initialData: {
@@ -75,6 +86,8 @@ export function SocialSkipService(
       comments,
       channelParticipants,
       messages,
+      servers,
+      serverChannels,
     },
     resources: {
       // users
@@ -84,6 +97,7 @@ export function SocialSkipService(
       oneSideFriendRequests: OneSideFriendRequestResource,
       // servers
       serverIndex: ServerMembersIndexResource,
+      profileServers: ProfileServersResource,
       // posts
       friendsPosts: FriendsPostsResource,
       authorPosts: AuthorPostsResource,
@@ -95,9 +109,10 @@ export function SocialSkipService(
     createGraph: (inputCollections) => {
       const { friends, friendIndex, modifiedProfiles, oneSideFriendRequests } =
         createUsersCollections(inputCollections);
-      const { serverIndex } = createServersCollections(inputCollections);
+      const { serverIndex, profileServers } =
+        createServersCollections(inputCollections);
       const { friendsPosts, authorPosts, comments } = createPostsCollections({
-        friends: friends,
+        friends,
         ...inputCollections,
         profiles: modifiedProfiles,
       });
@@ -117,6 +132,7 @@ export function SocialSkipService(
         comments,
         channels,
         messages,
+        profileServers,
       };
     },
   };

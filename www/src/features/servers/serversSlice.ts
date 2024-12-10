@@ -1,22 +1,20 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { User } from "../user/userSlice";
 import { Message } from "../channels/channelsSlice";
 
 export interface ServerMessage extends Message {}
 
-export interface ServerUser extends User {
+export interface ServerMember extends User {
   role?: string;
 }
 
-export interface Room {
+export interface ServerChannel {
   id: string;
   name: string;
-  messages: Message[];
 }
 
 export interface Server extends User {
-  rooms: Room[];
-  members: ServerUser[];
+  channels: ServerChannel[];
 }
 
 export interface ServersState {
@@ -31,7 +29,13 @@ const initialState: ServersState = {
 export const serversSlice = createSlice({
   name: "servers",
   initialState,
-  reducers: {},
+  reducers: {
+    setServers: (state, action: PayloadAction<Server[]>) => {
+      state.servers = action.payload;
+    },
+  },
 });
+
+export const { setServers } = serversSlice.actions;
 
 export default serversSlice.reducer;

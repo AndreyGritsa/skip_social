@@ -22,9 +22,7 @@ const NewPost = ({ setValue }: NewPostProps) => {
 
     newPost({ title, content, profile_id: user.id })
       .unwrap()
-      .catch((e) => {
-        console.error("Error creating new post:", e);
-      });
+      .catch((error) => console.error("Error creating new post:", error));
     setTitle("");
     setContent("");
     setValue(1);

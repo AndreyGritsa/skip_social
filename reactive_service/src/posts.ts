@@ -111,17 +111,18 @@ class FriendsPostsMapper
   ): Iterable<[string, ModifiedPost]> {
     console.assert(typeof key === "string");
     const result: [string, ModifiedPost][] = [];
-    const friend = values.next();
-    const posts = this.posts.getArray(friend!.id);
-
-    for (const post of posts) {
-      result.push([
-        key,
-        {
-          ...post,
-          author: friend!.name,
-        },
-      ]);
+    const friends = values.toArray();
+    for (const friend of friends) {
+      const posts = this.posts.getArray(friend!.id);
+      for (const post of posts) {
+        result.push([
+          key,
+          {
+            ...post,
+            author: friend!.name,
+          },
+        ]);
+      }
     }
 
     return result;

@@ -1,19 +1,17 @@
-import * as React from "react";
 import { IconButton, Box, Popper, Fade, Paper, Button } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useDeletePostMutation } from "../../services/endpoints/posts";
 import EditPostDialog from "./EditPostDialog";
 import { Post } from "../../features/posts/postsSlice";
+import { MouseEvent, useState } from "react";
 
 const PostPopper = ({ ...props }: Post) => {
-  const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(
-    null
-  );
-  const [open, setOpen] = React.useState<boolean>(false);
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const [open, setOpen] = useState<boolean>(false);
   const [triggerDeletePost] = useDeletePostMutation();
 
-  const handleSettingClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSettingClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
     setOpen(!open);
   };

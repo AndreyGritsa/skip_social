@@ -7,14 +7,14 @@ export interface LastRoom {
 
 export interface ActiveState {
   server: string;
-  room: string;
+  serverChannel: string;
   channel: string;
   lastRooms: LastRoom[];
 }
 
 const initialState: ActiveState = {
   server: "0",
-  room: "0",
+  serverChannel: "0",
   channel: "0",
   lastRooms: [],
 };
@@ -32,24 +32,25 @@ export const activeChannelSlice = createSlice({
         (server) => server.server === action.payload
       );
       if (lastRoomIndex !== -1) {
-        state.room = state.lastRooms[lastRoomIndex as number].room || "0";
+        state.serverChannel =
+          state.lastRooms[lastRoomIndex as number].room || "0";
       }
     },
     setActiveRoom: (
       state,
-      action: PayloadAction<{ roomId: string; serverId: string }>
+      action: PayloadAction<{ serverChannel: string; serverId: string }>
     ) => {
-      state.room = action.payload.roomId;
+      state.serverChannel = action.payload.serverChannel;
       const lastRoomIndex = state.lastRooms.findIndex(
         (server) => server.server === action.payload.serverId
       );
       if (lastRoomIndex !== -1) {
-        state.lastRooms[lastRoomIndex].room = action.payload.roomId;
+        state.lastRooms[lastRoomIndex].room = action.payload.serverChannel;
         state.lastRooms[lastRoomIndex].server = action.payload.serverId;
       } else {
         state.lastRooms.push({
           server: action.payload.serverId,
-          room: action.payload.roomId,
+          room: action.payload.serverChannel,
         });
       }
     },

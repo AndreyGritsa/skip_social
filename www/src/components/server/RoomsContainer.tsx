@@ -14,14 +14,16 @@ import { useNavigate } from "react-router-dom";
 const RoomsContainer = () => {
   const servers = useAppSelector((state) => state.servers.servers);
   const activeServer = useAppSelector((state) => state.active.server);
-  const activeRoom = useAppSelector((state) => state.active.room);
+  const activeRoom = useAppSelector((state) => state.active.channel);
   const server = servers.find((server) => server.id === activeServer);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const handleChangeRoom = (roomId: string) => {
-    dispatch(setActiveRoom({ roomId: roomId, serverId: activeServer }));
-    navigate(`/server/${activeServer}/${roomId}`);
+  const handleChangeRoom = (channelId: string) => {
+    dispatch(
+      setActiveRoom({ serverChannel: channelId, serverId: activeServer })
+    );
+    navigate(`/server/${activeServer}/${channelId}`);
   };
 
   return (
@@ -31,7 +33,7 @@ const RoomsContainer = () => {
       </Typography>
       <Divider />
       <List>
-        {server?.rooms.map((room) => {
+        {server?.channels.map((room) => {
           return (
             <ListItem disablePadding key={room.id}>
               <ListItemButton
