@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
   DialogTitle,
   DialogContent,
@@ -10,14 +9,15 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import { Post } from "../../features/posts/postsSlice";
 import { useUpdatePostMutation } from "../../services/endpoints/posts";
+import { useState, Dispatch, SetStateAction, Fragment, FormEvent } from "react";
 
 type EditPostDialogProps = {
-  setOpenPopper: React.Dispatch<React.SetStateAction<boolean>>;
+  setOpenPopper: Dispatch<SetStateAction<boolean>>;
   post: Post;
 };
 
 const EditPostDialog = ({ ...props }: EditPostDialogProps) => {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState<boolean>(false);
   const [triggerUpdatePost] = useUpdatePostMutation();
 
   const handleClickOpen = () => {
@@ -37,7 +37,7 @@ const EditPostDialog = ({ ...props }: EditPostDialogProps) => {
   };
 
   return (
-    <React.Fragment>
+    <Fragment>
       <Button
         onClick={handleClickOpen}
         variant="outlined"
@@ -50,7 +50,7 @@ const EditPostDialog = ({ ...props }: EditPostDialogProps) => {
         onClose={handleClose}
         PaperProps={{
           component: "form",
-          onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
+          onSubmit: (event: FormEvent<HTMLFormElement>) => {
             event.preventDefault();
             const formData = new FormData(event.currentTarget);
             const formJson = Object.fromEntries(
@@ -99,7 +99,7 @@ const EditPostDialog = ({ ...props }: EditPostDialogProps) => {
           <Button type="submit">Edit</Button>
         </DialogActions>
       </Dialog>
-    </React.Fragment>
+    </Fragment>
   );
 };
 

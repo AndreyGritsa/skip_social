@@ -8,7 +8,7 @@ import activeChannelReducer, {
 describe("activeChannel reducer", () => {
   const initialState: ActiveState = {
     channel: "0",
-    room: "0",
+    serverChannel: "0",
     server: "0",
     lastRooms: [],
   };
@@ -30,8 +30,8 @@ describe("activeChannel reducer", () => {
   it("should handle setActiveRoom", () => {
     const actual = activeChannelReducer(
       initialState,
-      setActiveRoom({ roomId: "1", serverId: "1" })
+      setActiveRoom({ serverChannel: "1", serverId: "1" })
     );
-    expect(actual.room).toEqual("1");
+    expect(actual.channel).toEqual("1");
   });
 });

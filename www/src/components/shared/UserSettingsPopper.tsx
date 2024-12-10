@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
   IconButton,
   Box,
@@ -16,22 +15,21 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import { useAppSelector, useAppDispatch } from "../../app/hooks";
 import { setUser } from "../../features/user/userSlice";
 import { useSetStatusMutation } from "../../services/endpoints/users";
+import { MouseEvent, useState, useEffect } from "react";
 
 const UserSettingsPopper = () => {
   const user = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
-  const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(
-    null
-  );
-  const [open, setOpen] = React.useState<boolean>(false);
-  const [status, setStatus] = React.useState<string>("");
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const [open, setOpen] = useState<boolean>(false);
+  const [status, setStatus] = useState<string>("");
   const [triggerStatusMutation] = useSetStatusMutation();
 
   const handleChange = (event: SelectChangeEvent) => {
     setStatus(event.target.value);
   };
 
-  const handleSettingClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSettingClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
     setOpen(!open);
   };
@@ -47,7 +45,7 @@ const UserSettingsPopper = () => {
     setOpen(!open);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     setStatus(user.status);
   }, [user]);
 

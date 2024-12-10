@@ -138,6 +138,24 @@ class MessageMapper
   }
 }
 
+// TODO: figure out why this is not working
+// can Date be used in here?
+class SortMessagesMapper
+  implements Mapper<string, ModifiedMessage, string, ModifiedMessage>
+{
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<ModifiedMessage>
+  ): Iterable<[string, ModifiedMessage]> {
+    const sorted = values.toArray().sort((a, b) => {
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+    return sorted.map((message) => [key, message]);
+  }
+}
+
 // resources
 
 export class ChannelsResource implements Resource {
@@ -164,7 +182,10 @@ export class MessageResource implements Resource {
       throw new Error("channel_id parameter is required");
     }
 
-    return collections.messages.slice([channelId, channelId]).take(20);
+    return collections.messages
+      .slice([channelId, channelId])
+      .take(20)
+      .map(SortMessagesMapper);
   }
 }
 

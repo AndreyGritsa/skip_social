@@ -4,7 +4,7 @@ import ServerRoomPage from "../pages/ServerRoomPage";
 const ServerRoutes = () => {
   return (
     <Routes>
-      <Route path=":serverId/:roomId" element={<ServerRoomPage />} />
+      <Route path=":serverId/:channelId" element={<ServerRoomPage />} />
     </Routes>
   );
 };

@@ -43,9 +43,9 @@ const FriendRequests = () => {
       to_profile: name,
     })
       .unwrap()
-      .catch((error) => {
-        console.error("Error accepting friend request:", error);
-      });
+      .catch((error) =>
+        console.error("Error accepting friend request:", error)
+      );
   };
 
   const handleDeclineRequest = (name: string) => {};

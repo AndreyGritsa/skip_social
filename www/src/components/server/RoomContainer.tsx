@@ -9,26 +9,26 @@ import {
 const RoomContainer = () => {
   const dispatch = useAppDispatch();
   const activeServer = useAppSelector((state) => state.active.server);
-  const activeRoom = useAppSelector((state) => state.active.room);
-  const { roomId, serverId } = useParams<{
-    roomId: string;
+  const activeRoom = useAppSelector((state) => state.active.channel);
+  const { channelId, serverId } = useParams<{
+    channelId: string;
     serverId: string;
   }>();
 
   useEffect(() => {
     // On page reload make sure the active server and room are set
-    if (!serverId || !roomId) return;
+    if (!serverId || !channelId) return;
     if (activeServer !== serverId) {
       dispatch(setActiveServer(serverId));
     }
-    if (activeRoom !== roomId) {
-      dispatch(setActiveRoom({ roomId: roomId, serverId: serverId }));
+    if (activeRoom !== channelId) {
+      dispatch(setActiveRoom({ serverChannel: channelId, serverId: serverId }));
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <div>Room Container: {roomId}</div>;
+  return <div>Room Container: {channelId}</div>;
 };
 
 export default RoomContainer;

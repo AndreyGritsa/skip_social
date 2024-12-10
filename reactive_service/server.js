@@ -26,21 +26,25 @@ async function selectAll(table) {
 const users = await selectAll("auth_user");
 const profiles = await selectAll("users_profile");
 const friendRequests = await selectAll("users_friendrequest");
-const servers = await selectAll("servers_server");
+const serversMembers = await selectAll("servers_member");
 const posts = await selectAll("posts_post");
 const comments = await selectAll("posts_comment");
 const channelParticipants = await selectAll("channels_channel_participants");
 const messages = await selectAll("channels_message");
+const servers = await selectAll("servers_server");
+const serverChannels = await selectAll("servers_serverchannel");
 
 runService(
   SocialSkipService(
     users,
     profiles,
     friendRequests,
-    servers,
+    serversMembers,
     posts,
     comments,
     channelParticipants,
-    messages
+    messages,
+    servers,
+    serverChannels
   )
 );

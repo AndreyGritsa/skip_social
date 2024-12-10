@@ -44,7 +44,7 @@ export class FriendRequestUniquePhase1Mapper
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, FriendRequest]> {
     console.assert(typeof key === "string");
-    let result: [string, FriendRequest][] = [];
+    const result: [string, FriendRequest][] = [];
     for (const value of values) {
       result.push([`${value.from_profile_id}/${value.to_profile_id}`, value]);
     }
@@ -96,7 +96,7 @@ class FriendRequestIndexMapper
     key: string,
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, boolean]> {
-    let array = values.toArray();
+    const array = values.toArray();
     if (array.length >= 2) {
       return [[key, true]];
     }
@@ -110,7 +110,7 @@ class FriendRequestIntersectPhase1Mapper {
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, string]> {
     console.assert(typeof key === "string");
-    let array = values.toArray();
+    const array = values.toArray();
     if (array.length >= 2) {
       console.assert(array[0]!.from_profile_id === array[1]!.to_profile_id);
       console.assert(array[1]!.from_profile_id === array[0]!.to_profile_id);
@@ -168,7 +168,7 @@ class OneSideFriendRequestMapper
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, ModifiedProfile]> {
     console.assert(typeof key === "string");
-    let array = values.toArray();
+    const array = values.toArray();
     if (array.length === 1) {
       const profile = this.modifiedProfiles.getUnique(
         array[0]!.from_profile_id
