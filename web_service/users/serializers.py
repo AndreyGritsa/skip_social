@@ -3,13 +3,13 @@ from .models import Profile, FriendRequest
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    username = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ['username', 'status']
+        fields = ["name", "status", "id"]
 
-    def get_username(self, obj):
+    def get_name(self, obj):
         return obj.user.username
 
 
@@ -18,15 +18,17 @@ class FriendSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['friends']
+        fields = ["friends"]
 
     def get_friends(self, obj):
         friends = obj.friends.all()
-        return [{'name': friend.user.username, 'status': friend.status, 'id': friend.id} for friend in friends]
-    
-    
+        return [
+            {"name": friend.user.username, "status": friend.status, "id": friend.id}
+            for friend in friends
+        ]
+
+
 class FriendRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = FriendRequest
-        fields = '__all__'
-   
+        fields = "__all__"

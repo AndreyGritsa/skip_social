@@ -11,9 +11,11 @@ export interface ServerMember extends User {
 export interface ServerChannel {
   id: string;
   name: string;
+  messages: ServerMessage[];
 }
 
 export interface Server extends User {
+  owner_id: string;
   channels: ServerChannel[];
 }
 
@@ -33,9 +35,29 @@ export const serversSlice = createSlice({
     setServers: (state, action: PayloadAction<Server[]>) => {
       state.servers = action.payload;
     },
+    setMessages: (
+      state,
+      action: PayloadAction<{
+        serverId: string;
+        channelId: string;
+        messages: ServerMessage[];
+      }>
+    ) => {
+      const server = state.servers.find(
+        (server) => server.id === action.payload.serverId
+      );
+      if (server) {
+        const channel = server.channels.find(
+          (channel) => channel.id === action.payload.channelId
+        );
+        if (channel) {
+          channel.messages = action.payload.messages;
+        }
+      }
+    },
   },
 });
 
-export const { setServers } = serversSlice.actions;
+export const { setServers, setMessages } = serversSlice.actions;
 
 export default serversSlice.reducer;

@@ -33,6 +33,7 @@ const channelParticipants = await selectAll("channels_channel_participants");
 const messages = await selectAll("channels_message");
 const servers = await selectAll("servers_server");
 const serverChannels = await selectAll("servers_serverchannel");
+const serverMessages = await selectAll("servers_serverchannelmessage");
 
 runService(
   SocialSkipService(
@@ -45,6 +46,7 @@ runService(
     channelParticipants,
     messages,
     servers,
-    serverChannels
+    serverChannels,
+    serverMessages
   )
 );

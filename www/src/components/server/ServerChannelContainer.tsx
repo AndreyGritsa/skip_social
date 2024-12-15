@@ -1,26 +1,19 @@
-import { useParams } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { useEffect } from "react";
-import {
-  setActiveServer,
-  setActiveRoom,
-} from "../../features/active/activeSlice";
 import MessagesContainer from "../shared/MessagesContainer";
+import { useParams } from "react-router-dom";
+import { useAppSelector, useAppDispatch } from "../../app/hooks";
 import { skipToken } from "@reduxjs/toolkit/query";
 import {
   useGetServerMessagesQuery,
   useInvalidateServerMessagesMutation,
   usePostServerMessageMutation,
 } from "../../services/endpoints/servers";
+import { useEffect } from "react";
 
-const RoomContainer = () => {
+const ServerChannelContainer = () => {
   const { channelId, serverId } = useParams<{
     channelId: string;
     serverId: string;
   }>();
-  const dispatch = useAppDispatch();
-  const activeServer = useAppSelector((state) => state.active.server);
-  const activeRoom = useAppSelector((state) => state.active.channel);
   const server = useAppSelector((state) =>
     state.servers.servers.find((server) => server.id === serverId)
   );
@@ -29,6 +22,7 @@ const RoomContainer = () => {
     channel ? { channel_id: channelId!, server_id: serverId! } : skipToken
   );
   const user = useAppSelector((state) => state.user);
+  const dispatch = useAppDispatch();
   const [invalidateMessages] = useInvalidateServerMessagesMutation();
   const [postMessage] = usePostServerMessageMutation();
 
@@ -44,19 +38,6 @@ const RoomContainer = () => {
       invalidateMessages();
     };
   }, [invalidateMessages]);
-
-  useEffect(() => {
-    // On page reload make sure the active server and room are set
-    if (!serverId || !channelId) return;
-    if (activeServer !== serverId) {
-      dispatch(setActiveServer(serverId));
-    }
-    if (activeRoom !== channelId) {
-      dispatch(setActiveRoom({ serverChannel: channelId, serverId: serverId }));
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleMessages = (messageInput: string) => {
     if (channelId) {
@@ -81,4 +62,4 @@ const RoomContainer = () => {
   ) : null;
 };
 
-export default RoomContainer;
+export default ServerChannelContainer;

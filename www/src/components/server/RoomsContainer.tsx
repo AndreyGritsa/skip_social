@@ -1,23 +1,46 @@
-import Box from "@mui/material/Box";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import Divider from "@mui/material/Divider";
-import { Typography } from "@mui/material";
-import TagIcon from "@mui/icons-material/Tag";
+import {
+  Box,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Typography,
+} from "@mui/material/";
 import { useAppSelector, useAppDispatch } from "../../app/hooks";
-import { setActiveRoom } from "../../features/active/activeSlice";
+import {
+  setActiveRoom,
+  setActiveServer,
+} from "../../features/active/activeSlice";
 import { useNavigate } from "react-router-dom";
+import TagIcon from "@mui/icons-material/Tag";
+import ServerMenegmentDialog from "./ServerMenegmentDialog";
+import { useEffect, useState } from "react";
+import { Server } from "../../features/servers/serversSlice";
 
 const RoomsContainer = () => {
   const servers = useAppSelector((state) => state.servers.servers);
   const activeServer = useAppSelector((state) => state.active.server);
-  const activeRoom = useAppSelector((state) => state.active.channel);
-  const server = servers.find((server) => server.id === activeServer);
+  const activeRoom = useAppSelector((state) => state.active.serverChannel);
+  const [server, setServer] = useState<Server | undefined>(undefined);
+  const user = useAppSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    setServer(servers.find((server) => server.id === activeServer));
+  }, [servers, activeServer]);
+
+  useEffect(() => {
+    if (activeServer === "0") {
+      // TODO: not the best practice, but for now it will do
+      // allows to refresh the page and keep the active server
+      const urlPath = window.location.pathname.split("/");
+      const serverId = urlPath[2];
+      dispatch(setActiveServer(serverId));
+    }
+  }, [activeServer]);
 
   const handleChangeRoom = (channelId: string) => {
     dispatch(
@@ -28,9 +51,12 @@ const RoomsContainer = () => {
 
   return (
     <Box sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}>
-      <Typography variant="h6" sx={{ m: 2 }}>
-        {server?.name}
-      </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", p: 2 }}>
+        <Typography variant="h6">{server?.name}</Typography>
+        {server?.owner_id === String(user.id) && ( // TODO: update reactive service, user id shoud be a string
+          <ServerMenegmentDialog server={server} />
+        )}
+      </Box>
       <Divider />
       <List>
         {server?.channels.map((room) => {

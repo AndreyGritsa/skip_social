@@ -6,7 +6,7 @@ const socialApi = createApi({
     baseUrl: process.env.REACT_APP_PUBLIC_BACKEND_URL,
   }),
   refetchOnFocus: false,
-  tagTypes: ["Messages", "Posts", "Comments", "Channels"],
+  tagTypes: ["Messages", "Posts", "Comments", "Channels", "ServerMessages"],
   endpoints: () => ({}),
 });
 

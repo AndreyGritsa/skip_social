@@ -32,7 +32,7 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         try {
           const cacheData = await cacheDataLoaded;
           dispatch(setUser(cacheData.data[0]));
-          console.log("cacheData", cacheData);
+          console.log("user cacheData", cacheData);
         } catch (error) {
           console.error("Error loading cache data:", error);
         }
@@ -41,7 +41,7 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         evSource.addEventListener("init", (e: MessageEvent<string>) => {
           const data = JSON.parse(e.data);
           const updatedUser = data[0][1][0] as UserResponse;
-          // console.log("response", data);
+          console.log("user init response", data);
           dispatch(setUser(updatedUser));
         });
 
@@ -49,7 +49,7 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         evSource.addEventListener("update", (e: MessageEvent<string>) => {
           const data = JSON.parse(e.data);
           const updatedUser = data[0][1][0] as UserResponse;
-          // console.log("response", data);
+          console.log("user update response", data);
           dispatch(setUser(updatedUser));
         });
 
@@ -195,6 +195,9 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         body: data,
       }),
     }),
+    getAllUsers: builder.query<UserResponse[], void>({
+      query: () => `users/users/`,
+    }),
   }),
 });
 
@@ -206,4 +209,5 @@ export const {
   useCloseFriendRequestsEventSourceMutation,
   usePostFriendRequestMutation,
   useDeleteFriendMutation,
+  useGetAllUsersQuery,
 } = extendedSocialSlice;

@@ -69,12 +69,10 @@ export const channelsSlice = createSlice({
       state.channels.unshift(action.payload);
     },
     setChannels: (state, action: PayloadAction<Channel[]>) => {
-      for (const channel of action.payload) {
-        if (!channel.messages) {
-          channel.messages = [];
-        }
-      }
-      state.channels = action.payload;
+      state.channels = action.payload.map((channel) => ({
+        ...channel,
+        messages: channel.messages || [],
+      }));
     },
     setMessages: (
       state,
