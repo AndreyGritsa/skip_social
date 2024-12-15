@@ -37,11 +37,16 @@ const ServersContainer = () => {
   const handleChangeServer = (serverId: string) => {
     const lastRoom = activeLastRooms?.find((room) => room.server === serverId);
     let path = `/server/${serverId}/`;
-    // if (lastRoom) {
-    //   path += lastRoom.room;
-    // } else {
-    //   path += servers.find((server) => server.id === serverId)?.rooms[0].id;
-    // }
+    if (lastRoom) {
+      path += lastRoom.room;
+    } else {
+      const serverChannels = servers.find(
+        (server) => server.id === serverId
+      )?.channels;
+      if (serverChannels && serverChannels?.length > 0) {
+        path += serverChannels[0].id;
+      }
+    }
     dispatch(setActiveServer(serverId));
     navigate(path);
   };

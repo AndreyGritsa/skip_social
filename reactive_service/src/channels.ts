@@ -49,8 +49,6 @@ class ProfileParticipantMapper
     values: NonEmptyIterator<ChannelParticipant>
   ): Iterable<[string, string]> {
     const participants = values.getUnique();
-    console.log(`ProfileParticipantMapper: ${participants.profile_id}: ${key}`);
-
     return [[participants.profile_id, key]];
   }
 }
@@ -120,7 +118,7 @@ class ChannelNotOneParticipantMapper
   }
 }
 
-class MessageMapper
+export class MessageMapper
   implements Mapper<string, Message, string, ModifiedMessage>
 {
   constructor(
@@ -134,6 +132,8 @@ class MessageMapper
     const value = values.getUnique();
 
     const author = this.modifiedProfiles.getUnique(value.author_id);
+    console.log(`author: ${author.name}, value: ${value}, key: ${key}`);
+
     return [[value.channel_id, { ...value, author: author.name }]];
   }
 }

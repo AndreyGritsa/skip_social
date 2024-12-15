@@ -1,6 +1,7 @@
 import { Box, List } from "@mui/material";
 import { useAppSelector } from "../../app/hooks";
 import SingleChannel from "../channel/SingleChannel";
+import { selectFilteredFriends } from "../../app/selectors";
 
 interface FriendsTabPanelProps {
   online: boolean;
@@ -8,9 +9,7 @@ interface FriendsTabPanelProps {
 
 const FriendsTabPanel: React.FC<FriendsTabPanelProps> = ({ online }) => {
   const friends = useAppSelector((state) =>
-    online
-      ? state.friends.friends.filter((friend) => friend.status === "online")
-      : state.friends.friends
+    selectFilteredFriends(state, online)
   );
 
   return (

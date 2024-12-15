@@ -6,11 +6,17 @@ import {
   useGetFriendsQuery,
 } from "../../services/endpoints/users";
 import UserSettingsPopper from "./UserSettingsPopper";
+import UserSelectPopper from "./UserSelectPopper";
 
 const User = () => {
   const user = useAppSelector((state) => state.user);
   // TODO: proper auth, localStorage used for the simplicity
-  const profile_id = localStorage.getItem("profile_id") || "3";
+  const profile_id = localStorage.getItem("profile_id");
+  if (!profile_id) {
+    throw Error(
+      "localStorage profile_id is not set. Enter in console localStorage.setItem('profile_id', '[value]')"
+    );
+  }
   const { data: userData } = useGetUserQuery(profile_id);
   const { data: friendsData } = useGetFriendsQuery(profile_id);
 
@@ -27,6 +33,7 @@ const User = () => {
         <Typography variant="body1">
           <strong>{user.name}</strong>
         </Typography>
+        <UserSelectPopper />
         <UserSettingsPopper />
       </Box>
     </Paper>

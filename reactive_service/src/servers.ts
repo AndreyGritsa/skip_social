@@ -5,6 +5,9 @@ import type {
   Resource,
 } from "skip-wasm";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
+import type { Message } from "./channels.js";
+import { MessageMapper } from "./channels.js";
+import type { ModifiedProfile } from "./users.js";
 
 // types
 export type Server = {
@@ -28,9 +31,18 @@ export type ServerMember = {
   role: string;
 };
 
+export type ServerMessage = Message;
+
+export type ModifiedServerMessage = ServerMessage & { author: string };
+
 type OutputCollection = {
   serverIndex: EagerCollection<string, boolean>;
   profileServers: EagerCollection<string, ModifiedServer>;
+  serverMessages: EagerCollection<string, ModifiedServerMessage>;
+};
+
+type ServersInputCollection = InputCollection & {
+  modifiedProfiles: EagerCollection<string, ModifiedProfile>;
 };
 
 // mappers
@@ -79,6 +91,22 @@ class ServerChannelMapper
   }
 }
 
+class MemberProfileMapper
+  implements Mapper<string, ServerMember, string, ModifiedProfile>
+{
+  constructor(
+    private modifiedProfiles: EagerCollection<string, ModifiedProfile>
+  ) {}
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<ServerMember>
+  ): Iterable<[string, ModifiedProfile]> {
+    const member = values.getUnique();
+    const profile = this.modifiedProfiles.getUnique(member.profile_id);
+    return [[key, profile]];
+  }
+}
+
 // resources
 
 export class ServerMembersIndexResource implements Resource {
@@ -114,10 +142,25 @@ export class ProfileServersResource implements Resource {
   }
 }
 
+export class ServerMessagesResource implements Resource {
+  constructor(private params: Record<string, string>) {}
+
+  instantiate(
+    collections: ResourcesCollection
+  ): EagerCollection<string, ModifiedServerMessage> {
+    const channel_id = this.params["channel_id"];
+    if (!channel_id) {
+      throw new Error("channel_id parameter is required");
+    }
+
+    return collections.serverMessages.slice([channel_id, channel_id]);
+  }
+}
+
 // main function
 
 export const createServersCollections = (
-  inputCollections: InputCollection
+  inputCollections: ServersInputCollection
 ): OutputCollection => {
   const serverChannels =
     inputCollections.serverChannels.map(ServerChannelMapper);
@@ -129,9 +172,18 @@ export const createServersCollections = (
     inputCollections.servers,
     serverChannels
   );
+  const memberProfiles = inputCollections.serverMembers.map(
+    MemberProfileMapper,
+    inputCollections.modifiedProfiles
+  );
+  const serverMessages = inputCollections.serverMessages.map(
+    MessageMapper,
+    memberProfiles
+  );
 
   return {
     serverIndex,
     profileServers,
+    serverMessages,
   };
 };

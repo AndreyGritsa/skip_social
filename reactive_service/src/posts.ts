@@ -39,7 +39,7 @@ type OutputCollection = {
 
 type PostsInputCollection = InputCollection & {
   friends: EagerCollection<string, ModifiedProfile>;
-  profiles: EagerCollection<string, ModifiedProfile>;
+  modifiedProfiles: EagerCollection<string, ModifiedProfile>;
 };
 
 // mappers
@@ -192,7 +192,7 @@ export const createPostsCollections = (
 ): OutputCollection => {
   const comments = inputCollections.comments.map(
     CommentMapper,
-    inputCollections.profiles
+    inputCollections.modifiedProfiles
   );
   const authorPosts = inputCollections.posts
     .map(ZeroPostMapper)
