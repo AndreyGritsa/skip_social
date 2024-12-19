@@ -1,14 +1,17 @@
-import socialApi from "../social";
+import socialApi, { handleEventSource } from "../social";
 import {
   Server,
   setServers,
   ServerMessage,
+  ServerMember,
 } from "../../features/servers/serversSlice";
 import { setMessages } from "../../features/servers/serversSlice";
 
 interface ServerResponse extends Server {}
 
 interface MessageResponse extends ServerMessage {}
+
+interface ServerMemberResponse extends ServerMember {}
 
 export const extendedSocialSlice = socialApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -28,54 +31,19 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         arg,
         { cacheDataLoaded, cacheEntryRemoved, dispatch }
       ) {
-        const serversEventSource = new EventSource(
-          `/api/servers/?profile_id=${arg.profile_id}`
+        handleEventSource(
+          `/api/servers/?profile_id=${arg.profile_id}`,
+          {
+            init: (data: ServerResponse[]) => {
+              dispatch(setServers(data));
+            },
+            update: (data: ServerResponse[]) => {
+              dispatch(setServers(data));
+            },
+          },
+          cacheDataLoaded,
+          cacheEntryRemoved
         );
-
-        // Handle the initial cache data
-        try {
-          const serversCacheData = await cacheDataLoaded;
-          console.log("serversCacheData", serversCacheData);
-          dispatch(setServers(serversCacheData.data));
-        } catch (error) {
-          console.error("Error loading cache data:", error);
-        }
-
-        // Handle the "init" event
-        serversEventSource.addEventListener(
-          "init",
-          (e: MessageEvent<string>) => {
-            const data = JSON.parse(e.data);
-            console.log("Servers init data", data);
-            try {
-              const servers = data[0][1] as ServerResponse[];
-              dispatch(setServers(servers));
-            } catch (error) {
-              console.error("Error updating friend requests:", error);
-            }
-          }
-        );
-
-        // Handle the "update" event
-        serversEventSource.addEventListener(
-          "update",
-          (e: MessageEvent<string>) => {
-            const data = JSON.parse(e.data);
-            console.log("Servers update data", data);
-            try {
-              const servers = data[0][1] as ServerResponse[];
-              dispatch(setServers(servers));
-              console.log(`servers`, servers);
-            } catch (error) {
-              console.error("Error updating friend requests:", error);
-            }
-          }
-        );
-
-        // Clean up the EventSource when the cache entry is removed
-        await cacheEntryRemoved;
-        console.log("Closing event source for servers");
-        serversEventSource.close();
       },
     }),
     newMember: builder.mutation<
@@ -124,43 +92,15 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         arg,
         { cacheDataLoaded, cacheEntryRemoved, dispatch }
       ) {
-        const messagesEventSource = new EventSource(
-          `/api/servers/messages/?channel_id=${arg.channel_id}`
-        );
-
-        // Handle the initial cache data
-        try {
-          const serverMessagesCacheData = await cacheDataLoaded;
-          console.log("serverMessagesCacheData", serverMessagesCacheData);
-          dispatch(
-            setMessages({
-              channelId: arg.channel_id,
-              serverId: arg.server_id,
-              messages: serverMessagesCacheData.data.sort((a, b) => {
-                return (
-                  new Date(b.created_at).getTime() -
-                  new Date(a.created_at).getTime()
-                );
-              }),
-            })
-          );
-        } catch (error) {
-          console.error("Error loading cache data:", error);
-        }
-
-        // Handle the "init" event
-        messagesEventSource.addEventListener(
-          "init",
-          (e: MessageEvent<string>) => {
-            const data = JSON.parse(e.data);
-            console.log("Server messages init data", data);
-            try {
-              const messages = data[0][1] as MessageResponse[];
+        handleEventSource(
+          `/api/servers/messages/?channel_id=${arg.channel_id}`,
+          {
+            init: (data: MessageResponse[]) => {
               dispatch(
                 setMessages({
                   channelId: arg.channel_id,
                   serverId: arg.server_id,
-                  messages: messages.sort((a, b) => {
+                  messages: data.sort((a, b) => {
                     return (
                       new Date(b.created_at).getTime() -
                       new Date(a.created_at).getTime()
@@ -168,25 +108,13 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
                   }),
                 })
               );
-            } catch (error) {
-              console.error("Error updating messages:", error);
-            }
-          }
-        );
-
-        // Handle the "update" event
-        messagesEventSource.addEventListener(
-          "update",
-          (e: MessageEvent<string>) => {
-            const data = JSON.parse(e.data);
-            console.log("Server messages update data", data);
-            try {
-              const messages = data[0][1] as MessageResponse[];
+            },
+            update: (data: MessageResponse[]) => {
               dispatch(
                 setMessages({
                   channelId: arg.channel_id,
                   serverId: arg.server_id,
-                  messages: messages.sort((a, b) => {
+                  messages: data.sort((a, b) => {
                     return (
                       new Date(b.created_at).getTime() -
                       new Date(a.created_at).getTime()
@@ -194,16 +122,11 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
                   }),
                 })
               );
-            } catch (error) {
-              console.error("Error updating messages:", error);
-            }
-          }
+            },
+          },
+          cacheDataLoaded,
+          cacheEntryRemoved
         );
-
-        // Clean up the EventSource when the cache entry is removed
-        await cacheEntryRemoved;
-        console.log("Closing event source for server messages");
-        messagesEventSource.close();
       },
     }),
     invalidateServerMessages: builder.mutation<void, void>({
@@ -222,6 +145,47 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         body: data,
       }),
     }),
+    getServerMembers: builder.query<
+      ServerMemberResponse[],
+      { server_id: string; profile_id: string }
+    >({
+      query: (params) => ({
+        url: `/servers/members/?server_id=${params.server_id}&profile_id=${params.profile_id}`,
+      }),
+      providesTags: ["ServerMembers"],
+      async onCacheEntryAdded(
+        arg,
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData }
+      ) {
+        handleEventSource(
+          `/api/servers/members/?server_id=${arg.server_id}&profile_id=${arg.profile_id}`,
+          {
+            init: (data: ServerMemberResponse[]) => {
+              console.log("Server members init data", data);
+              updateCachedData((draft) => {
+                draft.length = 0;
+                data.forEach((member) => draft.push(member));
+              });
+            },
+            update: (data: ServerMemberResponse[]) => {
+              console.log("Server members update data", data);
+              updateCachedData((draft) => {
+                draft.length = 0;
+                data.forEach((member) => draft.push(member));
+              });
+            },
+          },
+          cacheDataLoaded,
+          cacheEntryRemoved
+        );
+      },
+    }),
+    invalidateServerMembers: builder.mutation<void, void>({
+      queryFn: () => {
+        return { data: undefined };
+      },
+      invalidatesTags: ["ServerMembers"],
+    }),
   }),
 });
 
@@ -235,4 +199,6 @@ export const {
   useGetServerMessagesQuery,
   useInvalidateServerMessagesMutation,
   usePostServerMessageMutation,
+  useGetServerMembersQuery,
+  useInvalidateServerMembersMutation,
 } = extendedSocialSlice;

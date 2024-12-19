@@ -3,38 +3,17 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Profile, FriendRequest
 from .serializers import ProfileSerializer, FriendRequestSerializer
-import requests
-from django.shortcuts import redirect
-from rest_framework.negotiation import BaseContentNegotiation
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from django.conf import settings
-
-REACTIVE_SERVICE_URL = settings.REACTIVE_SERVICE_URL
-
-
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-    def enforce_csrf(self, request):
-        return  # To not perform the csrf check
-
-
-class IgnoreClientContentNegotiation(BaseContentNegotiation):
-    # TODO: Find better sollution to accept text/event-stream
-    def select_parser(self, request, parsers):
-        """
-        Select the first parser in the `.parser_classes` list.
-        """
-        return parsers[0]
-
-    def select_renderer(self, request, renderers, format_suffix):
-        """
-        Select the first renderer in the `.renderer_classes` list.
-        """
-        return (renderers[0], renderers[0].media_type)
+from utils import (
+    handle_reactive_get,
+    handle_reactive_put,
+    CsrfExemptSessionAuthentication,
+    IgnoreClientContentNegotiation,
+)
 
 
 class UserAPIView(APIView):
     content_negotiation_class = IgnoreClientContentNegotiation
-    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def get(self, request):
         # TODO: for testing purposes no auth here
@@ -44,26 +23,9 @@ class UserAPIView(APIView):
                 {"error": "Profile ID not provided"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        if "text/event-stream" in request.headers.get("Accept"):
-            resp = requests.post(
-                f"{REACTIVE_SERVICE_URL}/streams",
-                json={
-                    "resource": "modifiedProfiles",
-                    "params": {"profile_id": profile_id},
-                },
-            )
-            uuid = resp.text
-
-            return redirect(f"/streams/{uuid}", code=307)
-
-        else:
-            resp = requests.get(
-                f"{REACTIVE_SERVICE_URL}/resources/modifiedProfiles",
-                params={"profile_id": profile_id},
-            )
-            if resp.json():
-                return Response(resp.json()[0][1], status=status.HTTP_200_OK)
-            return Response([], status=status.HTTP_200_OK)
+        return handle_reactive_get(
+            request, "modifiedProfiles", {"profile_id": profile_id}
+        )
 
     def patch(self, request):
         # TODO: for testing purposes no auth here
@@ -78,15 +40,14 @@ class UserAPIView(APIView):
                 serializer = ProfileSerializer(profile)
 
                 # Write to reactive input collections
-                requests.put(
-                    f"{REACTIVE_SERVICE_URL}/inputs/profiles/{profile.id}",
-                    json=[
-                        {
-                            "status": profile.status,
-                            "id": profile.id,
-                            "user_id": profile.user.id,
-                        }
-                    ],
+                handle_reactive_put(
+                    "profiles",
+                    profile.id,
+                    {
+                        "status": profile.status,
+                        "id": profile.id,
+                        "user_id": profile.user.id,
+                    },
                 )
 
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -102,7 +63,7 @@ class UserAPIView(APIView):
 
 class FriendAPIView(APIView):
     content_negotiation_class = IgnoreClientContentNegotiation
-    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def get(self, request):
         # TODO: for testing purposes no auth here
@@ -112,23 +73,7 @@ class FriendAPIView(APIView):
                 {"error": "Profile ID not provided"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        if "text/event-stream" in request.headers.get("Accept"):
-            resp = requests.post(
-                f"{REACTIVE_SERVICE_URL}/streams",
-                json={"resource": "friends", "params": {"profile_id": profile_id}},
-            )
-            uuid = resp.text
-
-            return redirect(f"/streams/{uuid}", code=307)
-
-        else:
-            resp = requests.get(
-                f"{REACTIVE_SERVICE_URL}/resources/friends",
-                params={"profile_id": profile_id},
-            )
-            if resp.json():
-                return Response(resp.json()[0][1], status=status.HTTP_200_OK)
-            return Response([], status=status.HTTP_200_OK)
+        return handle_reactive_get(request, "friends", {"profile_id": profile_id})
 
     # TODO: for testing purposes put but should be delete
     def put(self, request):
@@ -157,11 +102,15 @@ class FriendAPIView(APIView):
             )
 
             # Write to reactive input collections
-            requests.put(
-                f"{REACTIVE_SERVICE_URL}/inputs/friendRequests/{request1.id}", json=[]
+            handle_reactive_put(
+                "friendRequests",
+                request1.id,
+                None,
             )
-            requests.put(
-                f"{REACTIVE_SERVICE_URL}/inputs/friendRequests/{request2.id}", json=[]
+            handle_reactive_put(
+                "friendRequests",
+                request2.id,
+                None,
             )
 
             request1.delete()
@@ -172,7 +121,7 @@ class FriendAPIView(APIView):
 
 class FriendRequestAPIView(APIView):
     content_negotiation_class = IgnoreClientContentNegotiation
-    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def get(self, request):
         profile_id = request.query_params.get("profile_id")
@@ -181,26 +130,9 @@ class FriendRequestAPIView(APIView):
                 {"error": "Profile ID not provided"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        if "text/event-stream" in request.headers.get("Accept"):
-            resp = requests.post(
-                f"{REACTIVE_SERVICE_URL}/streams",
-                json={
-                    "resource": "oneSideFriendRequests",
-                    "params": {"profile_id": profile_id},
-                },
-            )
-            uuid = resp.text
-
-            return redirect(f"/streams/{uuid}", code=307)
-
-        else:
-            resp = requests.get(
-                f"{REACTIVE_SERVICE_URL}/resources/oneSideFriendRequests",
-                params={"profile_id": profile_id},
-            )
-            if resp.json():
-                return Response(resp.json()[0][1], status=status.HTTP_200_OK)
-            return Response([], status=status.HTTP_200_OK)
+        return handle_reactive_get(
+            request, "oneSideFriendRequests", {"profile_id": profile_id}
+        )
 
     def post(self, request):
         to_profile = request.data.get("to_profile")
@@ -239,9 +171,10 @@ class FriendRequestAPIView(APIView):
                 }
 
                 # Write to reactive input collections
-                requests.put(
-                    f"{REACTIVE_SERVICE_URL}/inputs/friendRequests/{friend_request.id}",
-                    json=[collections_data],
+                handle_reactive_put(
+                    "friendRequests",
+                    serializer.data["id"],
+                    collections_data,
                 )
 
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -257,7 +190,7 @@ class FriendRequestAPIView(APIView):
 
 class UserListAPIView(APIView):
     content_negotiation_class = IgnoreClientContentNegotiation
-    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def get(self, request):
         profiles = Profile.objects.all()

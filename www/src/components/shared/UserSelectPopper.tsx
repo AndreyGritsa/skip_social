@@ -33,7 +33,7 @@ const UserSelectPopper = () => {
   };
 
   const handleChangeUser = () => {
-    if (userId !== user.id) {
+    if (userId !== String(user.id)) {
       localStorage.setItem("profile_id", userId);
       window.location.reload();
     }

@@ -19,6 +19,9 @@ class Member(models.Model):
     role = models.CharField(max_length=255)
     server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name="members")
 
+    class Meta:
+        unique_together = ("profile", "server")
+
     def __str__(self):
         return f"{self.profile.user.username}, {self.role} - {self.server.name}"
 

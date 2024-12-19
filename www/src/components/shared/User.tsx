@@ -7,18 +7,33 @@ import {
 } from "../../services/endpoints/users";
 import UserSettingsPopper from "./UserSettingsPopper";
 import UserSelectPopper from "./UserSelectPopper";
+import { useEffect, useState } from "react";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 const User = () => {
   const user = useAppSelector((state) => state.user);
   // TODO: proper auth, localStorage used for the simplicity
-  const profile_id = localStorage.getItem("profile_id");
-  if (!profile_id) {
-    throw Error(
-      "localStorage profile_id is not set. Enter in console localStorage.setItem('profile_id', '[value]')"
-    );
-  }
-  const { data: userData } = useGetUserQuery(profile_id);
-  const { data: friendsData } = useGetFriendsQuery(profile_id);
+  const [profileId, setProfileId] = useState<string>(
+    localStorage.getItem("profile_id") || ""
+  );
+  const { refetch: refetchUser } = useGetUserQuery(
+    profileId ? profileId : skipToken
+  );
+  const { refetch: refetchFriends } = useGetFriendsQuery(
+    profileId ? profileId : skipToken
+  );
+
+  useEffect(() => {
+    if (!profileId) {
+      localStorage.setItem("profile_id", "1");
+      setProfileId("1");
+    }
+  }, [profileId]);
+
+  useEffect(() => {
+    refetchUser();
+    refetchFriends();
+  }, [profileId]);
 
   return (
     <Paper sx={{ p: 1 }} elevation={4}>

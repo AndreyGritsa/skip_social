@@ -12,7 +12,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import {
   useGetFriendRequestsQuery,
   usePostFriendRequestMutation,
-  useCloseFriendRequestsEventSourceMutation,
+  useInvalidateFriendsRequestsMutation,
 } from "../../services/endpoints/users";
 import { useAppSelector } from "../../app/hooks";
 import { useEffect } from "react";
@@ -20,19 +20,16 @@ import { skipToken } from "@reduxjs/toolkit/query";
 
 const FriendRequests = () => {
   const user = useAppSelector((state) => state.user);
-  const {
-    data: friendRequests,
-    refetch,
-    isLoading,
-  } = useGetFriendRequestsQuery(user.id ? user.id : skipToken);
+  const { data: friendRequests } = useGetFriendRequestsQuery(
+    user.id ? user.id : skipToken
+  );
   const [triggerPostFriendRequest] = usePostFriendRequestMutation();
-  const [triggerCloseFriendRequestsEventSource] =
-    useCloseFriendRequestsEventSourceMutation();
+  const [invalidateFriendRequests] = useInvalidateFriendsRequestsMutation();
 
   useEffect(() => {
     return () => {
       // close EventSource when component is unmounted
-      // triggerCloseFriendRequestsEventSource();
+      invalidateFriendRequests();
     };
   }, []);
 

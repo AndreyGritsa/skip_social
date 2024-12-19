@@ -9,12 +9,12 @@ from .serializers import (
     ServerChannelSerializer,
     ServerChannelMessageSerializer,
 )
-from users.views import CsrfExemptSessionAuthentication, IgnoreClientContentNegotiation
-from django.shortcuts import redirect
-import requests
-from django.conf import settings
-
-REACTIVE_SERVICE_URL = settings.REACTIVE_SERVICE_URL
+from utils import (
+    handle_reactive_get,
+    handle_reactive_put,
+    CsrfExemptSessionAuthentication,
+    IgnoreClientContentNegotiation,
+)
 
 
 class ServerAPIView(APIView):
@@ -28,27 +28,9 @@ class ServerAPIView(APIView):
                 "profile_id is required", status=status.HTTP_400_BAD_REQUEST
             )
 
-        if "text/event-stream" in request.headers.get("Accept"):
-            resp = requests.post(
-                f"{REACTIVE_SERVICE_URL}/streams",
-                json={
-                    "resource": "profileServers",
-                    "params": {"profile_id": profile_id},
-                },
-            )
-            uuid = resp.text
-
-            return redirect(f"/streams/{uuid}", code=307)
-
-        else:
-            resp = requests.get(
-                f"{REACTIVE_SERVICE_URL}/resources/profileServers",
-                params={"profile_id": profile_id},
-            )
-
-            if resp.json():
-                return Response(resp.json()[0][1], status=status.HTTP_200_OK)
-            return Response([], status=status.HTTP_200_OK)
+        return handle_reactive_get(
+            request, "profileServers", {"profile_id": profile_id}
+        )
 
     def post(self, request):
         profile_id = request.data.get("profile_id")
@@ -63,23 +45,25 @@ class ServerAPIView(APIView):
         server = Server.objects.create(name=server_name, owner=profile)
         member = Member.objects.create(profile=profile, role="owner", server=server)
 
-        requests.put(
-            f"{REACTIVE_SERVICE_URL}/inputs/servers/{server.id}/",
-            json=[
-                {"id": str(server.id), "name": server.name, "owner_id": str(profile.id)}
-            ],
+        # write to input collections
+        handle_reactive_put(
+            "servers",
+            server.id,
+            {
+                "id": str(server.id),
+                "name": server.name,
+                "owner_id": str(profile.id),
+            },
         )
-
-        requests.put(
-            f"{REACTIVE_SERVICE_URL}/inputs/serverMembers/{member.id}/",
-            json=[
-                {
-                    "id": str(member.id),
-                    "profile_id": str(profile.id),
-                    "role": member.role,
-                    "server_id": str(server.id),
-                }
-            ],
+        handle_reactive_put(
+            "serverMembers",
+            member.id,
+            {
+                "id": str(member.id),
+                "profile_id": str(profile.id),
+                "role": member.role,
+                "server_id": str(server.id),
+            },
         )
 
         return Response(ServerSerializer(server).data, status=status.HTTP_201_CREATED)
@@ -88,6 +72,19 @@ class ServerAPIView(APIView):
 class MemberAPIView(APIView):
     content_negotiation_class = IgnoreClientContentNegotiation
     authentication_classes = (CsrfExemptSessionAuthentication,)
+
+    def get(self, request):
+        server_id = request.query_params.get("server_id")
+        profile_id = request.query_params.get("profile_id")
+        if not server_id or not profile_id:
+            Response(
+                "Server id and profile id should be provided",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return handle_reactive_get(
+            request, "serverMembers", {"server_id": server_id, "profile_id": profile_id}
+        )
 
     def post(self, request):
         profile_id = request.data.get("profile_id")
@@ -109,16 +106,16 @@ class MemberAPIView(APIView):
         profile = Profile.objects.get(id=int(profile_id))
         member = Member.objects.create(profile=profile, role="newbie", server=server)
 
-        requests.put(
-            f"{REACTIVE_SERVICE_URL}/inputs/serverMembers/{member.id}/",
-            json=[
-                {
-                    "id": str(member.id),
-                    "profile_id": str(profile.id),
-                    "role": member.role,
-                    "server_id": str(server.id),
-                }
-            ],
+        # write to input collections
+        handle_reactive_put(
+            "serverMembers",
+            member.id,
+            {
+                "id": str(member.id),
+                "profile_id": str(profile.id),
+                "role": member.role,
+                "server_id": str(server.id),
+            },
         )
 
         return Response(MemberSerializer(member).data, status=status.HTTP_201_CREATED)
@@ -140,15 +137,15 @@ class ServerChannelAPIView(APIView):
         server = Server.objects.get(id=int(server_id))
         channel = server.channels.create(name=channel_name)
 
-        requests.put(
-            f"{REACTIVE_SERVICE_URL}/inputs/serverChannels/{channel.id}/",
-            json=[
-                {
-                    "id": str(channel.id),
-                    "name": channel.name,
-                    "server_id": str(server.id),
-                }
-            ],
+        # write to input collections
+        handle_reactive_put(
+            "serverChannels",
+            channel.id,
+            {
+                "id": str(channel.id),
+                "name": channel.name,
+                "server_id": str(server.id),
+            },
         )
 
         return Response(
@@ -166,15 +163,15 @@ class ServerChannelAPIView(APIView):
         channel.name = new_channel_name
         channel.save()
 
-        requests.put(
-            f"{REACTIVE_SERVICE_URL}/inputs/serverChannels/{channel.id}/",
-            json=[
-                {
-                    "id": str(channel.id),
-                    "name": channel.name,
-                    "server_id": str(channel.server.id),
-                }
-            ],
+        # write to input collections
+        handle_reactive_put(
+            "serverChannels",
+            channel.id,
+            {
+                "id": str(channel.id),
+                "name": channel.name,
+                "server_id": str(channel.server.id),
+            },
         )
 
         return Response(
@@ -184,10 +181,8 @@ class ServerChannelAPIView(APIView):
     def delete(self, request, channel_id):
         ServerChannel.objects.get(id=channel_id).delete()
 
-        requests.put(
-            f"{REACTIVE_SERVICE_URL}/inputs/serverChannels/{channel_id}/",
-            json=[],
-        )
+        # write to input collections
+        handle_reactive_put("serverChannels", channel_id, None)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -203,27 +198,9 @@ class ServerChannelMessageAPIView(APIView):
                 {"error": "channel_id is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        if "text/event-stream" in request.headers.get("Accept"):
-            resp = requests.post(
-                f"{REACTIVE_SERVICE_URL}/streams",
-                json={
-                    "resource": "serverMessages",
-                    "params": {"channel_id": channel_id},
-                },
-            )
-            uuid = resp.text
-
-            return redirect(f"/streams/{uuid}", code=307)
-
-        else:
-            resp = requests.get(
-                f"{REACTIVE_SERVICE_URL}/resources/serverMessages",
-                params={"channel_id": channel_id},
-            )
-
-            if resp.json():
-                return Response(resp.json()[0][1], status=status.HTTP_200_OK)
-            return Response([], status=status.HTTP_200_OK)
+        return handle_reactive_get(
+            request, "serverMessages", {"channel_id": channel_id}
+        )
 
     def post(self, request):
         channel_id = request.data.get("channel_id")
@@ -236,23 +213,23 @@ class ServerChannelMessageAPIView(APIView):
             )
 
         channel = ServerChannel.objects.get(id=int(channel_id))
-        author = Member.objects.get(id=int(author_id))
+        author_profile = Profile.objects.get(id=int(author_id))
+        author = Member.objects.get(profile=author_profile, server=channel.server)
         message = ServerChannelMessage.objects.create(
             channel=channel, author=author, content=content
         )
 
         # write to input collections
-        requests.put(
-            f"{REACTIVE_SERVICE_URL}/inputs/serverMessages/{message.id}",
-            json=[
-                {
-                    "id": str(message.id),
-                    "channel_id": str(channel.id),
-                    "author_id": str(author.id),
-                    "content": message.content,
-                    "created_at": message.created_at.isoformat(),
-                }
-            ],
+        handle_reactive_put(
+            "serverMessages",
+            message.id,
+            {
+                "id": str(message.id),
+                "channel_id": str(channel.id),
+                "author_id": str(author.id),
+                "content": message.content,
+                "created_at": message.created_at.isoformat(),
+            },
         )
 
         return Response(
