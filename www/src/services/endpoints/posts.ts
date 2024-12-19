@@ -1,4 +1,4 @@
-import socialApi from "../social";
+import socialApi, { handleEventSource } from "../social";
 import { Post } from "../../features/posts/postsSlice";
 import { setPosts } from "../../features/posts/postsSlice";
 
@@ -13,66 +13,29 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         arg,
         { cacheDataLoaded, cacheEntryRemoved, dispatch }
       ) {
-        const postsEventSource = new EventSource(
-          `/api/posts/?profile_id=${arg}&type=posts`
-        );
-
-        // Handle the initial cache data
-        try {
-          const postsCacheData = await cacheDataLoaded;
-          console.log("postsCacheData", postsCacheData);
-          dispatch(
-            setPosts({
-              posts: postsCacheData.data.map((post: Post) => post).reverse(),
-              postType: "posts",
-            })
-          );
-        } catch (error) {
-          console.error("Error loading cache data:", error);
-        }
-
-        // Handle the "init" event
-        postsEventSource.addEventListener("init", (e: MessageEvent<string>) => {
-          const data = JSON.parse(e.data);
-          console.log("Posts init data", data);
-          try {
-            const posts = data[0][1] as PostsResponse[];
-            dispatch(
-              setPosts({
-                posts: posts.reverse(),
-                postType: "posts",
-              })
-            );
-          } catch (error) {
-            console.error("Error updating friend requests:", error);
-          }
-        });
-
-        // Handle the "update" event
-        postsEventSource.addEventListener(
-          "update",
-          (e: MessageEvent<string>) => {
-            const data = JSON.parse(e.data);
-            console.log("Posts update data", data);
-            try {
-              const posts = data[0][1] as PostsResponse[];
-              console.log(`posts`, posts);
+        handleEventSource(
+          `/api/posts/?profile_id=${arg}&type=posts`,
+          {
+            init: (data: PostsResponse[]) => {
               dispatch(
                 setPosts({
-                  posts: posts.reverse(),
+                  posts: data.map((post) => post).reverse(),
                   postType: "posts",
                 })
               );
-            } catch (error) {
-              console.error("Error updating friend requests:", error);
-            }
-          }
+            },
+            update: (data: PostsResponse[]) => {
+              dispatch(
+                setPosts({
+                  posts: data.map((post) => post).reverse(),
+                  postType: "posts",
+                })
+              );
+            },
+          },
+          cacheDataLoaded,
+          cacheEntryRemoved
         );
-
-        // Clean up the EventSource when the cache entry is removed
-        await cacheEntryRemoved;
-        console.log("Closing event source for posts");
-        postsEventSource.close();
       },
     }),
     invalidatePosts: builder.mutation<void, void>({
@@ -88,63 +51,29 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         arg,
         { cacheDataLoaded, cacheEntryRemoved, dispatch }
       ) {
-        const myPostsEventSource = new EventSource(
-          `/api/posts/?profile_id=${arg}&type=myPosts`
-        );
-
-        // Handle the initial cache data
-        try {
-          const myPostsCacheData = await cacheDataLoaded;
-          console.log("myPostsCacheData", myPostsCacheData);
-          dispatch(
-            setPosts({
-              posts: myPostsCacheData.data.map((post: Post) => post).reverse(),
-              postType: "myPosts",
-            })
-          );
-        } catch (error) {
-          console.error("Error loading cache data:", error);
-        }
-
-        // Handle the "init" event
-        myPostsEventSource.addEventListener(
-          "init",
-          (e: MessageEvent<string>) => {
-            const data = JSON.parse(e.data);
-            console.log("My posts init data", data);
-            try {
-              console.log("posts data", data);
-              const posts = data[0][1] as PostsResponse[];
+        handleEventSource(
+          `/api/posts/?profile_id=${arg}&type=myPosts`,
+          {
+            init: (data: PostsResponse[]) => {
               dispatch(
-                setPosts({ posts: posts.reverse(), postType: "myPosts" })
+                setPosts({
+                  posts: data.map((post) => post).reverse(),
+                  postType: "myPosts",
+                })
               );
-            } catch (error) {
-              console.error("Error updating friend requests:", error);
-            }
-          }
-        );
-
-        // Handle the "update" event
-        myPostsEventSource.addEventListener(
-          "update",
-          (e: MessageEvent<string>) => {
-            const data = JSON.parse(e.data);
-            console.log("My posts update data", data);
-            try {
-              const posts = data[0][1] as PostsResponse[];
+            },
+            update: (data: PostsResponse[]) => {
               dispatch(
-                setPosts({ posts: posts.reverse(), postType: "myPosts" })
+                setPosts({
+                  posts: data.map((post) => post).reverse(),
+                  postType: "myPosts",
+                })
               );
-            } catch (error) {
-              console.error("Error updating friend requests:", error);
-            }
-          }
+            },
+          },
+          cacheDataLoaded,
+          cacheEntryRemoved
         );
-
-        // Clean up the EventSource when the cache entry is removed
-        await cacheEntryRemoved;
-        console.log("Closing event source for my posts");
-        myPostsEventSource.close();
       },
     }),
     newPost: builder.mutation<
@@ -187,58 +116,25 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         arg,
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData }
       ) {
-        const commentsEventSource = new EventSource(
-          `/api/posts/comments/?post_id=${arg}`
-        );
-
-        // Handle the initial cache data
-        try {
-          await cacheDataLoaded;
-        } catch (error) {
-          console.error("Error loading cache data for comments:", error);
-        }
-
-        // Handle the "init" event
-        commentsEventSource.addEventListener(
-          "init",
-          (e: MessageEvent<string>) => {
-            const data = JSON.parse(e.data);
-            console.log("Comments init data", data);
-            try {
-              const comments = data[0][1] as Comment[];
-
+        handleEventSource(
+          `/api/posts/comments/?post_id=${arg}`,
+          {
+            init: (data: Comment[]) => {
               updateCachedData((draft) => {
                 draft.length = 0;
-                comments.forEach((comment) => draft.push(comment as any));
+                data.forEach((comment) => draft.push(comment as any));
               });
-            } catch (error) {
-              console.error("Error updating comments:", error);
-            }
-          }
-        );
-
-        // Handle the "update" event
-        commentsEventSource.addEventListener(
-          "update",
-          (e: MessageEvent<string>) => {
-            const data = JSON.parse(e.data);
-            console.log("Comments update data", data);
-            try {
-              const comments = data[0][1] as Comment[];
+            },
+            update: (data: Comment[]) => {
               updateCachedData((draft) => {
                 draft.length = 0;
-                comments.forEach((comment) => draft.push(comment as any));
+                data.forEach((comment) => draft.push(comment as any));
               });
-            } catch (error) {
-              console.error("Error updating comments:", error);
-            }
-          }
+            },
+          },
+          cacheDataLoaded,
+          cacheEntryRemoved
         );
-
-        // Clean up the EventSource when the cache entry is removed
-        await cacheEntryRemoved;
-        console.log("Closing event source for comments");
-        commentsEventSource.close();
       },
     }),
     invalidateComments: builder.mutation<void, void>({

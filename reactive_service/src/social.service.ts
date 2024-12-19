@@ -7,6 +7,7 @@ import type {
   ModifiedServer,
   ServerMessage,
   ModifiedServerMessage,
+  ServerMemberProfile,
 } from "./servers.js";
 import type { ModifiedPost, Post, Comment } from "./posts.js";
 import type {
@@ -20,6 +21,7 @@ import {
   createServersCollections,
   ProfileServersResource,
   ServerMessagesResource,
+  ServerMembersResource,
 } from "./servers.js";
 import {
   FriendsResource,
@@ -67,6 +69,7 @@ export type ResourcesCollection = {
   messages: EagerCollection<string, ModifiedMessage>;
   profileServers: EagerCollection<string, ModifiedServer>;
   serverMessages: EagerCollection<string, ModifiedServerMessage>;
+  serverMembers: EagerCollection<string, ServerMemberProfile>;
 };
 
 export function SocialSkipService(
@@ -106,6 +109,7 @@ export function SocialSkipService(
       serverIndex: ServerMembersIndexResource,
       profileServers: ProfileServersResource,
       serverMessages: ServerMessagesResource,
+      serverMembers: ServerMembersResource,
       // posts
       friendsPosts: FriendsPostsResource,
       authorPosts: AuthorPostsResource,
@@ -117,7 +121,7 @@ export function SocialSkipService(
     createGraph: (inputCollections) => {
       const { friends, friendIndex, modifiedProfiles, oneSideFriendRequests } =
         createUsersCollections(inputCollections);
-      const { serverIndex, profileServers, serverMessages } =
+      const { serverIndex, profileServers, serverMessages, serverMembers } =
         createServersCollections({
           ...inputCollections,
           modifiedProfiles,
@@ -145,6 +149,7 @@ export function SocialSkipService(
         messages,
         profileServers,
         serverMessages,
+        serverMembers,
       };
     },
   };

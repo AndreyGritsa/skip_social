@@ -5,7 +5,9 @@ import { Message } from "../channels/channelsSlice";
 export interface ServerMessage extends Message {}
 
 export interface ServerMember extends User {
-  role?: string;
+  role: string;
+  status: string;
+  friend?: 0 | 1;
 }
 
 export interface ServerChannel {

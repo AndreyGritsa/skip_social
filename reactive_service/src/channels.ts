@@ -130,10 +130,7 @@ export class MessageMapper
   ): Iterable<[string, ModifiedMessage]> {
     console.assert(typeof key === "string");
     const value = values.getUnique();
-
     const author = this.modifiedProfiles.getUnique(value.author_id);
-    console.log(`author: ${author.name}, value: ${value}, key: ${key}`);
-
     return [[value.channel_id, { ...value, author: author.name }]];
   }
 }

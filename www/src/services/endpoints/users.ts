@@ -1,4 +1,4 @@
-import socialApi from "../social";
+import socialApi, { handleEventSource } from "../social";
 import { setUser } from "../../features/user/userSlice";
 import { setFriends } from "../../features/friends/friendsSlice";
 import { Friend } from "../../features/friends/friendsSlice";
@@ -15,8 +15,6 @@ interface UserResponse extends User {
 
 interface FriendResponse extends Friend {}
 
-let friendRequestsEventSource: EventSource | null = null;
-
 export const extendedSocialSlice = socialApi.injectEndpoints({
   endpoints: (builder) => ({
     getUser: builder.query<UserResponse[], string>({
@@ -25,37 +23,19 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         arg,
         { dispatch, cacheDataLoaded, cacheEntryRemoved }
       ) {
-        // Create an EventSource instance
-        const evSource = new EventSource(`/api/users/?profile_id=${arg}`);
-
-        // Handle the initial cache data
-        try {
-          const cacheData = await cacheDataLoaded;
-          dispatch(setUser(cacheData.data[0]));
-          console.log("user cacheData", cacheData);
-        } catch (error) {
-          console.error("Error loading cache data:", error);
-        }
-
-        // Handle the "init" event
-        evSource.addEventListener("init", (e: MessageEvent<string>) => {
-          const data = JSON.parse(e.data);
-          const updatedUser = data[0][1][0] as UserResponse;
-          console.log("user init response", data);
-          dispatch(setUser(updatedUser));
-        });
-
-        // Handle the "update" event
-        evSource.addEventListener("update", (e: MessageEvent<string>) => {
-          const data = JSON.parse(e.data);
-          const updatedUser = data[0][1][0] as UserResponse;
-          console.log("user update response", data);
-          dispatch(setUser(updatedUser));
-        });
-
-        // Clean up the EventSource when the cache entry is removed
-        await cacheEntryRemoved;
-        evSource.close();
+        handleEventSource(
+          `/api/users/?profile_id=${arg}`,
+          {
+            init: (data: UserResponse[]) => {
+              dispatch(setUser(data[0]));
+            },
+            update: (data: UserResponse[]) => {
+              dispatch(setUser(data[0]));
+            },
+          },
+          cacheDataLoaded,
+          cacheEntryRemoved
+        );
       },
     }),
     getFriends: builder.query<FriendResponse[], string>({
@@ -64,42 +44,19 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         arg,
         { dispatch, cacheDataLoaded, cacheEntryRemoved }
       ) {
-        // Create an EventSource instance
-        const evSource = new EventSource(`/api/users/friend?profile_id=${arg}`);
-
-        // Handle the initial cache data
-        try {
-          const cacheData = await cacheDataLoaded;
-          dispatch(setFriends(cacheData.data));
-        } catch (error) {
-          console.error("Error loading cache data:", error);
-        }
-
-        // Handle the "init" event
-        evSource.addEventListener("init", (e: MessageEvent<string>) => {
-          const data = JSON.parse(e.data);
-          try {
-            const updatedFriends = data[0][1] as FriendResponse[];
-            dispatch(setFriends(updatedFriends));
-          } catch (error) {
-            console.error("Error updating friends:", error);
-          }
-        });
-
-        // Handle the "update" event
-        evSource.addEventListener("update", (e: MessageEvent<string>) => {
-          const data = JSON.parse(e.data);
-          try {
-            const updatedFriends = data[0][1] as FriendResponse[];
-            dispatch(setFriends(updatedFriends));
-          } catch (error) {
-            console.error("Error updating friends:", error);
-          }
-        });
-
-        // Clean up the EventSource when the cache entry is removed
-        await cacheEntryRemoved;
-        evSource.close();
+        handleEventSource(
+          `/api/users/friend?profile_id=${arg}`,
+          {
+            init: (data: FriendResponse[]) => {
+              dispatch(setFriends(data));
+            },
+            update: (data: FriendResponse[]) => {
+              dispatch(setFriends(data));
+            },
+          },
+          cacheDataLoaded,
+          cacheEntryRemoved
+        );
       },
     }),
     setStatus: builder.mutation<any, StausRequest>({
@@ -115,63 +72,30 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         arg,
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData }
       ) {
-        // Create an EventSource instance
-        friendRequestsEventSource = new EventSource(
-          `/api/users/friend/request?profile_id=${arg}`
-        );
-
-        // Handle the initial cache data
-        try {
-          await cacheDataLoaded;
-        } catch (error) {
-          console.error("Error loading cache data:", error);
-        }
-
-        // Handle the "init" event
-        friendRequestsEventSource.addEventListener(
-          "init",
-          (e: MessageEvent<string>) => {
-            const data = JSON.parse(e.data);
-            console.log(`Friend requests init:`, data);
-            try {
-              const friendRequests = data[0][1] as UserResponse[];
+        handleEventSource(
+          `/api/users/friend/request?profile_id=${arg}`,
+          {
+            init: (data: UserResponse[]) => {
               updateCachedData((draft) => {
                 draft.length = 0;
-                draft.push(...friendRequests);
+                draft.push(...data);
               });
-            } catch (error) {
-              console.error("Error updating friend requests:", error);
-            }
-          }
-        );
-
-        // Handle the "update" event
-        friendRequestsEventSource.addEventListener(
-          "update",
-          (e: MessageEvent<string>) => {
-            const data = JSON.parse(e.data);
-            console.log(`Friend requests update:`, data);
-            try {
-              const friendRequests = data[0][1] as UserResponse[];
+            },
+            update: (data: UserResponse[]) => {
               updateCachedData((draft) => {
                 draft.length = 0;
-                draft.push(...friendRequests);
+                draft.push(...data);
               });
-            } catch (error) {
-              console.error("Error updating friend requests:", error);
-            }
-          }
+            },
+          },
+          cacheDataLoaded,
+          cacheEntryRemoved
         );
-
-        // Clean up the EventSource when the cache entry is removed
-        await cacheEntryRemoved;
-        friendRequestsEventSource.close();
-        friendRequestsEventSource = null;
       },
     }),
-    closeFriendRequestsEventSource: builder.mutation<void, void>({
+    invalidateFriendsRequests: builder.mutation<void, void>({
+      invalidatesTags: ["FriendRequests"],
       queryFn: () => {
-        if (friendRequestsEventSource) friendRequestsEventSource.close();
         return { data: undefined };
       },
     }),
@@ -206,7 +130,7 @@ export const {
   useGetFriendsQuery,
   useSetStatusMutation,
   useGetFriendRequestsQuery,
-  useCloseFriendRequestsEventSourceMutation,
+  useInvalidateFriendsRequestsMutation,
   usePostFriendRequestMutation,
   useDeleteFriendMutation,
   useGetAllUsersQuery,

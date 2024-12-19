@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import TagIcon from "@mui/icons-material/Tag";
 import ServerMenegmentDialog from "./ServerMenegmentDialog";
+import ServerMembersDialog from "./ServerMembersDialog";
 import { useEffect, useState } from "react";
 import { Server } from "../../features/servers/serversSlice";
 
@@ -53,9 +54,12 @@ const RoomsContainer = () => {
     <Box sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", p: 2 }}>
         <Typography variant="h6">{server?.name}</Typography>
-        {server?.owner_id === String(user.id) && ( // TODO: update reactive service, user id shoud be a string
-          <ServerMenegmentDialog server={server} />
-        )}
+        <Box>
+          {server?.id && <ServerMembersDialog serverId={server.id} />}
+          {server?.owner_id === String(user.id) && ( // TODO: update reactive service, user id shoud be a string
+            <ServerMenegmentDialog server={server} />
+          )}
+        </Box>
       </Box>
       <Divider />
       <List>
