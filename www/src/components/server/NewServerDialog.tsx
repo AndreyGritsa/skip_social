@@ -85,7 +85,9 @@ const NewServerDialog = () => {
             <Grid size={{ sm: 8 }}>
               <TextField
                 value={newServer}
-                onChange={(e) => setNewServer(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.length < 8) setNewServer(e.target.value);
+                }}
                 fullWidth
                 label="Create new server"
               />

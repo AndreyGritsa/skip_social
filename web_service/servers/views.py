@@ -68,6 +68,17 @@ class ServerAPIView(APIView):
 
         return Response(ServerSerializer(server).data, status=status.HTTP_201_CREATED)
 
+    def delete(self, request, server_id):
+        server = Server.objects.get(id=int(server_id))
+
+        # write to input collections
+        resp = handle_reactive_put("servers", server.id, None)
+        print(resp.text)
+
+        server.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class MemberAPIView(APIView):
     content_negotiation_class = IgnoreClientContentNegotiation
@@ -119,6 +130,41 @@ class MemberAPIView(APIView):
         )
 
         return Response(MemberSerializer(member).data, status=status.HTTP_201_CREATED)
+
+    def patch(self, request, profile_id, server_id):
+        member = Member.objects.get(profile_id=profile_id, server_id=server_id)
+        new_role = request.data.get("role")
+        if not new_role:
+            return Response("role is required", status=status.HTTP_400_BAD_REQUEST)
+
+        member.role = new_role
+        member.save()
+
+        # write to input collections
+        handle_reactive_put(
+            "serverMembers",
+            member.id,
+            {
+                "id": str(member.id),
+                "profile_id": str(member.profile.id),
+                "role": member.role,
+                "server_id": str(member.server.id),
+            },
+        )
+
+        return Response(MemberSerializer(member).data, status=status.HTTP_200_OK)
+
+    def delete(self, request, profile_id, server_id):
+        profile = Profile.objects.get(id=int(profile_id))
+        server = Server.objects.get(id=int(server_id))
+        member = Member.objects.get(profile=profile, server=server)
+
+        # write to input collections
+        handle_reactive_put("serverMembers", member.id, None)
+
+        member.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ServerChannelAPIView(APIView):

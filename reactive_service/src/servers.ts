@@ -78,9 +78,14 @@ class ProfileServerMapper
   ): Iterable<[string, ModifiedServer]> {
     console.assert(typeof key === "string");
     const value = values.getUnique();
-    const server = this.servers.getUnique(value.server_id);
-    const channels = this.serverChannels.getArray(value.server_id);
-    return [[value.profile_id, { ...server, channels }]];
+    const serverArray = this.servers.getArray(value.server_id);
+    if (serverArray.length === 0) {
+      return [];
+    } else {
+      const server = serverArray[0]!;
+      const channels = this.serverChannels.getArray(value.server_id);
+      return [[value.profile_id, { ...server, channels }]];
+    }
   }
 }
 

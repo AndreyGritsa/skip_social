@@ -16,19 +16,21 @@ import {
   useGetServerMembersQuery,
   useInvalidateServerMembersMutation,
 } from "../../services/endpoints/servers";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useAppSelector } from "../../app/hooks";
 import { skipToken } from "@reduxjs/toolkit/query";
+import MemberOptionsPopper from "./MemberOptionsPopper";
+import { ServerMember } from "../../features/servers/serversSlice";
 
 const MemberRoleColorMap = {
   owner: "secondary",
-  admin: "primary",
+  admin: "warning",
   newbie: "success",
 };
 
 const ServerMembersDialog = ({ serverId }: { serverId: string }) => {
   const [open, setOpen] = useState<boolean>(false);
   const user = useAppSelector((state) => state.user);
+  const [userMember, setUserMember] = useState<ServerMember>();
   const { data, refetch } = useGetServerMembersQuery(
     user.id
       ? {
@@ -38,6 +40,12 @@ const ServerMembersDialog = ({ serverId }: { serverId: string }) => {
       : skipToken
   );
   const [invalidateServerMembers] = useInvalidateServerMembersMutation();
+
+  useEffect(() => {
+    if (data) {
+      setUserMember(data.find((member) => member.id === user.id));
+    }
+  }, [data]);
 
   useEffect(() => {
     return () => {
@@ -71,34 +79,36 @@ const ServerMembersDialog = ({ serverId }: { serverId: string }) => {
       >
         <DialogContent>
           <Grid container spacing={2}>
-            {data
-              ?.filter((member) => member.id === user.id)
-              .map((you) => (
-                <Grid key={you.id} size={12}>
-                  <Paper
-                    sx={{
-                      width: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                      p: 1,
-                    }}
-                  >
-                    <CustomAvatar src="/" alt={you.name} status={you.status} />
-                    <Typography>{you.name}</Typography>
-                    <Chip
-                      label={you.role}
-                      color={
-                        MemberRoleColorMap[
-                          you.role as keyof typeof MemberRoleColorMap
-                        ] as any
-                      }
-                      size="small"
-                      variant="outlined"
-                    />
-                  </Paper>
-                </Grid>
-              ))}
+            {userMember && (
+              <Grid key={userMember.id} size={12}>
+                <Paper
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    p: 1,
+                  }}
+                >
+                  <CustomAvatar
+                    src="/"
+                    alt={userMember.name}
+                    status={userMember.status}
+                  />
+                  <Typography>{userMember.name}</Typography>
+                  <Chip
+                    label={userMember.role}
+                    color={
+                      MemberRoleColorMap[
+                        userMember.role as keyof typeof MemberRoleColorMap
+                      ] as any
+                    }
+                    size="small"
+                    variant="outlined"
+                  />
+                </Paper>
+              </Grid>
+            )}
             {data
               ?.filter((memeber) => memeber.id !== user.id)
               .map((member) => (
@@ -136,10 +146,12 @@ const ServerMembersDialog = ({ serverId }: { serverId: string }) => {
                     size={6}
                     sx={{ justifyContent: "center", display: "flex", gap: 2 }}
                   >
-                    {member.id !== user.id && (
-                      <IconButton>
-                        <MoreVertIcon />
-                      </IconButton>
+                    {userMember && (
+                      <MemberOptionsPopper
+                        member={member}
+                        userMember={userMember}
+                        serverId={serverId}
+                      />
                     )}
                   </Grid>
                 </Fragment>
