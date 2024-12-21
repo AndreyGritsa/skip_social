@@ -12,6 +12,7 @@ import {
   List,
   Box,
   InputAdornment,
+  Typography,
 } from "@mui/material";
 import { Fragment, useState } from "react";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -21,11 +22,13 @@ import {
   useNewServerChannelMutation,
   useDeleteServerChannelMutation,
   useUpdateServerChannelMutation,
+  useDeleteServerMutation,
 } from "../../services/endpoints/servers";
 import TagIcon from "@mui/icons-material/Tag";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
+import { useNavigate } from "react-router-dom";
 
 const ServerMenegmentDialog = ({ server }: { server: Server }) => {
   const [open, setOpen] = useState<boolean>(false);
@@ -35,6 +38,8 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
   const [newServerChannel] = useNewServerChannelMutation();
   const [deleteServerChannel] = useDeleteServerChannelMutation();
   const [updateServerChannel] = useUpdateServerChannelMutation();
+  const [deleteServer] = useDeleteServerMutation();
+  const navigate = useNavigate();
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -76,6 +81,14 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
     setEditChannelId(channelId);
   };
 
+  const handleDeleteServer = () => {
+    deleteServer({ server_id: server.id })
+      .unwrap()
+      .catch((error) => console.error("error", error));
+    setOpen(false);
+    navigate("/");
+  };
+
   return (
     <Fragment>
       <IconButton onClick={handleClickOpen}>
@@ -93,7 +106,10 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
             <Grid size={8}>
               <TextField
                 value={channelName}
-                onChange={(event) => setChannelName(event.target.value)}
+                onChange={(event) => {
+                  if (event.target.value.length < 10)
+                    setChannelName(event.target.value);
+                }}
                 label="Add new channel"
                 fullWidth
               />
@@ -105,6 +121,16 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
                 fullWidth
               >
                 Add
+              </Button>
+            </Grid>
+            <Grid size={8}>
+              <Typography sx={{ color: "error.main" }}>
+                Delete server
+              </Typography>
+            </Grid>
+            <Grid size={4} sx={{ justifyContent: "center", display: "flex" }}>
+              <Button onClick={handleDeleteServer} color="error">
+                Delete
               </Button>
             </Grid>
           </Grid>
@@ -144,9 +170,10 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
                       {editChannelId === channel.id ? (
                         <TextField
                           value={editChannel}
-                          onChange={(event) =>
-                            setEditChannel(event.target.value)
-                          }
+                          onChange={(event) => {
+                            if (event.target.value.length < 10)
+                              setEditChannel(event.target.value);
+                          }}
                           slotProps={{
                             input: {
                               endAdornment: (

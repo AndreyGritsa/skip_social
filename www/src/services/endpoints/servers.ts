@@ -186,6 +186,31 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
       },
       invalidatesTags: ["ServerMembers"],
     }),
+    leaveServer: builder.mutation<
+      string,
+      { profile_id: string; server_id: string }
+    >({
+      query: (body) => ({
+        url: `/servers/members/${body.profile_id}/${body.server_id}/`,
+        method: "DELETE",
+      }),
+    }),
+    deleteServer: builder.mutation<string, { server_id: string }>({
+      query: (body) => ({
+        url: `/servers/${body.server_id}/`,
+        method: "DELETE",
+      }),
+    }),
+    updateMemberRole: builder.mutation<
+      string,
+      { role: string; server_id: string; profile_id: string }
+    >({
+      query: (body) => ({
+        url: `/servers/members/${body.profile_id}/${body.server_id}/`,
+        method: "PATCH",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -201,4 +226,7 @@ export const {
   usePostServerMessageMutation,
   useGetServerMembersQuery,
   useInvalidateServerMembersMutation,
+  useLeaveServerMutation,
+  useDeleteServerMutation,
+  useUpdateMemberRoleMutation,
 } = extendedSocialSlice;

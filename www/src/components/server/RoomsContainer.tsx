@@ -7,6 +7,7 @@ import {
   ListItemText,
   Divider,
   Typography,
+  IconButton,
 } from "@mui/material/";
 import { useAppSelector, useAppDispatch } from "../../app/hooks";
 import {
@@ -19,6 +20,8 @@ import ServerMenegmentDialog from "./ServerMenegmentDialog";
 import ServerMembersDialog from "./ServerMembersDialog";
 import { useEffect, useState } from "react";
 import { Server } from "../../features/servers/serversSlice";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { useLeaveServerMutation } from "../../services/endpoints/servers";
 
 const RoomsContainer = () => {
   const servers = useAppSelector((state) => state.servers.servers);
@@ -28,6 +31,7 @@ const RoomsContainer = () => {
   const user = useAppSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const [leaveServer] = useLeaveServerMutation();
 
   useEffect(() => {
     setServer(servers.find((server) => server.id === activeServer));
@@ -50,6 +54,16 @@ const RoomsContainer = () => {
     navigate(`/server/${activeServer}/${channelId}`);
   };
 
+  const handleLeaveServer = () => {
+    leaveServer({ server_id: activeServer, profile_id: user.id })
+      .unwrap()
+      .then(() => {
+        dispatch(setActiveServer("0"));
+        navigate("/");
+      })
+      .catch((error) => console.error("error", error));
+  };
+
   return (
     <Box sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", p: 2 }}>
@@ -58,6 +72,11 @@ const RoomsContainer = () => {
           {server?.id && <ServerMembersDialog serverId={server.id} />}
           {server?.owner_id === String(user.id) && ( // TODO: update reactive service, user id shoud be a string
             <ServerMenegmentDialog server={server} />
+          )}
+          {server?.owner_id !== String(user.id) && (
+            <IconButton onClick={handleLeaveServer}>
+              <LogoutIcon />
+            </IconButton>
           )}
         </Box>
       </Box>
