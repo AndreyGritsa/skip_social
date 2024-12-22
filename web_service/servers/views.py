@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Member, Server, ServerChannel, ServerChannelMessage
+from .models import Member, Server, ServerChannel, ServerChannelMessage, ALL_MEMBER_ROLES, ServerChannelAllowedRole
 from users.models import Profile
 from .serializers import (
     MemberSerializer,
@@ -193,6 +193,17 @@ class ServerChannelAPIView(APIView):
                 "server_id": str(server.id),
             },
         )
+        for role in ALL_MEMBER_ROLES:
+            role_obj = ServerChannelAllowedRole.objects.get(channel=channel, role=role)
+            handle_reactive_put(
+                "serverChannelAllowedRoles",
+                role_obj.id,
+                {
+                    "id": str(role_obj.id),
+                    "channel_id": str(channel.id),
+                    "role": role,
+                },
+            )
 
         return Response(
             ServerChannelSerializer(channel).data, status=status.HTTP_201_CREATED

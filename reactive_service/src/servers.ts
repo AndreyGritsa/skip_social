@@ -41,11 +41,19 @@ export type ServerMemberProfile = ModifiedProfile & {
   friendRequested?: boolean;
 };
 
+export type ServerChannelAllowedRole = {
+  id: string;
+  channel_id: string;
+  role: string;
+};
+
 type OutputCollection = {
   serverIndex: EagerCollection<string, boolean>;
   profileServers: EagerCollection<string, ModifiedServer>;
   serverMessages: EagerCollection<string, ModifiedServerMessage>;
   serverMembers: EagerCollection<string, ServerMemberProfile>;
+  serverChannelsAllowedIndexRoles: EagerCollection<string, boolean>;
+  serverProfileMember: EagerCollection<string, ServerMemberProfile>;
 };
 
 type ServersInputCollection = InputCollection & {
@@ -136,6 +144,24 @@ class ServerMemberMapper
   }
 }
 
+class ServerProfileMemberMapper
+  implements Mapper<string, ServerMember, string, ServerMemberProfile>
+{
+  constructor(
+    private modifiedProfiles: EagerCollection<string, ModifiedProfile>
+  ) {}
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<ServerMember>
+  ): Iterable<[string, ServerMemberProfile]> {
+    console.assert(typeof key === "string");
+    const member = values.getUnique();
+    const profile = this.modifiedProfiles.getUnique(member.profile_id);
+    const newKey = `${member.server_id}/${member.profile_id}`;
+    return [[newKey, { ...profile, role: member.role }]];
+  }
+}
+
 class ServerMemberIsFriendMapper
   implements Mapper<string, ServerMemberProfile, string, ServerMemberProfile>
 {
@@ -201,6 +227,55 @@ class ServerMemberIsFrienRequestedMapper
   }
 }
 
+class ServerChannelAllowedRoleIndexMapper
+  implements Mapper<string, ServerChannelAllowedRole, string, boolean>
+{
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<ServerChannelAllowedRole>
+  ): Iterable<[string, boolean]> {
+    console.assert(typeof key === "string");
+    const value = values.getUnique();
+    return [[`${value.channel_id}/${value.role}`, true]];
+  }
+}
+
+class ProfileServersResourceAllowedChannelsMapper
+  implements Mapper<string, ModifiedServer, string, ModifiedServer>
+{
+  constructor(
+    private serverChannelAllowedRoles: EagerCollection<string, boolean>,
+    private profileId: string,
+    private serverProfileMembers: EagerCollection<string, ServerMemberProfile>
+  ) {}
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<ModifiedServer>
+  ): Iterable<[string, ModifiedServer]> {
+    const servers = values.toArray();
+    const result: [string, ModifiedServer][] = [];
+    for (const server of servers) {
+      const allowedChannels: ServerChannel[] = [];
+      const serverProfileMember = this.serverProfileMembers.getUnique(
+        `${server.id}/${this.profileId}`
+      );
+      console.log(
+        `Server channels: ${server.channels} for ${serverProfileMember.role}`
+      );
+      const channels = server.channels;
+      // TODO: ask Julien, why can't use .filter?
+      for (const channel of channels) {
+        const channelKey = `${channel.id}/${serverProfileMember.role}`;
+        if (this.serverChannelAllowedRoles.getArray(channelKey).length === 1) {
+          allowedChannels.push(channel);
+        }
+      }
+      result.push([key, { ...server, channels: allowedChannels }]);
+    }
+    return result;
+  }
+}
+
 // resources
 
 export class ServerMembersIndexResource implements Resource {
@@ -232,7 +307,14 @@ export class ProfileServersResource implements Resource {
       throw new Error("profile_id parameter is required");
     }
 
-    return collections.profileServers.slice([profile_id, profile_id]);
+    return collections.profileServers
+      .slice([profile_id, profile_id])
+      .map(
+        ProfileServersResourceAllowedChannelsMapper,
+        collections.serverChannelsAllowedIndexRoles,
+        profile_id,
+        collections.serverProfileMember
+      );
   }
 }
 
@@ -279,6 +361,14 @@ export class ServerMembersResource implements Resource {
 export const createServersCollections = (
   inputCollections: ServersInputCollection
 ): OutputCollection => {
+  const serverChannelsAllowedIndexRoles =
+    inputCollections.serverChannelAllowedRoles.map(
+      ServerChannelAllowedRoleIndexMapper
+    );
+  const serverProfileMember = inputCollections.serverMembers.map(
+    ServerProfileMemberMapper,
+    inputCollections.modifiedProfiles
+  );
   const serverChannels =
     inputCollections.serverChannels.map(ServerChannelMapper);
   const serverIndex = inputCollections.serverMembers.map(
@@ -307,5 +397,7 @@ export const createServersCollections = (
     profileServers,
     serverMessages,
     serverMembers,
+    serverChannelsAllowedIndexRoles,
+    serverProfileMember,
   };
 };
