@@ -122,6 +122,15 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
     getAllUsers: builder.query<UserResponse[], void>({
       query: () => `users/users/`,
     }),
+    declineFriendRequest: builder.mutation<
+      string,
+      { profile_id: string; friend_id: string }
+    >({
+      query: (data) => ({
+        url: `users/friend/request/${data.profile_id}/${data.friend_id}/`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
@@ -134,4 +143,5 @@ export const {
   usePostFriendRequestMutation,
   useDeleteFriendMutation,
   useGetAllUsersQuery,
+  useDeclineFriendRequestMutation,
 } = extendedSocialSlice;

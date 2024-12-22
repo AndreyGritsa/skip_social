@@ -20,6 +20,7 @@ import { ServerMember } from "../../features/servers/serversSlice";
 import { SelectChangeEvent } from "@mui/material/Select";
 import { useUpdateMemberRoleMutation } from "../../services/endpoints/servers";
 import useChannelNavigate from "../../hooks/useChannelNavigate";
+import { usePostFriendRequestMutation } from "../../services/endpoints/users";
 
 const MemberOptionsPopper = ({
   member,
@@ -36,6 +37,7 @@ const MemberOptionsPopper = ({
   const [settingRole, setSettingRole] = useState<boolean>(false);
   const [updateMemberRole] = useUpdateMemberRoleMutation();
   const channelNavigation = useChannelNavigate();
+  const [postFriendRequest] = usePostFriendRequestMutation();
 
   useEffect(() => {
     setRole(member.role);
@@ -70,6 +72,12 @@ const MemberOptionsPopper = ({
     });
   };
 
+  const handleFriendRequest = () => {
+    postFriendRequest({ from_profile: userMember.id, to_profile: member.name })
+      .unwrap()
+      .catch((error) => console.error(error));
+  };
+
   return (
     <Box sx={{ ml: "auto", display: "flex", direction: "column" }}>
       <Popper
@@ -90,9 +98,9 @@ const MemberOptionsPopper = ({
             >
               {!settingRole ? (
                 <List>
-                  {member.friend === 0 && (
+                  {member.friend === 0 && member.friendRequested === 0 && (
                     <ListItem disablePadding>
-                      <ListItemButton>
+                      <ListItemButton onClick={handleFriendRequest}>
                         <ListItemText primary="Send friend request" />
                       </ListItemButton>
                     </ListItem>

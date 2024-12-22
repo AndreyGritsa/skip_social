@@ -6,7 +6,7 @@ import type {
 } from "skip-wasm";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 
-// TYPES
+// Types
 
 export type User = {
   id: string;
@@ -31,7 +31,9 @@ type OutputCollection = {
   friends: EagerCollection<string, ModifiedProfile>;
   friendIndex: EagerCollection<string, boolean>;
   modifiedProfiles: EagerCollection<string, ModifiedProfile>;
-  oneSideFriendRequests: EagerCollection<string, ModifiedProfile>;
+  friendRequestsTo: EagerCollection<string, ModifiedProfile>;
+  friendRequestsFrom: EagerCollection<string, ModifiedProfile>;
+  friendRequestsFromTo: EagerCollection<string, FriendRequest>;
 };
 
 // Mappers
@@ -157,7 +159,7 @@ class ModifiedProfileMapper
   }
 }
 
-class OneSideFriendRequestMapper
+class FriendRequestToMapper
   implements Mapper<string, FriendRequest, string, ModifiedProfile>
 {
   constructor(
@@ -179,6 +181,45 @@ class OneSideFriendRequestMapper
   }
 }
 
+class FriendRequestFromMapper
+  implements Mapper<string, FriendRequest, string, ModifiedProfile>
+{
+  constructor(
+    private modifiedProfiles: EagerCollection<string, ModifiedProfile>
+  ) {}
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<FriendRequest>
+  ): Iterable<[string, ModifiedProfile]> {
+    console.assert(typeof key === "string");
+    const array = values.toArray();
+    if (array.length === 1) {
+      const profile = this.modifiedProfiles.getUnique(array[0]!.to_profile_id);
+      return [[array[0]!.from_profile_id, profile]];
+    }
+    return [];
+  }
+}
+
+class FriendRequestFromToMapper
+  implements Mapper<string, FriendRequest, string, FriendRequest>
+{
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<FriendRequest>
+  ): Iterable<[string, FriendRequest]> {
+    console.assert(typeof key === "string");
+    const array = values.toArray();
+    if (array.length === 1) {
+      const friendRequest = array[0]!;
+      const newKey = `${friendRequest.from_profile_id}/${friendRequest.to_profile_id}`;
+      return [[newKey, friendRequest]];
+    } else {
+      return [];
+    }
+  }
+}
+
 // Resources
 
 export class FriendsResource implements Resource {
@@ -195,7 +236,7 @@ export class FriendsResource implements Resource {
   }
 }
 
-export class OneSideFriendRequestResource implements Resource {
+export class FriendRequestsToResource implements Resource {
   constructor(private params: Record<string, string>) {}
   instantiate(
     collections: ResourcesCollection
@@ -205,7 +246,21 @@ export class OneSideFriendRequestResource implements Resource {
       throw new Error("profile_id must be provided");
     }
 
-    return collections.oneSideFriendRequests.slice([id, id]);
+    return collections.friendRequestsTo.slice([id, id]);
+  }
+}
+
+export class FriendRequestsFromResource implements Resource {
+  constructor(private params: Record<string, string>) {}
+  instantiate(
+    collections: ResourcesCollection
+  ): EagerCollection<string, ModifiedProfile> {
+    const id = this.params["profile_id"];
+    if (!id) {
+      throw new Error("profile_id must be provided");
+    }
+
+    return collections.friendRequestsFrom.slice([id, id]);
   }
 }
 
@@ -266,15 +321,22 @@ export const createUsersCollections = (
   const friends = friendRequests
     .map(FriendRequestIntersectPhase1Mapper)
     .map(FriendRequestIntersectPhase2Mapper, modifiedProfiles);
-  const oneSideFriendRequests = friendRequests.map(
-    OneSideFriendRequestMapper,
+  const friendRequestsTo = friendRequests.map(
+    FriendRequestToMapper,
     modifiedProfiles
   );
+  const friendRequestsFrom = friendRequests.map(
+    FriendRequestFromMapper,
+    modifiedProfiles
+  );
+  const friendRequestsFromTo = friendRequests.map(FriendRequestFromToMapper);
 
   return {
     friends,
     friendIndex,
     modifiedProfiles,
-    oneSideFriendRequests,
+    friendRequestsTo,
+    friendRequestsFrom,
+    friendRequestsFromTo,
   };
 };

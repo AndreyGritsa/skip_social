@@ -13,6 +13,7 @@ import {
   useGetFriendRequestsQuery,
   usePostFriendRequestMutation,
   useInvalidateFriendsRequestsMutation,
+  useDeclineFriendRequestMutation,
 } from "../../services/endpoints/users";
 import { useAppSelector } from "../../app/hooks";
 import { useEffect } from "react";
@@ -25,6 +26,7 @@ const FriendRequests = () => {
   );
   const [triggerPostFriendRequest] = usePostFriendRequestMutation();
   const [invalidateFriendRequests] = useInvalidateFriendsRequestsMutation();
+  const [triggerDeclineFriendRequest] = useDeclineFriendRequestMutation();
 
   useEffect(() => {
     return () => {
@@ -45,7 +47,13 @@ const FriendRequests = () => {
       );
   };
 
-  const handleDeclineRequest = (name: string) => {};
+  const handleDeclineRequest = (id: string) => {
+    triggerDeclineFriendRequest({ profile_id: id, friend_id: user.id })
+      .unwrap()
+      .catch((error) =>
+        console.error("Error declining friend request:", error)
+      );
+  };
 
   return (
     <List sx={{ maxWidth: 500 }}>
@@ -65,7 +73,7 @@ const FriendRequests = () => {
                 edge="end"
                 aria-label="decline"
                 color="error"
-                onClick={() => handleDeclineRequest(request.name)}
+                onClick={() => handleDeclineRequest(request.id)}
               >
                 <CloseIcon />
               </IconButton>
