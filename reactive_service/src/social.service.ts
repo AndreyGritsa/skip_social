@@ -8,6 +8,7 @@ import type {
   ServerMessage,
   ModifiedServerMessage,
   ServerMemberProfile,
+  ServerChannelAllowedRole,
 } from "./servers.js";
 import type { ModifiedPost, Post, Comment } from "./posts.js";
 import type {
@@ -55,6 +56,7 @@ export type InputCollection = {
   servers: EagerCollection<string, Server>;
   serverChannels: EagerCollection<string, ServerChannel>;
   serverMessages: EagerCollection<string, ServerMessage>;
+  serverChannelAllowedRoles: EagerCollection<string, ServerChannelAllowedRole>;
 };
 
 export type ResourcesCollection = {
@@ -73,6 +75,8 @@ export type ResourcesCollection = {
   profileServers: EagerCollection<string, ModifiedServer>;
   serverMessages: EagerCollection<string, ModifiedServerMessage>;
   serverMembers: EagerCollection<string, ServerMemberProfile>;
+  serverChannelsAllowedIndexRoles: EagerCollection<string, boolean>;
+  serverProfileMember: EagerCollection<string, ServerMemberProfile>;
 };
 
 export function SocialSkipService(
@@ -86,7 +90,8 @@ export function SocialSkipService(
   messages: Entry<string, Message>[],
   servers: Entry<string, Server>[],
   serverChannels: Entry<string, ServerChannel>[],
-  serverMessages: Entry<string, ServerMessage>[]
+  serverMessages: Entry<string, ServerMessage>[],
+  serverChannelAllowedRoles: Entry<string, ServerChannelAllowedRole>[]
 ): SkipService<InputCollection, ResourcesCollection> {
   return {
     initialData: {
@@ -101,6 +106,7 @@ export function SocialSkipService(
       servers,
       serverChannels,
       serverMessages,
+      serverChannelAllowedRoles,
     },
     resources: {
       // users
@@ -131,11 +137,17 @@ export function SocialSkipService(
         friendRequestsFrom,
         friendRequestsFromTo,
       } = createUsersCollections(inputCollections);
-      const { serverIndex, profileServers, serverMessages, serverMembers } =
-        createServersCollections({
-          ...inputCollections,
-          modifiedProfiles,
-        });
+      const {
+        serverIndex,
+        profileServers,
+        serverMessages,
+        serverMembers,
+        serverChannelsAllowedIndexRoles,
+        serverProfileMember,
+      } = createServersCollections({
+        ...inputCollections,
+        modifiedProfiles,
+      });
       const { friendsPosts, authorPosts, comments } = createPostsCollections({
         friends,
         ...inputCollections,
@@ -162,6 +174,8 @@ export function SocialSkipService(
         profileServers,
         serverMessages,
         serverMembers,
+        serverChannelsAllowedIndexRoles,
+        serverProfileMember,
       };
     },
   };

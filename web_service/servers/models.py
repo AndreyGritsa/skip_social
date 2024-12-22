@@ -1,6 +1,8 @@
 from django.db import models
 from users.models import Profile
 
+ALL_MEMBER_ROLES = ["owner", "admin", "newbie"]
+
 
 class Server(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -13,10 +15,12 @@ class Server(models.Model):
 
 
 class Member(models.Model):
+    ROLE_CHOICES = [(role, role) for role in ALL_MEMBER_ROLES]
+    
     profile = models.ForeignKey(
         Profile, on_delete=models.CASCADE, related_name="servers"
     )
-    role = models.CharField(max_length=255)
+    role = models.CharField(max_length=255, choices=ROLE_CHOICES)
     server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name="members")
 
     class Meta:
@@ -48,3 +52,10 @@ class ServerChannelMessage(models.Model):
 
     def __str__(self):
         return self.content
+    
+class ServerChannelAllowedRole(models.Model):
+    channel = models.ForeignKey(ServerChannel, on_delete=models.CASCADE, related_name="allowed_roles")
+    role = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.role} - {self.channel.name}"
