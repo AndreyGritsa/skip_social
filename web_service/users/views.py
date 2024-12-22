@@ -131,7 +131,7 @@ class FriendRequestAPIView(APIView):
             )
 
         return handle_reactive_get(
-            request, "oneSideFriendRequests", {"profile_id": profile_id}
+            request, "friendRequestsTo", {"profile_id": profile_id}
         )
 
     def post(self, request):
@@ -185,6 +185,28 @@ class FriendRequestAPIView(APIView):
         return Response(
             {"error": "Profile ID or username not provided"},
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    def delete(self, request, profile_id, friend_id):
+        profile = Profile.objects.get(id=int(profile_id))
+        friend = Profile.objects.get(id=int(friend_id))
+        if FriendRequest.objects.filter(
+            from_profile=profile, to_profile=friend
+        ).exists():
+            friend_request = FriendRequest.objects.get(from_profile=profile, to_profile=friend)
+            
+            # Write to reactive input collections
+            handle_reactive_put(
+                "friendRequests",
+                friend_request.id,
+                None,
+            )
+            
+            friend_request.delete()
+            
+            return Response(status=status.HTTP_200_OK)
+        return Response(
+            {"error": "Friend request not found"}, status=status.HTTP_404_NOT_FOUND
         )
 
 

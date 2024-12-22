@@ -7,7 +7,7 @@ import type {
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 import type { Message } from "./channels.js";
 import { MessageMapper } from "./channels.js";
-import type { ModifiedProfile } from "./users.js";
+import type { FriendRequest, ModifiedProfile } from "./users.js";
 
 // types
 export type Server = {
@@ -38,6 +38,7 @@ export type ModifiedServerMessage = ServerMessage & { author: string };
 export type ServerMemberProfile = ModifiedProfile & {
   role: string;
   friend?: boolean;
+  friendRequested?: boolean;
 };
 
 type OutputCollection = {
@@ -170,6 +171,36 @@ class ServerMemberIsFriendMapper
   }
 }
 
+class ServerMemberIsFrienRequestedMapper
+  implements Mapper<string, ServerMemberProfile, string, ServerMemberProfile>
+{
+  constructor(
+    private friendRequestsFromTo: EagerCollection<string, FriendRequest>,
+    private profileId: string
+  ) {}
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<ServerMemberProfile>
+  ): Iterable<[string, ServerMemberProfile]> {
+    const membersArray = values.toArray();
+    const result: [string, ServerMemberProfile][] = [];
+    for (const member of membersArray) {
+      if (member.friend) {
+        result.push([key, { ...member, friendRequested: false }]);
+        continue;
+      }
+      const friendRequested = this.friendRequestsFromTo.getArray(
+        `${this.profileId}/${member.id}`
+      ).length
+        ? true
+        : false;
+      result.push([key, { ...member, friendRequested }]);
+    }
+
+    return result;
+  }
+}
+
 // resources
 
 export class ServerMembersIndexResource implements Resource {
@@ -234,7 +265,12 @@ export class ServerMembersResource implements Resource {
 
     return collections.serverMembers
       .slice([server_id, server_id])
-      .map(ServerMemberIsFriendMapper, collections.friendIndex, profile_id);
+      .map(ServerMemberIsFriendMapper, collections.friendIndex, profile_id)
+      .map(
+        ServerMemberIsFrienRequestedMapper,
+        collections.friendRequestsFromTo,
+        profile_id
+      );
   }
 }
 

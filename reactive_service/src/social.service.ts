@@ -26,7 +26,8 @@ import {
 import {
   FriendsResource,
   createUsersCollections,
-  OneSideFriendRequestResource,
+  FriendRequestsToResource,
+  FriendRequestsFromResource,
   ModifiedProfileResource,
   FriendsIndexResource,
 } from "./users.js";
@@ -61,7 +62,9 @@ export type ResourcesCollection = {
   friendIndex: EagerCollection<string, boolean>;
   serverIndex: EagerCollection<string, boolean>;
   modifiedProfiles: EagerCollection<string, ModifiedProfile>;
-  oneSideFriendRequests: EagerCollection<string, ModifiedProfile>;
+  friendRequestsTo: EagerCollection<string, ModifiedProfile>;
+  friendRequestsFrom: EagerCollection<string, ModifiedProfile>;
+  friendRequestsFromTo: EagerCollection<string, FriendRequest>;
   friendsPosts: EagerCollection<string, ModifiedPost>;
   authorPosts: EagerCollection<string, Post>;
   comments: EagerCollection<string, Comment>;
@@ -104,7 +107,8 @@ export function SocialSkipService(
       friends: FriendsResource,
       friendIndex: FriendsIndexResource,
       modifiedProfiles: ModifiedProfileResource,
-      oneSideFriendRequests: OneSideFriendRequestResource,
+      friendRequestsTo: FriendRequestsToResource,
+      friendRequestsFrom: FriendRequestsFromResource,
       // servers
       serverIndex: ServerMembersIndexResource,
       profileServers: ProfileServersResource,
@@ -119,8 +123,14 @@ export function SocialSkipService(
       messages: MessageResource,
     },
     createGraph: (inputCollections) => {
-      const { friends, friendIndex, modifiedProfiles, oneSideFriendRequests } =
-        createUsersCollections(inputCollections);
+      const {
+        friends,
+        friendIndex,
+        modifiedProfiles,
+        friendRequestsTo,
+        friendRequestsFrom,
+        friendRequestsFromTo,
+      } = createUsersCollections(inputCollections);
       const { serverIndex, profileServers, serverMessages, serverMembers } =
         createServersCollections({
           ...inputCollections,
@@ -141,7 +151,9 @@ export function SocialSkipService(
         friendIndex,
         serverIndex,
         modifiedProfiles,
-        oneSideFriendRequests,
+        friendRequestsTo,
+        friendRequestsFrom,
+        friendRequestsFromTo,
         friendsPosts,
         authorPosts,
         comments,

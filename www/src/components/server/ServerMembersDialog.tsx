@@ -141,6 +141,14 @@ const ServerMembersDialog = ({ serverId }: { serverId: string }) => {
                         variant="outlined"
                       />
                     )}
+                    {member.friendRequested === 1 && (
+                      <Chip
+                        label="Friend requested"
+                        color="info"
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
                   </Grid>
                   <Grid
                     size={6}

@@ -8,6 +8,7 @@ export interface ServerMember extends User {
   role: string;
   status: string;
   friend?: 0 | 1;
+  friendRequested?: 0 | 1;
 }
 
 export interface ServerChannel {
