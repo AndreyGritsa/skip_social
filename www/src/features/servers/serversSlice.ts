@@ -11,10 +11,17 @@ export interface ServerMember extends User {
   friendRequested?: 0 | 1;
 }
 
+export interface ServerChannelAllowedRole {
+  id: string;
+  channel_id: string;
+  role: string;
+}
+
 export interface ServerChannel {
   id: string;
   name: string;
   messages: ServerMessage[];
+  allowedRoles: ServerChannelAllowedRole[];
 }
 
 export interface Server extends User {

@@ -21,7 +21,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import MemberOptionsPopper from "./MemberOptionsPopper";
 import { ServerMember } from "../../features/servers/serversSlice";
 
-const MemberRoleColorMap = {
+export const MemberRoleColorMap = {
   owner: "secondary",
   admin: "warning",
   newbie: "success",
