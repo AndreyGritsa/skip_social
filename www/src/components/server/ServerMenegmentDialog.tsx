@@ -11,13 +11,18 @@ import {
   Divider,
   List,
   Box,
-  InputAdornment,
   Typography,
   Chip,
+  Checkbox,
+  FormGroup,
+  FormControlLabel,
 } from "@mui/material";
 import { Fragment, useState } from "react";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { Server } from "../../features/servers/serversSlice";
+import {
+  Server,
+  ServerChannelAllowedRole,
+} from "../../features/servers/serversSlice";
 import Grid from "@mui/material/Grid2";
 import {
   useNewServerChannelMutation,
@@ -28,7 +33,6 @@ import {
 import TagIcon from "@mui/icons-material/Tag";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import CheckIcon from "@mui/icons-material/Check";
 import { useNavigate } from "react-router-dom";
 import { MemberRoleColorMap } from "./ServerMembersDialog";
 
@@ -37,6 +41,8 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
   const [channelName, setChannelName] = useState<string>("");
   const [editChannel, setEditChannel] = useState<string>("");
   const [editChannelId, setEditChannelId] = useState<string>("");
+  const [adminRoleChecked, setAdminRoleChecked] = useState<boolean>(false);
+  const [newbieRoleChecked, setNewbieRoleChecked] = useState<boolean>(false);
   const [newServerChannel] = useNewServerChannelMutation();
   const [deleteServerChannel] = useDeleteServerChannelMutation();
   const [updateServerChannel] = useUpdateServerChannelMutation();
@@ -71,6 +77,8 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
     updateServerChannel({
       channel_id: editChannelId,
       channel_name: editChannel,
+      admin_role: adminRoleChecked,
+      newbie_role: newbieRoleChecked,
     })
       .unwrap()
       .catch((error) => console.error("error", error));
@@ -78,9 +86,20 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
     setEditChannelId("");
   };
 
-  const handleStartEditChannel = (channelId: string, channelName: string) => {
+  const handleStartEditChannel = (
+    channelId: string,
+    channelName: string,
+    allowedRoles: ServerChannelAllowedRole[]
+  ) => {
+    if (editChannelId === channelId) {
+      setEditChannel("");
+      setEditChannelId("");
+      return;
+    }
     setEditChannel(channelName);
     setEditChannelId(channelId);
+    setAdminRoleChecked(allowedRoles.some((role) => role.role === "admin"));
+    setNewbieRoleChecked(allowedRoles.some((role) => role.role === "newbie"));
   };
 
   const handleDeleteServer = () => {
@@ -151,7 +170,11 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
                             edge="end"
                             aria-label="edit"
                             onClick={() =>
-                              handleStartEditChannel(channel.id, channel.name)
+                              handleStartEditChannel(
+                                channel.id,
+                                channel.name,
+                                channel.allowedRoles
+                              )
                             }
                           >
                             <EditIcon />
@@ -170,24 +193,51 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
                         <TagIcon />
                       </ListItemIcon>
                       {editChannelId === channel.id ? (
-                        <TextField
-                          value={editChannel}
-                          onChange={(event) => {
-                            if (event.target.value.length < 10)
-                              setEditChannel(event.target.value);
+                        <Box
+                          sx={{
+                            display: "flex",
+                            gap: 1,
+                            flexDirection: "column",
                           }}
-                          slotProps={{
-                            input: {
-                              endAdornment: (
-                                <InputAdornment position="start">
-                                  <IconButton onClick={handleUpdateChannel}>
-                                    <CheckIcon color="success" />
-                                  </IconButton>
-                                </InputAdornment>
-                              ),
-                            },
-                          }}
-                        />
+                        >
+                          <TextField
+                            value={editChannel}
+                            onChange={(event) => {
+                              if (event.target.value.length < 10)
+                                setEditChannel(event.target.value);
+                            }}
+                          />
+                          <FormGroup row>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={adminRoleChecked}
+                                  onClick={() =>
+                                    setAdminRoleChecked(!adminRoleChecked)
+                                  }
+                                />
+                              }
+                              label="Admin"
+                            />
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={newbieRoleChecked}
+                                  onClick={() =>
+                                    setNewbieRoleChecked(!newbieRoleChecked)
+                                  }
+                                />
+                              }
+                              label="Newbie"
+                            />
+                          </FormGroup>
+                          <Button
+                            variant="outlined"
+                            onClick={handleUpdateChannel}
+                          >
+                            Save Changes
+                          </Button>
+                        </Box>
                       ) : (
                         <ListItemText
                           primary={

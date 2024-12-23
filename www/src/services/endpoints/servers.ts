@@ -74,7 +74,12 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
     }),
     updateServerChannel: builder.mutation<
       string,
-      { channel_id: string; channel_name: string }
+      {
+        channel_id: string;
+        channel_name: string;
+        admin_role: boolean;
+        newbie_role: boolean;
+      }
     >({
       query: (body) => ({
         url: `/servers/channels/${body.channel_id}/`,

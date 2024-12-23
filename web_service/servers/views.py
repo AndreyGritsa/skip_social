@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Member, Server, ServerChannel, ServerChannelMessage, ALL_MEMBER_ROLES, ServerChannelAllowedRole
+from .models import Member, Server, ServerChannel, \
+    ServerChannelMessage, ALL_MEMBER_ROLES, ServerChannelAllowedRole
 from users.models import Profile
 from .serializers import (
     MemberSerializer,
@@ -211,16 +212,54 @@ class ServerChannelAPIView(APIView):
 
     def put(self, request, channel_id):
         new_channel_name = request.data.get("channel_name")
-        if not new_channel_name:
+        admin_role = request.data.get("admin_role")
+        newbiew_role = request.data.get("newbie_role")
+        print(new_channel_name, admin_role, newbiew_role)
+        if not new_channel_name or not type(admin_role) == bool or not type(newbiew_role) == bool:
             return Response(
-                "channel_name is required", status=status.HTTP_400_BAD_REQUEST
+                "channel_name, admin_role and newbie_role are required",
+                status=status.HTTP_400_BAD_REQUEST,
             )
-
+            
         channel = ServerChannel.objects.get(id=channel_id)
-        channel.name = new_channel_name
-        channel.save()
+        
+        if new_channel_name != channel.name:
+            channel.name = new_channel_name
+            channel.save()
+        
+        admin_role_obj = ServerChannelAllowedRole.objects.filter(channel=channel, role="admin").first()
+        niewbiew_role_obj = ServerChannelAllowedRole.objects.filter(channel=channel, role="newbie").first()
+        
+        if admin_role and not admin_role_obj:
+            admin_created_role = ServerChannelAllowedRole.objects.create(channel=channel, role="admin")
+            handle_reactive_put(
+                "serverChannelAllowedRoles",
+                admin_created_role.id,
+                {
+                    "id": str(admin_created_role.id),
+                    "channel_id": str(channel.id),
+                    "role": "admin",
+                },
+            )
+        elif not admin_role and admin_role_obj:
+            handle_reactive_put("serverChannelAllowedRoles", admin_role_obj.id, None)
+            admin_role_obj.delete()
+            
+        if newbiew_role and not niewbiew_role_obj:
+            newbie_created_role = ServerChannelAllowedRole.objects.create(channel=channel, role="newbie")
+            handle_reactive_put(
+                "serverChannelAllowedRoles",
+                newbie_created_role.id,
+                {
+                    "id": str(newbie_created_role.id),
+                    "channel_id": str(channel.id),
+                    "role": "newbie",
+                },
+            )
+        elif not newbiew_role and niewbiew_role_obj:
+            handle_reactive_put("serverChannelAllowedRoles", niewbiew_role_obj.id, None)
+            niewbiew_role_obj.delete()
 
-        # write to input collections
         handle_reactive_put(
             "serverChannels",
             channel.id,
