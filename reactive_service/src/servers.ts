@@ -22,6 +22,10 @@ export type ServerChannel = {
   server_id: string;
 };
 
+export type ServerChannelWithAllowedRoles = ServerChannel & {
+  allowedRoles: ServerChannelAllowedRole[];
+};
+
 export type ModifiedServer = Server & { channels: ServerChannel[] };
 
 export type ServerMember = {
@@ -99,15 +103,24 @@ class ProfileServerMapper
 }
 
 class ServerChannelMapper
-  implements Mapper<string, ServerChannel, string, ServerChannel>
+  implements
+    Mapper<string, ServerChannel, string, ServerChannelWithAllowedRoles>
 {
+  constructor(
+    private serverChannelIdAllowedRoles: EagerCollection<
+      string,
+      ServerChannelAllowedRole
+    >
+  ) {}
   mapEntry(
     key: string,
     values: NonEmptyIterator<ServerChannel>
-  ): Iterable<[string, ServerChannel]> {
+  ): Iterable<[string, ServerChannelWithAllowedRoles]> {
     console.assert(typeof key === "string");
     const value = values.getUnique();
-    return [[value.server_id, value]];
+    const allowedRoles = this.serverChannelIdAllowedRoles.getArray(value.id);
+
+    return [[value.server_id, { ...value, allowedRoles }]];
   }
 }
 
@@ -276,6 +289,20 @@ class ProfileServersResourceAllowedChannelsMapper
   }
 }
 
+class ServerChannelAllowedRolesMapper
+  implements
+    Mapper<string, ServerChannelAllowedRole, string, ServerChannelAllowedRole>
+{
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<ServerChannelAllowedRole>
+  ): Iterable<[string, ServerChannelAllowedRole]> {
+    console.assert(typeof key === "string");
+    const value = values.getUnique();
+    return [[value.channel_id, value]];
+  }
+}
+
 // resources
 
 export class ServerMembersIndexResource implements Resource {
@@ -365,12 +392,18 @@ export const createServersCollections = (
     inputCollections.serverChannelAllowedRoles.map(
       ServerChannelAllowedRoleIndexMapper
     );
+  const serverChannelIdAllowedRoles =
+    inputCollections.serverChannelAllowedRoles.map(
+      ServerChannelAllowedRolesMapper
+    );
   const serverProfileMember = inputCollections.serverMembers.map(
     ServerProfileMemberMapper,
     inputCollections.modifiedProfiles
   );
-  const serverChannels =
-    inputCollections.serverChannels.map(ServerChannelMapper);
+  const serverChannels = inputCollections.serverChannels.map(
+    ServerChannelMapper,
+    serverChannelIdAllowedRoles
+  );
   const serverIndex = inputCollections.serverMembers.map(
     ServerMemberIndexMapper
   );

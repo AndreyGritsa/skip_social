@@ -13,6 +13,7 @@ import {
   Box,
   InputAdornment,
   Typography,
+  Chip,
 } from "@mui/material";
 import { Fragment, useState } from "react";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -29,6 +30,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
 import { useNavigate } from "react-router-dom";
+import { MemberRoleColorMap } from "./ServerMembersDialog";
 
 const ServerMenegmentDialog = ({ server }: { server: Server }) => {
   const [open, setOpen] = useState<boolean>(false);
@@ -187,7 +189,35 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
                           }}
                         />
                       ) : (
-                        <ListItemText primary={channel.name} />
+                        <ListItemText
+                          primary={
+                            <Box
+                              sx={{
+                                display: "flex",
+                                gap: 1,
+                                alignItems: "center",
+                              }}
+                            >
+                              {channel.name}
+                              {channel.allowedRoles.map((role) => {
+                                if (role.role === "owner") return null;
+                                return (
+                                  <Chip
+                                    key={role.id}
+                                    label={role.role}
+                                    color={
+                                      MemberRoleColorMap[
+                                        role.role as keyof typeof MemberRoleColorMap
+                                      ] as any
+                                    }
+                                    variant="outlined"
+                                    size="small"
+                                  />
+                                );
+                              })}
+                            </Box>
+                          }
+                        />
                       )}
                     </ListItem>
                   );
