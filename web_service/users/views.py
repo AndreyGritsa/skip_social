@@ -22,7 +22,6 @@ class UserAPIView(APIView):
             return Response(
                 {"error": "Profile ID not provided"}, status=status.HTTP_400_BAD_REQUEST
             )
-
         return handle_reactive_get(
             request, "modifiedProfiles", {"profile_id": profile_id}
         )

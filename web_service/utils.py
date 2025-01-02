@@ -5,6 +5,7 @@ from django.conf import settings
 from rest_framework import status
 from rest_framework.negotiation import BaseContentNegotiation
 from rest_framework.authentication import SessionAuthentication
+import json
 
 REACTIVE_SERVICE_URL = settings.REACTIVE_SERVICE_URL
 
@@ -59,8 +60,8 @@ def handle_reactive_get(request, resource, params):
         A redirect response to the stream URL if streaming is requested,
         otherwise a JSON response with the resource data.
     """
-
-    if "text/event-stream" in request.headers.get("Accept"):
+        
+    if "text/event-stream" in request.headers.get("Accept", ""):
         resp = requests.post(
             f"{REACTIVE_SERVICE_URL}/streams",
             json={"resource": resource, "params": params},
@@ -95,3 +96,14 @@ def handle_reactive_put(inputs_name, id, data):
         f"{REACTIVE_SERVICE_URL}/inputs/{inputs_name}/{id}",
         json=data,
     )
+    
+    
+# test utils
+    
+    
+def mock_requests_reactive(status_code=200, content=None):
+        content = json.dumps(content).encode('utf-8') if content else b'[]'
+        mock_response = requests.Response()
+        mock_response.status_code = status_code
+        mock_response._content = content
+        return mock_response
