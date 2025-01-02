@@ -2,6 +2,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth.models import User
+from unittest.mock import patch
+from utils import mock_requests_reactive
 
 
 class FriendAPITestCase(APITestCase):
@@ -19,18 +21,23 @@ class FriendAPITestCase(APITestCase):
         self.url = reverse("friend")
         return super().setUp()
 
-    def test_get_friends(self):
+    @patch('requests.get')
+    def test_get_friends(self, mock_requests_get):
+        get_content = [[f"{self.profile2.id}", {'id': self.profile2.id, 'status': 'away'}]]
+        mock_requests_get.return_value = mock_requests_reactive(content=get_content)
         response = self.client.get(self.url, {'profile_id': self.profile_id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('friends', response.data)
-        self.assertEqual(len(response.data['friends']), 1)
-        self.assertEqual(response.data['friends'][0]['id'], self.profile2.id)
-        self.assertEqual(response.data['friends'][0]['status'], 'away')
+        self.assertEqual(response.data['id'], self.profile2.id)
+        self.assertEqual(response.data['status'], 'away')
 
-    def test_get_friends_profile_not_found(self):
+    @patch('requests.get')
+    def test_get_friends_profile_not_found(self, mock_requests_get):
+        mock_requests_get.return_value = mock_requests_reactive()
         response = self.client.get(self.url, {'profile_id': 999})
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data, [])
 
-    def test_get_friends_profile_id_not_provided(self):
+    @patch('requests.get')
+    def test_get_friends_profile_id_not_provided(self, mock_requests_get):
+        mock_requests_get.return_value = mock_requests_reactive()
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

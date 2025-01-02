@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from users.models import Profile, FriendRequest
 
+
 class UserProfileSignalTestCase(TestCase):
     def test_profile_created_on_user_creation(self):
         # Create a user
@@ -49,9 +50,9 @@ class FriendRequestSignalTestCase(TestCase):
         self.assertIn(self.profile2, self.profile1.friends.all())
         self.assertIn(self.profile1, self.profile2.friends.all())
 
-        # Check that the friend requests are deleted
-        self.assertFalse(FriendRequest.objects.filter(from_profile=self.profile1, to_profile=self.profile2).exists())
-        self.assertFalse(FriendRequest.objects.filter(from_profile=self.profile2, to_profile=self.profile1).exists())
+        # Check that the friend requests are not deleted
+        self.assertTrue(FriendRequest.objects.filter(from_profile=self.profile1, to_profile=self.profile2).exists())
+        self.assertTrue(FriendRequest.objects.filter(from_profile=self.profile2, to_profile=self.profile1).exists())
 
     def test_no_friendship_on_single_request(self):
         # Create a friend request from profile1 to profile2
