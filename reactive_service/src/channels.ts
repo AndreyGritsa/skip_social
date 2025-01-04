@@ -135,8 +135,6 @@ export class MessageMapper
   }
 }
 
-// TODO: figure out why this is not working
-// can Date be used in here?
 class SortMessagesMapper
   implements Mapper<string, ModifiedMessage, string, ModifiedMessage>
 {
@@ -181,8 +179,8 @@ export class MessageResource implements Resource {
 
     return collections.messages
       .slice([channelId, channelId])
-      .take(20)
-      .map(SortMessagesMapper);
+      .map(SortMessagesMapper)
+      .take(20);
   }
 }
 

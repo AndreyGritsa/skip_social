@@ -16,7 +16,7 @@ const sql = postgres(
 async function selectAll(table) {
   return (await sql`SELECT * FROM ${sql(table)}`).map((r) => {
     if (r.created_at) {
-      r.created_at = r.created_at.toISOString();
+      r.created_at = r.created_at.toString();
     }
     return [r.id, [r]];
   });

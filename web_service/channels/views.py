@@ -121,7 +121,7 @@ class MessageAPIView(APIView):
                 "channel_id": str(channel.id),
                 "author_id": str(author.id),
                 "content": message.content,
-                "created_at": message.created_at.isoformat(),
+                "created_at": str(message.created_at),
             },
         )
 

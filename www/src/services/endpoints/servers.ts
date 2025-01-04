@@ -105,12 +105,7 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
                 setMessages({
                   channelId: arg.channel_id,
                   serverId: arg.server_id,
-                  messages: data.sort((a, b) => {
-                    return (
-                      new Date(b.created_at).getTime() -
-                      new Date(a.created_at).getTime()
-                    );
-                  }),
+                  messages: data,
                 })
               );
             },
@@ -119,12 +114,7 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
                 setMessages({
                   channelId: arg.channel_id,
                   serverId: arg.server_id,
-                  messages: data.sort((a, b) => {
-                    return (
-                      new Date(b.created_at).getTime() -
-                      new Date(a.created_at).getTime()
-                    );
-                  }),
+                  messages: data,
                 })
               );
             },

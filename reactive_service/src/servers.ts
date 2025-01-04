@@ -198,7 +198,6 @@ class ServerMemberIsFriendMapper
         result.push([key, member]);
         continue;
       }
-      console.log("Checking friendship between", id1, id2);
 
       const friendKey = `${id1}/${id2}`;
       const isFriend =
@@ -303,6 +302,25 @@ class ServerChannelAllowedRolesMapper
   }
 }
 
+// TODO: channels messages use the same, should be generic
+class ServerChannelMessageSortedMapper
+  implements
+    Mapper<string, ModifiedServerMessage, string, ModifiedServerMessage>
+{
+  mapEntry(
+    key: string,
+    values: NonEmptyIterator<ModifiedServerMessage>
+  ): Iterable<[string, ModifiedServerMessage]> {
+    console.assert(typeof key === "string");
+    const sorted = values.toArray().sort((a, b) => {
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+    return sorted.map((message) => [key, message]);
+  }
+}
+
 // resources
 
 export class ServerMembersIndexResource implements Resource {
@@ -356,7 +374,9 @@ export class ServerMessagesResource implements Resource {
       throw new Error("channel_id parameter is required");
     }
 
-    return collections.serverMessages.slice([channel_id, channel_id]);
+    return collections.serverMessages
+      .slice([channel_id, channel_id])
+      .map(ServerChannelMessageSortedMapper);
   }
 }
 

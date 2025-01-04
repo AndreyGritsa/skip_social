@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Post, Comment
+from .models import Post
 from .serializers import PostSerializer, CommentSerializer
 from utils import (
     handle_reactive_get,
@@ -43,7 +43,11 @@ class PostAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
 
-            collections_data = {**serializer.data, "author_id": profile_id}
+            collections_data = {
+                **serializer.data, 
+                "author_id": profile_id, 
+                "created_at": str(serializer.data["created_at"])
+            }
 
             # Write to reactive input collections
             handle_reactive_put("posts", serializer.data["id"], collections_data)
@@ -110,16 +114,3 @@ class CommentAPIView(APIView):
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    # def put(self, request, pk):
-    #     comment = Comment.objects.get(pk=pk)
-    #     serializer = CommentSerializer(comment, data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    # def delete(self, request, pk):
-    #     comment = Comment.objects.get(pk=pk)
-    #     comment.delete()
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
