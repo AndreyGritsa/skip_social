@@ -6,6 +6,7 @@ import type {
 } from "skip-wasm";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 import type { ModifiedProfile } from "./users.js";
+import { GenericSortedMapper } from "./utils/generic.js";
 
 // types
 
@@ -135,22 +136,6 @@ export class MessageMapper
   }
 }
 
-class SortMessagesMapper
-  implements Mapper<string, ModifiedMessage, string, ModifiedMessage>
-{
-  mapEntry(
-    key: string,
-    values: NonEmptyIterator<ModifiedMessage>
-  ): Iterable<[string, ModifiedMessage]> {
-    const sorted = values.toArray().sort((a, b) => {
-      return (
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-    });
-    return sorted.map((message) => [key, message]);
-  }
-}
-
 // resources
 
 export class ChannelsResource implements Resource {
@@ -179,7 +164,7 @@ export class MessageResource implements Resource {
 
     return collections.messages
       .slice([channelId, channelId])
-      .map(SortMessagesMapper)
+      .map(GenericSortedMapper<string, ModifiedMessage>)
       .take(20);
   }
 }
