@@ -45,21 +45,18 @@ type PostsInputCollection = InputCollection & {
 // mappers
 class ZeroPostMapper implements Mapper<string, Post, string, Post> {
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<Post>
   ): Iterable<[string, Post]> {
-    console.assert(typeof key === "string");
     return [["0", values.getUnique()]];
   }
 }
 
 class SortedPostsMapper implements Mapper<string, Post, string, Post> {
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<Post>
   ): Iterable<[string, Post]> {
-    console.assert(typeof key === "string");
-
     const postsArray = values.toArray();
 
     const sortedPosts = postsArray.sort((a, b) => {
@@ -78,7 +75,6 @@ class PostsMapper implements Mapper<string, Post, string, Post> {
     key: string,
     values: NonEmptyIterator<Post>
   ): Iterable<[string, Post]> {
-    console.assert(typeof key === "string");
     const post = values.getUnique();
     const comments = this.comments.getArray(key);
     const commentsAmount = comments.length;
@@ -109,7 +105,6 @@ class FriendsPostsMapper
     key: string,
     values: NonEmptyIterator<ModifiedProfile>
   ): Iterable<[string, ModifiedPost]> {
-    console.assert(typeof key === "string");
     const result: [string, ModifiedPost][] = [];
     const friends = values.toArray();
     for (const friend of friends) {
@@ -134,10 +129,9 @@ class CommentMapper
 {
   constructor(private profiles: EagerCollection<string, ModifiedProfile>) {}
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<Comment>
   ): Iterable<[string, ModifiedComment]> {
-    console.assert(typeof key === "string");
     const comment = values.getUnique();
     const authorName = this.profiles.getUnique(comment.author_id).name;
     return [[comment.post_id, { ...comment, author: authorName }]];
