@@ -87,10 +87,9 @@ class ProfileServerMapper
     private serverChannels: EagerCollection<string, ServerChannel>
   ) {}
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<ServerMember>
   ): Iterable<[string, ModifiedServer]> {
-    console.assert(typeof key === "string");
     const value = values.getUnique();
     const serverArray = this.servers.getArray(value.server_id);
     if (serverArray.length === 0) {
@@ -114,10 +113,9 @@ class ServerChannelMapper
     >
   ) {}
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<ServerChannel>
   ): Iterable<[string, ServerChannelWithAllowedRoles]> {
-    console.assert(typeof key === "string");
     const value = values.getUnique();
     const allowedRoles = this.serverChannelIdAllowedRoles.getArray(value.id);
 
@@ -148,10 +146,9 @@ class ServerMemberMapper
     private modifiedProfiles: EagerCollection<string, ModifiedProfile>
   ) {}
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<ServerMember>
   ): Iterable<[string, ServerMemberProfile]> {
-    console.assert(typeof key === "string");
     const member = values.getUnique();
     const profile = this.modifiedProfiles.getUnique(member.profile_id);
     return [[member.server_id, { ...profile, role: member.role }]];
@@ -165,10 +162,9 @@ class ServerProfileMemberMapper
     private modifiedProfiles: EagerCollection<string, ModifiedProfile>
   ) {}
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<ServerMember>
   ): Iterable<[string, ServerMemberProfile]> {
-    console.assert(typeof key === "string");
     const member = values.getUnique();
     const profile = this.modifiedProfiles.getUnique(member.profile_id);
     const newKey = `${member.server_id}/${member.profile_id}`;
@@ -244,10 +240,9 @@ class ServerChannelAllowedRoleIndexMapper
   implements Mapper<string, ServerChannelAllowedRole, string, boolean>
 {
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<ServerChannelAllowedRole>
   ): Iterable<[string, boolean]> {
-    console.assert(typeof key === "string");
     const value = values.getUnique();
     return [[`${value.channel_id}/${value.role}`, true]];
   }
@@ -294,10 +289,9 @@ class ServerChannelAllowedRolesMapper
     Mapper<string, ServerChannelAllowedRole, string, ServerChannelAllowedRole>
 {
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<ServerChannelAllowedRole>
   ): Iterable<[string, ServerChannelAllowedRole]> {
-    console.assert(typeof key === "string");
     const value = values.getUnique();
     return [[value.channel_id, value]];
   }

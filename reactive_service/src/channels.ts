@@ -58,10 +58,9 @@ class ChannelProfileMapper
   implements Mapper<string, ChannelParticipant, string, string>
 {
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<ChannelParticipant>
   ): Iterable<[string, string]> {
-    console.assert(typeof key === "string");
     const participants = values.getUnique();
     return [[participants.channel_id, participants.profile_id]];
   }
@@ -126,10 +125,9 @@ export class MessageMapper
     private modifiedProfiles: EagerCollection<string, ModifiedProfile>
   ) {}
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<Message>
   ): Iterable<[string, ModifiedMessage]> {
-    console.assert(typeof key === "string");
     const value = values.getUnique();
     const author = this.modifiedProfiles.getUnique(value.author_id);
     return [[value.channel_id, { ...value, author: author.name }]];

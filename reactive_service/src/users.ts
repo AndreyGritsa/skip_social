@@ -42,10 +42,9 @@ export class FriendRequestUniquePhase1Mapper
   implements Mapper<string, FriendRequest, string, FriendRequest>
 {
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, FriendRequest]> {
-    console.assert(typeof key === "string");
     const result: [string, FriendRequest][] = [];
     for (const value of values) {
       result.push([`${value.from_profile_id}/${value.to_profile_id}`, value]);
@@ -72,10 +71,9 @@ class FriendRequestMapper
   implements Mapper<string, FriendRequest, string, FriendRequest>
 {
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, FriendRequest]> {
-    console.assert(typeof key === "string");
     const result: [string, FriendRequest][] = [];
     for (const value of values) {
       let from = value.from_profile_id;
@@ -108,10 +106,9 @@ class FriendRequestIndexMapper
 
 class FriendRequestIntersectPhase1Mapper {
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, string]> {
-    console.assert(typeof key === "string");
     const array = values.toArray();
     if (array.length >= 2) {
       console.assert(array[0]!.from_profile_id === array[1]!.to_profile_id);
@@ -166,10 +163,9 @@ class FriendRequestToMapper
     private modifiedProfiles: EagerCollection<string, ModifiedProfile>
   ) {}
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, ModifiedProfile]> {
-    console.assert(typeof key === "string");
     const array = values.toArray();
     if (array.length === 1) {
       const profile = this.modifiedProfiles.getUnique(
@@ -188,10 +184,9 @@ class FriendRequestFromMapper
     private modifiedProfiles: EagerCollection<string, ModifiedProfile>
   ) {}
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, ModifiedProfile]> {
-    console.assert(typeof key === "string");
     const array = values.toArray();
     if (array.length === 1) {
       const profile = this.modifiedProfiles.getUnique(array[0]!.to_profile_id);
@@ -205,10 +200,9 @@ class FriendRequestFromToMapper
   implements Mapper<string, FriendRequest, string, FriendRequest>
 {
   mapEntry(
-    key: string,
+    _key: string,
     values: NonEmptyIterator<FriendRequest>
   ): Iterable<[string, FriendRequest]> {
-    console.assert(typeof key === "string");
     const array = values.toArray();
     if (array.length === 1) {
       const friendRequest = array[0]!;
