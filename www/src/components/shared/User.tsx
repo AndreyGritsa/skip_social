@@ -9,6 +9,7 @@ import UserSettingsPopper from "./UserSettingsPopper";
 import UserSelectPopper from "./UserSelectPopper";
 import { useEffect, useState } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { useGetStreamingIssueQuery } from "../../services/endpoints/streaming_issue";
 
 const User = () => {
   const user = useAppSelector((state) => state.user);
@@ -22,6 +23,7 @@ const User = () => {
   const { refetch: refetchFriends } = useGetFriendsQuery(
     profileId ? profileId : skipToken
   );
+  const { data } = useGetStreamingIssueQuery("");
 
   useEffect(() => {
     if (!profileId) {

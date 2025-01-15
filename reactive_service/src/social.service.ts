@@ -44,6 +44,9 @@ import {
   MessageResource,
 } from "./channels.js";
 
+import type { Resource, Context } from "@skipruntime/api";
+import { GenericExternalService, Polled } from "@skipruntime/helpers";
+
 export type InputCollection = {
   users: EagerCollection<string, User>;
   profiles: EagerCollection<string, Profile>;
@@ -127,6 +130,20 @@ export function SocialSkipService(
       // channels
       channels: ChannelsResource,
       messages: MessageResource,
+      // issue
+      issue: DogFactsResource,
+    },
+    externalServices: {
+      externalAPI: new GenericExternalService({
+        dogFactsAPI: new Polled(
+          "https://dog-api.kinduff.com/api/facts",
+          10000,
+          (data: DogFactsResult) => {
+            console.log("externalAPI", data);
+            return [[0, [data]]];
+          }
+        ),
+      }),
     },
     createGraph: (inputCollections) => {
       const {
@@ -179,4 +196,27 @@ export function SocialSkipService(
       };
     },
   };
+}
+
+// reproduce an issue
+type DogFactsResult = {
+  facts: string[];
+  success: boolean;
+};
+
+export class DogFactsResource implements Resource {
+  instantiate(
+    _cs: ResourcesCollection,
+    context: Context
+  ): EagerCollection<number, DogFactsResult> {
+    const params = {
+      number: 1,
+    };
+
+    return context.useExternalResource({
+      service: "externalAPI",
+      identifier: "dogFactsAPI",
+      params,
+    });
+  }
 }

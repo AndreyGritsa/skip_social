@@ -17,6 +17,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from .streaming_issue_view import StreamingIssueView
 
 admin.site.site_header = "Reactive Social Admin"
 admin.site.index_title = "Reactive Social features area"
@@ -28,4 +29,5 @@ urlpatterns = [
     path("api/posts/", include("posts.urls")),
     path("api/channels/", include("channels.urls")),
     path("api/servers/", include("servers.urls")),
+    path("api/issue/", StreamingIssueView.as_view(), name="streaming_issue"),
 ]
