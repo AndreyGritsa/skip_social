@@ -1,14 +1,16 @@
 import type {
   EagerCollection,
   Mapper,
-  NonEmptyIterator,
+  Values,
   Resource,
-} from "skip-wasm";
+  Json,
+} from "@skipruntime/api";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 import type { Message } from "./channels.js";
 import { MessageMapper } from "./channels.js";
 import type { FriendRequest, ModifiedProfile } from "./users.js";
 import { GenericSortedMapper } from "./utils/generic.js";
+import { isJsonObject } from "./utils/function.js";
 
 // types
 export type Server = {
@@ -72,7 +74,7 @@ class ServerMemberIndexMapper
 {
   mapEntry(
     key: string,
-    values: NonEmptyIterator<ServerMember>
+    values: Values<ServerMember>
   ): Iterable<[string, boolean]> {
     const value = values.getUnique();
     return [[`${value.profile_id}/${key}`, true]];
@@ -88,14 +90,14 @@ class ProfileServerMapper
   ) {}
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<ServerMember>
+    values: Values<ServerMember>
   ): Iterable<[string, ModifiedServer]> {
     const value = values.getUnique();
     const serverArray = this.servers.getArray(value.server_id);
     if (serverArray.length === 0) {
       return [];
     } else {
-      const server = serverArray[0]!;
+      const server: Server = serverArray[0]!;
       const channels = this.serverChannels.getArray(value.server_id);
       return [[value.profile_id, { ...server, channels }]];
     }
@@ -114,9 +116,9 @@ class ServerChannelMapper
   ) {}
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<ServerChannel>
+    values: Values<ServerChannel>
   ): Iterable<[string, ServerChannelWithAllowedRoles]> {
-    const value = values.getUnique();
+    const value: ServerChannel = values.getUnique();
     const allowedRoles = this.serverChannelIdAllowedRoles.getArray(value.id);
 
     return [[value.server_id, { ...value, allowedRoles }]];
@@ -131,7 +133,7 @@ class MemberProfileMapper
   ) {}
   mapEntry(
     key: string,
-    values: NonEmptyIterator<ServerMember>
+    values: Values<ServerMember>
   ): Iterable<[string, ModifiedProfile]> {
     const member = values.getUnique();
     const profile = this.modifiedProfiles.getUnique(member.profile_id);
@@ -147,10 +149,12 @@ class ServerMemberMapper
   ) {}
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<ServerMember>
+    values: Values<ServerMember>
   ): Iterable<[string, ServerMemberProfile]> {
     const member = values.getUnique();
-    const profile = this.modifiedProfiles.getUnique(member.profile_id);
+    const profile: ModifiedProfile = this.modifiedProfiles.getUnique(
+      member.profile_id
+    );
     return [[member.server_id, { ...profile, role: member.role }]];
   }
 }
@@ -163,10 +167,12 @@ class ServerProfileMemberMapper
   ) {}
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<ServerMember>
+    values: Values<ServerMember>
   ): Iterable<[string, ServerMemberProfile]> {
     const member = values.getUnique();
-    const profile = this.modifiedProfiles.getUnique(member.profile_id);
+    const profile: ModifiedProfile = this.modifiedProfiles.getUnique(
+      member.profile_id
+    );
     const newKey = `${member.server_id}/${member.profile_id}`;
     return [[newKey, { ...profile, role: member.role }]];
   }
@@ -181,7 +187,7 @@ class ServerMemberIsFriendMapper
   ) {}
   mapEntry(
     key: string,
-    values: NonEmptyIterator<ServerMemberProfile>
+    values: Values<ServerMemberProfile>
   ): Iterable<[string, ServerMemberProfile]> {
     const membersArray = values.toArray();
     const result: [string, ServerMemberProfile][] = [];
@@ -199,7 +205,10 @@ class ServerMemberIsFriendMapper
       const friendKey = `${id1}/${id2}`;
       const isFriend =
         this.friendIndex.getArray(friendKey).length > 0 ? true : false;
-      result.push([key, { ...member, friend: isFriend }]);
+      result.push([
+        key,
+        { ...(member as ServerMemberProfile), friend: isFriend },
+      ]);
     }
 
     return result;
@@ -215,13 +224,16 @@ class ServerMemberIsFrienRequestedMapper
   ) {}
   mapEntry(
     key: string,
-    values: NonEmptyIterator<ServerMemberProfile>
+    values: Values<ServerMemberProfile>
   ): Iterable<[string, ServerMemberProfile]> {
     const membersArray = values.toArray();
     const result: [string, ServerMemberProfile][] = [];
     for (const member of membersArray) {
       if (member.friend) {
-        result.push([key, { ...member, friendRequested: false }]);
+        result.push([
+          key,
+          { ...(member as ServerMemberProfile), friendRequested: false },
+        ]);
         continue;
       }
       const friendRequested = this.friendRequestsFromTo.getArray(
@@ -229,7 +241,10 @@ class ServerMemberIsFrienRequestedMapper
       ).length
         ? true
         : false;
-      result.push([key, { ...member, friendRequested }]);
+      result.push([
+        key,
+        { ...(member as ServerMemberProfile), friendRequested },
+      ]);
     }
 
     return result;
@@ -241,7 +256,7 @@ class ServerChannelAllowedRoleIndexMapper
 {
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<ServerChannelAllowedRole>
+    values: Values<ServerChannelAllowedRole>
   ): Iterable<[string, boolean]> {
     const value = values.getUnique();
     return [[`${value.channel_id}/${value.role}`, true]];
@@ -258,7 +273,7 @@ class ProfileServersResourceAllowedChannelsMapper
   ) {}
   mapEntry(
     key: string,
-    values: NonEmptyIterator<ModifiedServer>
+    values: Values<ModifiedServer>
   ): Iterable<[string, ModifiedServer]> {
     const servers = values.toArray();
     const result: [string, ModifiedServer][] = [];
@@ -276,7 +291,10 @@ class ProfileServersResourceAllowedChannelsMapper
           allowedChannels.push(channel);
         }
       }
-      result.push([key, { ...server, channels: allowedChannels }]);
+      result.push([
+        key,
+        { ...(server as ModifiedServer), channels: allowedChannels },
+      ]);
     }
     return result;
   }
@@ -288,7 +306,7 @@ class ServerChannelAllowedRolesMapper
 {
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<ServerChannelAllowedRole>
+    values: Values<ServerChannelAllowedRole>
   ): Iterable<[string, ServerChannelAllowedRole]> {
     const value = values.getUnique();
     return [[value.channel_id, value]];
@@ -298,81 +316,106 @@ class ServerChannelAllowedRolesMapper
 // resources
 
 export class ServerMembersIndexResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private profileId: string = "";
+  private serverId: string = "";
+  constructor(params: Json) {
+    if (
+      isJsonObject(params) &&
+      typeof params["profile_id"] === "string" &&
+      typeof params["server_id"] === "string"
+    ) {
+      this.profileId = params["profile_id"];
+      this.serverId = params["server_id"];
+    }
+  }
 
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, boolean> {
-    const profile_id = this.params["profile_id"];
-    const server_id = this.params["server_id"];
-
-    if (!profile_id || !server_id) {
+    if (!this.profileId || !this.serverId) {
       throw new Error("Both profile_id and server_id must be provided");
     }
 
-    const key = `${profile_id}/${server_id}`;
-    return collections.friendIndex.slice([key, key]);
+    const key = `${this.profileId}/${this.serverId}`;
+    return collections.friendIndex.slice(key, key);
   }
 }
 
 export class ProfileServersResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private profileId: string;
+  constructor(params: Json) {
+    console.log(`test param: ${params}`);
+    if (typeof params == "string") this.profileId = params;
+    else this.profileId = "";
+  }
 
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, Server> {
-    const profile_id = this.params["profile_id"];
-    if (!profile_id) {
+    if (!this.profileId) {
       throw new Error("profile_id parameter is required");
     }
 
     return collections.profileServers
-      .slice([profile_id, profile_id])
+      .slice(this.profileId, this.profileId)
       .map(
         ProfileServersResourceAllowedChannelsMapper,
         collections.serverChannelsAllowedIndexRoles,
-        profile_id,
+        this.profileId,
         collections.serverProfileMember
       );
   }
 }
 
 export class ServerMessagesResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private channelId: string;
+  constructor(params: Json) {
+    console.log(`test param: ${params}`);
+    if (typeof params == "string") this.channelId = params;
+    else this.channelId = "";
+  }
 
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, ModifiedServerMessage> {
-    const channel_id = this.params["channel_id"];
-    if (!channel_id) {
+    if (!this.channelId) {
       throw new Error("channel_id parameter is required");
     }
 
     return collections.serverMessages
-      .slice([channel_id, channel_id])
+      .slice(this.channelId, this.channelId)
       .map(GenericSortedMapper<string, ModifiedServerMessage>);
   }
 }
 
 export class ServerMembersResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private serverId: string = "";
+  private profileId: string = "";
+  constructor(params: Json) {
+    if (
+      isJsonObject(params) &&
+      typeof params["server_id"] === "string" &&
+      typeof params["profile_id"] === "string"
+    ) {
+      this.serverId = params["server_id"];
+      this.profileId = params["profile_id"];
+    }
+  }
 
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, ServerMemberProfile> {
-    const server_id = this.params["server_id"];
-    const profile_id = this.params["profile_id"];
-    if (!server_id || !profile_id) {
+    if (!this.serverId || !this.profileId) {
       throw new Error("server_id and profile_id parameters are required");
     }
 
     return collections.serverMembers
-      .slice([server_id, server_id])
-      .map(ServerMemberIsFriendMapper, collections.friendIndex, profile_id)
+      .slice(this.serverId, this.serverId)
+      .map(ServerMemberIsFriendMapper, collections.friendIndex, this.profileId)
       .map(
         ServerMemberIsFrienRequestedMapper,
         collections.friendRequestsFromTo,
-        profile_id
+        this.profileId
       );
   }
 }

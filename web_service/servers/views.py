@@ -30,7 +30,7 @@ class ServerAPIView(APIView):
             )
 
         return handle_reactive_get(
-            request, "profileServers", {"profile_id": profile_id}
+            request, "profileServers", profile_id
         )
 
     def post(self, request):
@@ -295,7 +295,7 @@ class ServerChannelMessageAPIView(APIView):
             )
 
         return handle_reactive_get(
-            request, "serverMessages", {"channel_id": channel_id}
+            request, "serverMessages", channel_id
         )
 
     def post(self, request):

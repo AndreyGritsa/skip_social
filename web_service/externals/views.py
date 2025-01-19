@@ -38,9 +38,9 @@ class ExternalServiceSubscriptionAPIView(APIView):
             )
 
         if subscription_type == "externals":
-            params = {"profile_id": profile_id}
+            params = profile_id
         else:
-            params = {"id": id}
+            params = id
 
         return handle_reactive_get(request, subscription_type, params)
 

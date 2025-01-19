@@ -2,9 +2,11 @@ import type {
   Resource,
   EagerCollection,
   Mapper,
-  NonEmptyIterator,
-} from "skip-wasm";
+  Values,
+  Json,
+} from "@skipruntime/api";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
+import { isJsonObject } from "./utils/function.js";
 
 // Types
 
@@ -43,7 +45,7 @@ export class FriendRequestUniquePhase1Mapper
 {
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<FriendRequest>
+    values: Values<FriendRequest>
   ): Iterable<[string, FriendRequest]> {
     const result: [string, FriendRequest][] = [];
     for (const value of values) {
@@ -58,7 +60,7 @@ export class FriendRequestUniquePhase2Mapper
 {
   mapEntry(
     key: string,
-    values: NonEmptyIterator<FriendRequest>
+    values: Values<FriendRequest>
   ): Iterable<[string, FriendRequest]> {
     if (values.toArray().length > 1) {
       throw new Error(`More than one friend requests detected for ${key}`);
@@ -72,7 +74,7 @@ class FriendRequestMapper
 {
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<FriendRequest>
+    values: Values<FriendRequest>
   ): Iterable<[string, FriendRequest]> {
     const result: [string, FriendRequest][] = [];
     for (const value of values) {
@@ -94,7 +96,7 @@ class FriendRequestIndexMapper
 {
   mapEntry(
     key: string,
-    values: NonEmptyIterator<FriendRequest>
+    values: Values<FriendRequest>
   ): Iterable<[string, boolean]> {
     const array = values.toArray();
     if (array.length >= 2) {
@@ -107,7 +109,7 @@ class FriendRequestIndexMapper
 class FriendRequestIntersectPhase1Mapper {
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<FriendRequest>
+    values: Values<FriendRequest>
   ): Iterable<[string, string]> {
     const array = values.toArray();
     if (array.length >= 2) {
@@ -128,7 +130,7 @@ class FriendRequestIntersectPhase2Mapper
 
   mapEntry(
     key: string,
-    values: NonEmptyIterator<string>
+    values: Values<string>
   ): Iterable<[string, ModifiedProfile]> {
     const profile1Id = key;
     const profile1 = this.modifiedProfiles.getUnique(profile1Id);
@@ -148,9 +150,9 @@ class ModifiedProfileMapper
   constructor(private users: EagerCollection<string, User>) {}
   mapEntry(
     key: string,
-    values: NonEmptyIterator<Profile>
+    values: Values<Profile>
   ): Iterable<[string, ModifiedProfile]> {
-    const profile = values.getUnique();
+    const profile: Profile = values.getUnique();
     const user = this.users.getUnique(profile.user_id);
     return [[key, { ...profile, name: user.username }]];
   }
@@ -164,7 +166,7 @@ class FriendRequestToMapper
   ) {}
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<FriendRequest>
+    values: Values<FriendRequest>
   ): Iterable<[string, ModifiedProfile]> {
     const array = values.toArray();
     if (array.length === 1) {
@@ -185,7 +187,7 @@ class FriendRequestFromMapper
   ) {}
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<FriendRequest>
+    values: Values<FriendRequest>
   ): Iterable<[string, ModifiedProfile]> {
     const array = values.toArray();
     if (array.length === 1) {
@@ -201,7 +203,7 @@ class FriendRequestFromToMapper
 {
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<FriendRequest>
+    values: Values<FriendRequest>
   ): Iterable<[string, FriendRequest]> {
     const array = values.toArray();
     if (array.length === 1) {
@@ -215,75 +217,94 @@ class FriendRequestFromToMapper
 }
 
 // Resources
-
 export class FriendsResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private profileId: string;
+
+  constructor(params: Json) {
+    if (typeof params == "string") this.profileId = params;
+    else this.profileId = "";
+  }
+
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, ModifiedProfile> {
-    const id = this.params["profile_id"];
-    if (!id) {
-      throw new Error("profile_id must be provided");
-    }
+    if (!this.profileId) throw new Error("Profile id should be provided");
 
-    return collections.friends.slice([id, id]);
+    return collections.friends.slice(this.profileId, this.profileId);
   }
 }
 
 export class FriendRequestsToResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private profileId: string;
+
+  constructor(params: Json) {
+    if (typeof params == "string") this.profileId = params;
+    else this.profileId = "";
+  }
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, ModifiedProfile> {
-    const id = this.params["profile_id"];
-    if (!id) {
-      throw new Error("profile_id must be provided");
-    }
+    if (!this.profileId) throw new Error("Profile id should be provided");
 
-    return collections.friendRequestsTo.slice([id, id]);
+    return collections.friendRequestsTo.slice(this.profileId, this.profileId);
   }
 }
 
 export class FriendRequestsFromResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private profileId: string;
+
+  constructor(params: Json) {
+    if (typeof params == "string") this.profileId = params;
+    else this.profileId = "";
+  }
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, ModifiedProfile> {
-    const id = this.params["profile_id"];
-    if (!id) {
-      throw new Error("profile_id must be provided");
-    }
+    if (!this.profileId) throw new Error("Profile id should be provided");
 
-    return collections.friendRequestsFrom.slice([id, id]);
+    return collections.friendRequestsFrom.slice(this.profileId, this.profileId);
   }
 }
 
 export class ModifiedProfileResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private profileId: string;
+  constructor(params: Json) {
+    console.log(`test param: ${params}`);
+    if (typeof params == "string") this.profileId = params;
+    else this.profileId = "";
+  }
+
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, ModifiedProfile> {
-    const id = this.params["profile_id"];
-    if (!id) {
-      throw new Error("profile_id must be provided");
-    }
+    if (!this.profileId) throw new Error("Profile id should be provided");
 
-    return collections.modifiedProfiles.slice([id, id]);
+    return collections.modifiedProfiles.slice(this.profileId, this.profileId);
   }
 }
 
 export class FriendsIndexResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private id1: string = "";
+  private id2: string = "";
+  constructor(params: Json) {
+    if (
+      isJsonObject(params) &&
+      typeof params["id_1"] === "string" &&
+      typeof params["id_2"] === "string"
+    ) {
+      this.id1 = params["id_1"];
+      this.id2 = params["id_2"];
+    }
+  }
 
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, boolean> {
-    let id_1 = this.params["id_1"];
-    let id_2 = this.params["id_2"];
-
-    if (!id_1 || !id_2) {
+    if (!this.id1 || !this.id2) {
       throw new Error("Both id_1 and id_2 must be provided");
     }
+    let id_1 = this.id1;
+    let id_2 = this.id2;
 
     if (id_1 > id_2) {
       let tmp = id_1;
@@ -292,7 +313,7 @@ export class FriendsIndexResource implements Resource {
     }
 
     const key = `${id_1}/${id_2}`;
-    return collections.friendIndex.slice([key, key]);
+    return collections.friendIndex.slice(key, key);
   }
 }
 

@@ -23,7 +23,7 @@ class UserAPIView(APIView):
                 {"error": "Profile ID not provided"}, status=status.HTTP_400_BAD_REQUEST
             )
         return handle_reactive_get(
-            request, "modifiedProfiles", {"profile_id": profile_id}
+            request, "modifiedProfiles", profile_id
         )
 
     def patch(self, request):
@@ -72,7 +72,7 @@ class FriendAPIView(APIView):
                 {"error": "Profile ID not provided"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        return handle_reactive_get(request, "friends", {"profile_id": profile_id})
+        return handle_reactive_get(request, "friends", profile_id)
 
     # TODO: for testing purposes put but should be delete
     def put(self, request):
@@ -130,7 +130,7 @@ class FriendRequestAPIView(APIView):
             )
 
         return handle_reactive_get(
-            request, "friendRequestsTo", {"profile_id": profile_id}
+            request, "friendRequestsTo", profile_id
         )
 
     def post(self, request):

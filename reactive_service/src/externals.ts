@@ -3,7 +3,8 @@ import type {
   Resource,
   Context,
   Mapper,
-  NonEmptyIterator,
+  Values,
+  Json,
 } from "@skipruntime/api";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 
@@ -47,7 +48,7 @@ class ExternalServiceSubscriptionMapper
 {
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<ExternalServiceSubscription>
+    values: Values<ExternalServiceSubscription>
   ): Iterable<[string, ExternalServiceSubscription]> {
     const value = values.getUnique();
     console.log(
@@ -61,33 +62,39 @@ class ExternalServiceSubscriptionMapper
 // resources
 
 export class ExternalServiceSubscriptionsResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private profileId: string = "";
+  constructor(params: Json) {
+    if (typeof params === "string") this.profileId = params;
+  }
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, ExternalServiceSubscription> {
-    const profileId = this.params["profile_id"];
-    if (profileId === undefined) {
+    if (!this.profileId) {
       throw new Error("profile_id parameter is required");
     }
-    return collections.profileExternalServiceSubscriptions.slice([
-      profileId,
-      profileId,
-    ]);
+    return collections.profileExternalServiceSubscriptions.slice(
+      this.profileId,
+      this.profileId
+    );
   }
 }
 
 export class WeatherExternalResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private id: string = "";
+  constructor(params: Json) {
+    if (typeof params === "string") this.id = params;
+  }
   instantiate(
     collections: ResourcesCollection,
     context: Context
   ): EagerCollection<string, WeatherResults> {
-    const id = this.params["id"];
-    if (id === undefined) {
+    if (!this.id) {
       throw new Error("id parameter is required");
     }
 
-    const subcription = collections.externalServiceSubscriptions.getUnique(id);
+    const subcription = collections.externalServiceSubscriptions.getUnique(
+      this.id
+    );
 
     return context.useExternalResource<string, WeatherResults>({
       service: "externalAPI",
