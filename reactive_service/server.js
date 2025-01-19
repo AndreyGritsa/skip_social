@@ -37,6 +37,9 @@ const serverMessages = await selectAll("servers_serverchannelmessage");
 const serverChannelAllowedRoles = await selectAll(
   "servers_serverchannelallowedrole"
 );
+const externalServiceSubscriptions = await selectAll(
+  "externals_externalservicesubscription"
+);
 
 runService(
   SocialSkipService(
@@ -51,6 +54,7 @@ runService(
     servers,
     serverChannels,
     serverMessages,
-    serverChannelAllowedRoles
+    serverChannelAllowedRoles,
+    externalServiceSubscriptions
   )
 );
