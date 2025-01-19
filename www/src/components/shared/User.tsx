@@ -9,6 +9,7 @@ import UserSettingsPopper from "./UserSettingsPopper";
 import UserSelectPopper from "./UserSelectPopper";
 import { useEffect, useState } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { useGetExternalsQuery } from "../../services/endpoints/externals";
 
 const User = () => {
   const user = useAppSelector((state) => state.user);
@@ -22,6 +23,9 @@ const User = () => {
   const { refetch: refetchFriends } = useGetFriendsQuery(
     profileId ? profileId : skipToken
   );
+  const { refetch: refetchExternals } = useGetExternalsQuery(
+    profileId ? { profile_id: profileId, type: "externals" } : skipToken
+  );
 
   useEffect(() => {
     if (!profileId) {
@@ -33,6 +37,7 @@ const User = () => {
   useEffect(() => {
     refetchUser();
     refetchFriends();
+    refetchExternals();
   }, [profileId]);
 
   return (

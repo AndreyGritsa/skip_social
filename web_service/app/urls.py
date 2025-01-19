@@ -28,4 +28,5 @@ urlpatterns = [
     path("api/posts/", include("posts.urls")),
     path("api/channels/", include("channels.urls")),
     path("api/servers/", include("servers.urls")),
+    path("api/externals/", include("externals.urls")),
 ]

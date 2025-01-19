@@ -7,6 +7,7 @@ import activeChannelReducer from "../features/active/activeSlice";
 import postsReducer from "../features/posts/postsSlice";
 import friendsReducer from "../features/friends/friendsSlice";
 import serversReducer from "../features/servers/serversSlice";
+import subscriptionsReducer from "../features/subscriptions/subscriptionsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -17,6 +18,7 @@ export const store = configureStore({
     posts: postsReducer,
     friends: friendsReducer,
     servers: serversReducer,
+    subscriptions: subscriptionsReducer,
   },
 
   // Adding the api middleware enables caching, invalidation, polling,

@@ -267,9 +267,7 @@ class ProfileServersResourceAllowedChannelsMapper
       const serverProfileMember = this.serverProfileMembers.getUnique(
         `${server.id}/${this.profileId}`
       );
-      console.log(
-        `Server channels: ${server.channels} for ${serverProfileMember.role}`
-      );
+
       const channels = server.channels;
       // TODO: ask Julien, why can't use .filter?
       for (const channel of channels) {

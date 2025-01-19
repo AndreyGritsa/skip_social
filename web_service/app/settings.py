@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'servers',
     'posts',
     'channels',
+    'externals',
     'rest_framework',
     'corsheaders'
 ]

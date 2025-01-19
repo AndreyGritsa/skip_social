@@ -1,6 +1,10 @@
 import type { EagerCollection, SkipService, Entry } from "@skipruntime/api";
 import type { User, Profile, ModifiedProfile, FriendRequest } from "./users.js";
 import type {
+  WeatherResults,
+  ExternalServiceSubscription,
+} from "./externals.js";
+import type {
   ServerMember,
   Server,
   ServerChannel,
@@ -17,6 +21,7 @@ import type {
   Message,
   ModifiedMessage,
 } from "./channels.js";
+import { GenericExternalService, Polled } from "@skipruntime/helpers";
 import {
   ServerMembersIndexResource,
   createServersCollections,
@@ -43,6 +48,11 @@ import {
   ChannelsResource,
   MessageResource,
 } from "./channels.js";
+import {
+  WeatherExternalResource,
+  createExternalsCollections,
+  ExternalServiceSubscriptionsResource,
+} from "./externals.js";
 
 export type InputCollection = {
   users: EagerCollection<string, User>;
@@ -57,6 +67,10 @@ export type InputCollection = {
   serverChannels: EagerCollection<string, ServerChannel>;
   serverMessages: EagerCollection<string, ServerMessage>;
   serverChannelAllowedRoles: EagerCollection<string, ServerChannelAllowedRole>;
+  externalServiceSubscriptions: EagerCollection<
+    string,
+    ExternalServiceSubscription
+  >;
 };
 
 export type ResourcesCollection = {
@@ -77,6 +91,14 @@ export type ResourcesCollection = {
   serverMembers: EagerCollection<string, ServerMemberProfile>;
   serverChannelsAllowedIndexRoles: EagerCollection<string, boolean>;
   serverProfileMember: EagerCollection<string, ServerMemberProfile>;
+  externalServiceSubscriptions: EagerCollection<
+    string,
+    ExternalServiceSubscription
+  >;
+  profileExternalServiceSubscriptions: EagerCollection<
+    string,
+    ExternalServiceSubscription
+  >;
 };
 
 export function SocialSkipService(
@@ -91,7 +113,8 @@ export function SocialSkipService(
   servers: Entry<string, Server>[],
   serverChannels: Entry<string, ServerChannel>[],
   serverMessages: Entry<string, ServerMessage>[],
-  serverChannelAllowedRoles: Entry<string, ServerChannelAllowedRole>[]
+  serverChannelAllowedRoles: Entry<string, ServerChannelAllowedRole>[],
+  externalServiceSubscriptions: Entry<string, ExternalServiceSubscription>[]
 ): SkipService<InputCollection, ResourcesCollection> {
   return {
     initialData: {
@@ -107,6 +130,7 @@ export function SocialSkipService(
       serverChannels,
       serverMessages,
       serverChannelAllowedRoles,
+      externalServiceSubscriptions,
     },
     resources: {
       // users
@@ -127,6 +151,24 @@ export function SocialSkipService(
       // channels
       channels: ChannelsResource,
       messages: MessageResource,
+      // externals
+      externals: ExternalServiceSubscriptionsResource,
+      weather: WeatherExternalResource,
+    },
+    externalServices: {
+      externalAPI: new GenericExternalService({
+        weatherAPI: new Polled(
+          "https://api.open-meteo.com/v1/forecast",
+          45000,
+          (data: WeatherResults) => {
+            console.log("externalAPI", data);
+            if (data) {
+              return [[0, [data]]];
+            }
+            return [];
+          }
+        ),
+      }),
     },
     createGraph: (inputCollections) => {
       const {
@@ -157,6 +199,10 @@ export function SocialSkipService(
         ...inputCollections,
         modifiedProfiles,
       });
+      const {
+        profileExternalServiceSubscriptions,
+        externalServiceSubscriptions,
+      } = createExternalsCollections(inputCollections);
 
       return {
         friends,
@@ -176,6 +222,8 @@ export function SocialSkipService(
         serverMembers,
         serverChannelsAllowedIndexRoles,
         serverProfileMember,
+        profileExternalServiceSubscriptions,
+        externalServiceSubscriptions,
       };
     },
   };
