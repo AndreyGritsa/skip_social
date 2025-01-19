@@ -9,12 +9,13 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
-    "postgres": "^3.4.5",
-    "skip-wasm": "^0.0.4",
-    "@skipruntime/server": "^0.0.4"
+    "@skipruntime/helpers": "^0.0.8",
+    "@skipruntime/server": "^0.0.8",
+    "postgres": "^3.4.5"
   },
   "devDependencies": {
     "@skiplabs/eslint-config": "^0.0.1",
-    "@skiplabs/tsconfig": "^0.0.1"
+    "@skiplabs/tsconfig": "^0.0.1",
+    "@types/node": "^22.10.7"
   }
 }

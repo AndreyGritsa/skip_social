@@ -60,20 +60,20 @@ def handle_reactive_get(request, resource, params):
         A redirect response to the stream URL if streaming is requested,
         otherwise a JSON response with the resource data.
     """
-        
+
     if "text/event-stream" in request.headers.get("Accept", ""):
         resp = requests.post(
-            f"{REACTIVE_SERVICE_URL}/streams",
-            json={"resource": resource, "params": params},
+            f"{REACTIVE_SERVICE_URL}/streams/{resource}",
+            json=params,
         )
         uuid = resp.text
 
         return redirect(f"/streams/{uuid}", code=307)
 
     else:
-        resp = requests.get(
-            f"{REACTIVE_SERVICE_URL}/resources/{resource}",
-            params=params,
+        resp = requests.post(
+            f"{REACTIVE_SERVICE_URL}/snapshot/{resource}",
+            json=params,
         )
 
         if resp.json():
@@ -96,14 +96,14 @@ def handle_reactive_put(inputs_name, id, data):
         f"{REACTIVE_SERVICE_URL}/inputs/{inputs_name}/{id}",
         json=data,
     )
-    
-    
+
+
 # test utils
-    
-    
+
+
 def mock_requests_reactive(status_code=200, content=None):
-        content = json.dumps(content).encode('utf-8') if content else b'[]'
-        mock_response = requests.Response()
-        mock_response.status_code = status_code
-        mock_response._content = content
-        return mock_response
+    content = json.dumps(content).encode("utf-8") if content else b"[]"
+    mock_response = requests.Response()
+    mock_response.status_code = status_code
+    mock_response._content = content
+    return mock_response

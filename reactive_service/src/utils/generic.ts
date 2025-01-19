@@ -1,11 +1,11 @@
-import type { Mapper, NonEmptyIterator, Json } from "skip-wasm";
+import type { Mapper, Values, Json } from "@skipruntime/api";
 
 export type CustomJson = Json & { created_at: string };
 
 export class GenericSortedMapper<K extends Json, V extends CustomJson>
   implements Mapper<K, V, K, V>
 {
-  mapEntry(key: K, values: NonEmptyIterator<V>): Iterable<[K, V]> {
+  mapEntry(key: K, values: Values<V>): Iterable<[K, V]> {
     const sorted = values.toArray().sort((a, b) => {
       if (!a.created_at || !b.created_at) new Error("created_at is missing");
 

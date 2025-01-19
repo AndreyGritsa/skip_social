@@ -23,7 +23,7 @@ class ChannelAPIView(APIView):
             return Response(
                 {"error": "profile_id is required"}, status=status.HTTP_400_BAD_REQUEST
             )
-        return handle_reactive_get(request, "channels", {"profile_id": profile_id})
+        return handle_reactive_get(request, "channels", profile_id)
 
     def post(self, request):
         profile_id = request.data.get("profile_id")
@@ -94,7 +94,7 @@ class MessageAPIView(APIView):
             return Response(
                 {"error": "channel_id is required"}, status=status.HTTP_400_BAD_REQUEST
             )
-        return handle_reactive_get(request, "messages", {"channel_id": channel_id})
+        return handle_reactive_get(request, "messages", channel_id)
 
     def post(self, request):
         channel_id = request.data.get("channel_id")

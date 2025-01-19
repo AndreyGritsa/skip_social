@@ -1,9 +1,10 @@
 import type {
   EagerCollection,
   Mapper,
-  NonEmptyIterator,
+  Values,
   Resource,
-} from "skip-wasm";
+  Json,
+} from "@skipruntime/api";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 import type { ModifiedProfile } from "./users.js";
 
@@ -44,19 +45,13 @@ type PostsInputCollection = InputCollection & {
 
 // mappers
 class ZeroPostMapper implements Mapper<string, Post, string, Post> {
-  mapEntry(
-    _key: string,
-    values: NonEmptyIterator<Post>
-  ): Iterable<[string, Post]> {
+  mapEntry(_key: string, values: Values<Post>): Iterable<[string, Post]> {
     return [["0", values.getUnique()]];
   }
 }
 
 class SortedPostsMapper implements Mapper<string, Post, string, Post> {
-  mapEntry(
-    _key: string,
-    values: NonEmptyIterator<Post>
-  ): Iterable<[string, Post]> {
+  mapEntry(_key: string, values: Values<Post>): Iterable<[string, Post]> {
     const postsArray = values.toArray();
 
     const sortedPosts = postsArray.sort((a, b) => {
@@ -71,11 +66,8 @@ class SortedPostsMapper implements Mapper<string, Post, string, Post> {
 
 class PostsMapper implements Mapper<string, Post, string, Post> {
   constructor(private comments: EagerCollection<string, Comment>) {}
-  mapEntry(
-    key: string,
-    values: NonEmptyIterator<Post>
-  ): Iterable<[string, Post]> {
-    const post = values.getUnique();
+  mapEntry(key: string, values: Values<Post>): Iterable<[string, Post]> {
+    const post: Post = values.getUnique();
     const comments = this.comments.getArray(key);
     const commentsAmount = comments.length;
     let lastComment;
@@ -103,7 +95,7 @@ class FriendsPostsMapper
 
   mapEntry(
     key: string,
-    values: NonEmptyIterator<ModifiedProfile>
+    values: Values<ModifiedProfile>
   ): Iterable<[string, ModifiedPost]> {
     const result: [string, ModifiedPost][] = [];
     const friends = values.toArray();
@@ -113,7 +105,7 @@ class FriendsPostsMapper
         result.push([
           key,
           {
-            ...post,
+            ...(post as Post),
             author: friend!.name,
           },
         ]);
@@ -130,9 +122,9 @@ class CommentMapper
   constructor(private profiles: EagerCollection<string, ModifiedProfile>) {}
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<Comment>
+    values: Values<Comment>
   ): Iterable<[string, ModifiedComment]> {
-    const comment = values.getUnique();
+    const comment: Comment = values.getUnique();
     const authorName = this.profiles.getUnique(comment.author_id).name;
     return [[comment.post_id, { ...comment, author: authorName }]];
   }
@@ -141,42 +133,50 @@ class CommentMapper
 // resources
 
 export class FriendsPostsResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private profileId: string = "";
+  constructor(params: Json) {
+    if (typeof params === "string") this.profileId = params;
+  }
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, ModifiedPost> {
-    const profileId = this.params["profile_id"];
-    if (profileId === undefined) {
+    if (!this.profileId) {
       throw new Error("profile_id parameter is required");
     }
 
-    return collections.friendsPosts.slice([profileId, profileId]).take(10);
+    return collections.friendsPosts
+      .slice(this.profileId, this.profileId)
+      .take(10);
   }
 }
 
 export class AuthorPostsResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private profileId: string = "";
+  constructor(params: Json) {
+    if (typeof params === "string") this.profileId = params;
+  }
   instantiate(collections: ResourcesCollection): EagerCollection<string, Post> {
-    const profileId = this.params["profile_id"];
-    if (profileId === undefined) {
+    if (!this.profileId) {
       throw new Error("profile_id parameter is required");
     }
 
-    return collections.authorPosts.slice([profileId, profileId]);
+    return collections.authorPosts.slice(this.profileId, this.profileId);
   }
 }
 
 export class CommentsResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private postId: string = "";
+  constructor(params: Json) {
+    if (typeof params === "string") this.postId = params;
+  }
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, Comment> {
-    const postId = this.params["post_id"];
-    if (postId === undefined) {
+    if (!this.postId) {
       throw new Error("post_id parameter is required");
     }
 
-    return collections.comments.slice([postId, postId]);
+    return collections.comments.slice(this.postId, this.postId);
   }
 }
 

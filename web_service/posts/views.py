@@ -25,7 +25,7 @@ class PostAPIView(APIView):
             )
 
         resources_name = "friendsPosts" if post_type == "posts" else "authorPosts"
-        return handle_reactive_get(request, resources_name, {"profile_id": profile_id})
+        return handle_reactive_get(request, resources_name, profile_id)
 
     def post(self, request):
         profile_id = request.data["profile_id"]

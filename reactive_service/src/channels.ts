@@ -1,9 +1,10 @@
 import type {
   EagerCollection,
   Mapper,
-  NonEmptyIterator,
   Resource,
-} from "skip-wasm";
+  Values,
+  Json,
+} from "@skipruntime/api";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 import type { ModifiedProfile } from "./users.js";
 import { GenericSortedMapper } from "./utils/generic.js";
@@ -47,7 +48,7 @@ class ProfileParticipantMapper
 {
   mapEntry(
     key: string,
-    values: NonEmptyIterator<ChannelParticipant>
+    values: Values<ChannelParticipant>
   ): Iterable<[string, string]> {
     const participants = values.getUnique();
     return [[participants.profile_id, key]];
@@ -59,7 +60,7 @@ class ChannelProfileMapper
 {
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<ChannelParticipant>
+    values: Values<ChannelParticipant>
   ): Iterable<[string, string]> {
     const participants = values.getUnique();
     return [[participants.channel_id, participants.profile_id]];
@@ -72,10 +73,7 @@ class ChannelMapper implements Mapper<string, string, string, Channel> {
     private channelParticipants: EagerCollection<string, ChannelParticipant>,
     private channelIdProfileId: EagerCollection<string, string>
   ) {}
-  mapEntry(
-    key: string,
-    values: NonEmptyIterator<string>
-  ): Iterable<[string, Channel]> {
+  mapEntry(key: string, values: Values<string>): Iterable<[string, Channel]> {
     const result: [string, Channel][] = [];
     const profileId = key;
     const participantTableIds = values.toArray();
@@ -103,10 +101,7 @@ class ChannelMapper implements Mapper<string, string, string, Channel> {
 class ChannelNotOneParticipantMapper
   implements Mapper<string, Channel, string, Channel>
 {
-  mapEntry(
-    key: string,
-    values: NonEmptyIterator<Channel>
-  ): Iterable<[string, Channel]> {
+  mapEntry(key: string, values: Values<Channel>): Iterable<[string, Channel]> {
     const result: [string, Channel][] = [];
     const value = values.toArray();
     for (const v of value) {
@@ -126,42 +121,54 @@ export class MessageMapper
   ) {}
   mapEntry(
     _key: string,
-    values: NonEmptyIterator<Message>
+    values: Values<Message>
   ): Iterable<[string, ModifiedMessage]> {
-    const value = values.getUnique();
+    const value: Message = values.getUnique();
     const author = this.modifiedProfiles.getUnique(value.author_id);
-    return [[value.channel_id, { ...value, author: author.name }]];
+    return [
+      [
+        value.channel_id,
+        {
+          author: author.name,
+          ...value,
+        },
+      ],
+    ];
   }
 }
 
 // resources
 
 export class ChannelsResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private profileId: string = "";
+  constructor(params: Json) {
+    if (typeof params === "string") this.profileId = params;
+  }
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, Channel> {
-    const profileId = this.params["profile_id"];
-    if (profileId === undefined) {
+    if (!this.profileId) {
       throw new Error("profile_id parameter is required");
     }
 
-    return collections.channels.slice([profileId, profileId]);
+    return collections.channels.slice(this.profileId, this.profileId);
   }
 }
 
 export class MessageResource implements Resource {
-  constructor(private params: Record<string, string>) {}
+  private channelId: string = "";
+  constructor(params: Json) {
+    if (typeof params === "string") this.channelId = params;
+  }
   instantiate(
     collections: ResourcesCollection
   ): EagerCollection<string, ModifiedMessage> {
-    const channelId = this.params["channel_id"];
-    if (channelId === undefined) {
+    if (!this.channelId) {
       throw new Error("channel_id parameter is required");
     }
 
     return collections.messages
-      .slice([channelId, channelId])
+      .slice(this.channelId, this.channelId)
       .map(GenericSortedMapper<string, ModifiedMessage>)
       .take(20);
   }
