@@ -12,11 +12,16 @@ import {
 } from "@mui/material";
 import { SelectChangeEvent } from "@mui/material/Select";
 import { useState, Fragment } from "react";
+import { WeatherCities } from "../../features/subscriptions/subscriptionsSlice";
+import { useAddExternalSubscriptionMutation } from "../../services/endpoints/externals";
+import { useAppSelector } from "../../app/hooks";
 
 const NewSubscriptionDialog = () => {
   const [open, setOpen] = useState<boolean>(false);
   const [subsctiptionType, setSubscriptionType] = useState<string>("");
   const [city, setCity] = useState<string>("");
+  const [addSubscription] = useAddExternalSubscriptionMutation();
+  const user = useAppSelector((state) => state.user);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -24,6 +29,34 @@ const NewSubscriptionDialog = () => {
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const handleAddSubscription = () => {
+    switch (subsctiptionType) {
+      case "wehather":
+        if (city in WeatherCities) {
+          const params = {
+            city: city,
+            latitude:
+              WeatherCities[city as keyof typeof WeatherCities].latitude,
+            longitude:
+              WeatherCities[city as keyof typeof WeatherCities].longitude,
+            hourly: "temperature_2m,relative_humidity_2m",
+            current: "temperature_2m,wind_speed_10m",
+          };
+          addSubscription({ type: "weather", params: params, profile_id: user.id})
+            .unwrap()
+            .catch((error) => console.error(error));
+        }
+
+        break;
+      case "currency":
+        console.log("Currency subscription");
+        break;
+      default:
+        break;
+    }
+    handleClose();
   };
 
   const handleChange = (event: SelectChangeEvent, type: string) => {
@@ -60,7 +93,7 @@ const NewSubscriptionDialog = () => {
                 onChange={(event) => handleChange(event, "subscription")}
               >
                 <MenuItem value={"wehather"}>Weather</MenuItem>
-                <MenuItem value={"curreny"}>Currency exchange rates</MenuItem>
+                <MenuItem value={"currency"}>Currency exchange rates</MenuItem>
               </Select>
             </FormControl>
             {subsctiptionType === "wehather" && (
@@ -73,9 +106,9 @@ const NewSubscriptionDialog = () => {
                   label="City"
                   onChange={(event) => handleChange(event, "city")}
                 >
-                  <MenuItem value={"barcelona"}>Barcelona</MenuItem>
-                  <MenuItem value={"london"}>London</MenuItem>
-                  <MenuItem value={"new_york"}>New York</MenuItem>
+                  <MenuItem value={"Barcelona"}>Barcelona</MenuItem>
+                  <MenuItem value={"London"}>London</MenuItem>
+                  <MenuItem value={"New York"}>New York</MenuItem>
                 </Select>
               </FormControl>
             )}
@@ -83,7 +116,9 @@ const NewSubscriptionDialog = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
-          <Button type="submit">Save</Button>
+          <Button type="submit" onClick={handleAddSubscription}>
+            Save
+          </Button>
         </DialogActions>
       </Dialog>
     </Fragment>

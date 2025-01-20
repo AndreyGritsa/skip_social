@@ -10,6 +10,7 @@ export const extendedExternalSlice = socialApi.injectEndpoints({
     >({
       query: (params) =>
         `externals/?profile_id=${params.profile_id}&type=${params.type}&id=${params.id}`,
+      providesTags: ["Externals"],
       async onCacheEntryAdded(
         arg,
         { cacheDataLoaded, cacheEntryRemoved, dispatch, updateCachedData }
@@ -35,6 +36,7 @@ export const extendedExternalSlice = socialApi.injectEndpoints({
     >({
       query: (params) =>
         `externals/?profile_id=${params.profile_id}&type=${params.type}&id=${params.id}`,
+      providesTags: ["Externals"],
       async onCacheEntryAdded(
         arg,
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData }
@@ -60,8 +62,28 @@ export const extendedExternalSlice = socialApi.injectEndpoints({
         );
       },
     }),
+    invalidateExternals: builder.mutation<void, void>({
+      queryFn: () => {
+        return { data: undefined };
+      },
+      invalidatesTags: ["Externals"],
+    }),
+    addExternalSubscription: builder.mutation<
+      any,
+      { type: string; params: Record<string, any>, profile_id: string }
+    >({
+      query: (data) => ({
+        url: `externals/`,
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
-export const { useGetExternalsQuery, useGetExternalsWeatherQuery } =
-  extendedExternalSlice;
+export const {
+  useGetExternalsQuery,
+  useGetExternalsWeatherQuery,
+  useInvalidateExternalsMutation,
+  useAddExternalSubscriptionMutation,
+} = extendedExternalSlice;

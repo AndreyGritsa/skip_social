@@ -344,7 +344,6 @@ export class ServerMembersIndexResource implements Resource {
 export class ProfileServersResource implements Resource {
   private profileId: string;
   constructor(params: Json) {
-    console.log(`test param: ${params}`);
     if (typeof params == "string") this.profileId = params;
     else this.profileId = "";
   }
@@ -370,7 +369,6 @@ export class ProfileServersResource implements Resource {
 export class ServerMessagesResource implements Resource {
   private channelId: string;
   constructor(params: Json) {
-    console.log(`test param: ${params}`);
     if (typeof params == "string") this.channelId = params;
     else this.channelId = "";
   }

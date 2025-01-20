@@ -86,16 +86,19 @@ def handle_reactive_put(inputs_name, id, data):
     Sends a PUT request to the reactive service to update the specified input with the given data.
     Args:
         inputs_name (str): The name of the input to be updated.
-        id (int): The identifier of the input to be updated.
+        id (str): The identifier of the input to be updated.
         data (dict): The data to update the input with.
     Returns:
         Response: The response object from the requests library.
     """
-    data = [data] if data else []
-    return requests.put(
-        f"{REACTIVE_SERVICE_URL}/inputs/{inputs_name}/{id}",
+    id = str(id) # Ensure id is a string
+    data = [[id, [data]]] if data else [[id, []]]
+   
+    return requests.patch(
+        f"{REACTIVE_SERVICE_URL}/inputs/{inputs_name}",
         json=data,
     )
+    
 
 
 # test utils
