@@ -3,11 +3,20 @@ import { Paper } from "@mui/material";
 import NewSubscriptionDialog from "./NewSubscriptionDialog";
 import { useAppSelector } from "../../app/hooks";
 import WeatherSubscription from "./WeatherSubscription";
+import { useEffect } from "react";
+import { useInvalidateExternalsMutation } from "../../services/endpoints/externals";
 
 const SubscriptionContainer = () => {
   const subscriptions = useAppSelector(
     (state) => state.subscriptions.subscriptions
   );
+  const [invalidateExternals] = useInvalidateExternalsMutation();
+
+  useEffect(() => {
+    return () => {
+      invalidateExternals();
+    };
+  }, []);
 
   return (
     <Grid container spacing={2}>

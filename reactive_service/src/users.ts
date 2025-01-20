@@ -269,7 +269,6 @@ export class FriendRequestsFromResource implements Resource {
 export class ModifiedProfileResource implements Resource {
   private profileId: string;
   constructor(params: Json) {
-    console.log(`test param: ${params}`);
     if (typeof params == "string") this.profileId = params;
     else this.profileId = "";
   }
