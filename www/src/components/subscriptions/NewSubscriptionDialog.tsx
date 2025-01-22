@@ -36,7 +36,6 @@ const NewSubscriptionDialog = () => {
       case "wehather":
         if (city in WeatherCities) {
           const params = {
-            city: city,
             latitude:
               WeatherCities[city as keyof typeof WeatherCities].latitude,
             longitude:
