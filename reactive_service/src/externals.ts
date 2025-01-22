@@ -91,15 +91,18 @@ export class WeatherExternalResource implements Resource {
     if (!this.id) {
       throw new Error("id parameter is required");
     }
-
-    const subcription = collections.externalServiceSubscriptions.getUnique(
+    let query_params = {}
+    const subcriptionArray = collections.externalServiceSubscriptions.getArray(
       this.id
     );
 
+    if (subcriptionArray && subcriptionArray.length > 0) {
+      query_params = subcriptionArray[0]!.query_params
+    }
     return context.useExternalResource<string, WeatherResults>({
       service: "externalAPI",
       identifier: "weatherAPI",
-      params: subcription.query_params,
+      params: query_params,
     });
   }
 }

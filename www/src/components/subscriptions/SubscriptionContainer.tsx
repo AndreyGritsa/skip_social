@@ -19,7 +19,7 @@ const SubscriptionContainer = () => {
   }, []);
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={2} sx={{height: "1dvh",}}>
       <Grid size={12}>
         <NewSubscriptionDialog />
       </Grid>

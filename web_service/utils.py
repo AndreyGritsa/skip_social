@@ -25,7 +25,7 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
         return  # To not perform the csrf check
 
 
-# TODO: Find better sollution to accept text/event-stream
+# TODO: Find a better solution to accept text/event-stream
 class IgnoreClientContentNegotiation(BaseContentNegotiation):
     """
     Custom content negotiation class that ignores client content negotiation.
@@ -83,7 +83,7 @@ def handle_reactive_get(request, resource, params):
 
 def handle_reactive_put(inputs_name, id, data):
     """
-    Sends a PUT request to the reactive service to update the specified input with the given data.
+    Sends a PATCH request to the reactive service to update the specified input with the given data.
     Args:
         inputs_name (str): The name of the input to be updated.
         id (str): The identifier of the input to be updated.

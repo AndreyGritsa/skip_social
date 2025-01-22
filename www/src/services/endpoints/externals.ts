@@ -78,6 +78,15 @@ export const extendedExternalSlice = socialApi.injectEndpoints({
         body: data,
       }),
     }),
+    deleteSubscription: builder.mutation<
+      any,
+      string
+      >({
+      query: (id) => ({
+        url: `externals/${id}/`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
@@ -86,4 +95,5 @@ export const {
   useGetExternalsWeatherQuery,
   useInvalidateExternalsMutation,
   useAddExternalSubscriptionMutation,
+  useDeleteSubscriptionMutation,
 } = extendedExternalSlice;

@@ -1,9 +1,14 @@
 import { useAppSelector } from "../../app/hooks";
-import { useGetExternalsWeatherQuery } from "../../services/endpoints/externals";
+import {
+  useGetExternalsWeatherQuery,
+  useDeleteSubscriptionMutation,
+} from "../../services/endpoints/externals";
 import { skipToken } from "@reduxjs/toolkit/query";
 import Grid from "@mui/material/Grid2";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
+import { WeatherCities } from "../../features/subscriptions/subscriptionsSlice";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const WeatherSubscription = ({ id }: { id: string }) => {
   const user = useAppSelector((state) => state.user);
@@ -11,6 +16,8 @@ const WeatherSubscription = ({ id }: { id: string }) => {
     user.id ? { profile_id: user.id, type: "weather", id } : skipToken
   );
   const [forecast, setForecast] = useState<Record<string, any>[]>([]);
+  const [city, setCity] = useState<string>("");
+  const [deleteSubscription] = useDeleteSubscriptionMutation();
 
   const mapHourlyForecast = (data: Record<string, any>) => {
     const { temperature_2m: temperatures, time: times } = data.hourly;
@@ -28,12 +35,43 @@ const WeatherSubscription = ({ id }: { id: string }) => {
     if (data && data.length > 0 && data[0].current) return true;
   };
 
+  const getCityName = (longitude: number, latitude: number): string => {
+    const tolerance = 0.1;
+    for (const city in WeatherCities) {
+      const cityData = WeatherCities[city as keyof typeof WeatherCities];
+      if (
+        Math.abs(cityData.longitude - longitude) < tolerance &&
+        Math.abs(cityData.latitude - latitude) < tolerance
+      ) {
+        return city;
+      }
+    }
+    return "";
+  };
+
   useEffect(() => {
-    isWeatherData(data) && setForecast(mapHourlyForecast(data[0]));
+    if (isWeatherData(data)) {
+      setForecast(mapHourlyForecast(data[0]));
+      setCity(getCityName(data[0].longitude, data[0].latitude));
+    }
   }, [data]);
+
+  const handleDeleteSubscripion = () => {
+    deleteSubscription(id)
+      .unwrap()
+      .catch((error) => console.error(error));
+  };
 
   return isWeatherData(data) ? (
     <Grid container spacing={2}>
+      <Grid size={6}>
+        <Typography variant="h6">Weather: {city}</Typography>
+      </Grid>
+      <Grid container size={6} sx={{ justifyContent: "flex-end" }}>
+        <IconButton onClick={handleDeleteSubscripion}>
+          <DeleteIcon />
+        </IconButton>
+      </Grid>
       <Grid size={6}>Temperature: {data[0].current.temperature_2m}°C</Grid>
       <Grid size={6}>Wind speed: {data[0].current.wind_speed_10m} m/s</Grid>
       <Grid size={12}>
