@@ -3,6 +3,7 @@ import type { User, Profile, ModifiedProfile, FriendRequest } from "./users.js";
 import type {
   WeatherResults,
   ExternalServiceSubscription,
+  CryptoResults
 } from "./externals.js";
 import type {
   ServerMember,
@@ -52,6 +53,8 @@ import {
   WeatherExternalResource,
   createExternalsCollections,
   ExternalServiceSubscriptionsResource,
+  CustomPolled,
+  CryptoExternalResource
 } from "./externals.js";
 
 export type InputCollection = {
@@ -154,6 +157,7 @@ export function SocialSkipService(
       // externals
       externals: ExternalServiceSubscriptionsResource,
       weather: WeatherExternalResource,
+      crypto: CryptoExternalResource
     },
     externalServices: {
       externalAPI: new GenericExternalService({
@@ -161,13 +165,20 @@ export function SocialSkipService(
           "https://api.open-meteo.com/v1/forecast",
           45000,
           (data: WeatherResults) => {
-            console.log("externalAPI", data);
+            // console.log("externalAPI", data);
             if (data) {
               return [[0, [data]]];
             }
             return [];
           }
         ),
+        cryptoAPI: new CustomPolled("", 45000, (data: CryptoResults) => {
+          console.log("crypto", data);
+          if (data) {
+            return [[0, [data]]];
+          }
+          return [];
+        }),
       }),
     },
     createGraph: (inputCollections) => {

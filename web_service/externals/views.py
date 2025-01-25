@@ -11,7 +11,7 @@ from utils import (
     IgnoreClientContentNegotiation,
 )
 
-SUBSCRIPTION_TYPES = ["externals", "weather"]
+SUBSCRIPTION_TYPES = ["externals", "weather", "crypto"]
 
 
 class ExternalServiceSubscriptionAPIView(APIView):

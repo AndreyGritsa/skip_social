@@ -20,6 +20,7 @@ const NewSubscriptionDialog = () => {
   const [open, setOpen] = useState<boolean>(false);
   const [subsctiptionType, setSubscriptionType] = useState<string>("");
   const [city, setCity] = useState<string>("");
+  const [currency, setCurrency] = useState<string>("");
   const [addSubscription] = useAddExternalSubscriptionMutation();
   const user = useAppSelector((state) => state.user);
 
@@ -43,14 +44,22 @@ const NewSubscriptionDialog = () => {
             hourly: "temperature_2m,relative_humidity_2m",
             current: "temperature_2m,wind_speed_10m",
           };
-          addSubscription({ type: "weather", params: params, profile_id: user.id})
+          addSubscription({
+            type: "weather",
+            params: params,
+            profile_id: user.id,
+          })
             .unwrap()
             .catch((error) => console.error(error));
         }
 
         break;
       case "currency":
-        console.log("Currency subscription");
+        addSubscription({
+          type: "crypto",
+          params: { url: `https://api.coincap.io/v2/assets/${currency}` },
+          profile_id: user.id,
+        });
         break;
       default:
         break;
@@ -65,6 +74,9 @@ const NewSubscriptionDialog = () => {
         break;
       case "city":
         setCity(event.target.value as string);
+        break;
+      case "currency":
+        setCurrency(event.target.value as string);
         break;
       default:
         break;
@@ -108,6 +120,22 @@ const NewSubscriptionDialog = () => {
                   <MenuItem value={"Barcelona"}>Barcelona</MenuItem>
                   <MenuItem value={"London"}>London</MenuItem>
                   <MenuItem value={"New York"}>New York</MenuItem>
+                </Select>
+              </FormControl>
+            )}
+            {subsctiptionType === "currency" && (
+              <FormControl fullWidth>
+                <InputLabel id="select-crypto-city-label">Coin</InputLabel>
+                <Select
+                  labelId="select-crypto-city-label"
+                  id="select-crypto-city"
+                  value={currency}
+                  label="Coin"
+                  onChange={(event) => handleChange(event, "currency")}
+                >
+                  <MenuItem value={"bitcoin"}>Bitcoin</MenuItem>
+                  <MenuItem value={"ethereum"}>Ethereum</MenuItem>
+                  <MenuItem value={"tether"}>Tether</MenuItem>
                 </Select>
               </FormControl>
             )}

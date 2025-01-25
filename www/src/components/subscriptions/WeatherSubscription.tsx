@@ -12,7 +12,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 const WeatherSubscription = ({ id }: { id: string }) => {
   const user = useAppSelector((state) => state.user);
-  const { data, refetch: refetchExternals } = useGetExternalsWeatherQuery(
+  const { data } = useGetExternalsWeatherQuery(
     user.id ? { profile_id: user.id, type: "weather", id } : skipToken
   );
   const [forecast, setForecast] = useState<Record<string, any>[]>([]);
