@@ -96,7 +96,7 @@ class CommentAPIView(APIView):
             return Response(
                 {"error": "Post ID not provided"}, status=status.HTTP_400_BAD_REQUEST
             )
-        return handle_reactive_get(request, "comments", {"post_id": post_id})
+        return handle_reactive_get(request, "comments", post_id)
 
     def post(self, request):
         serializer = CommentSerializer(data=request.data)

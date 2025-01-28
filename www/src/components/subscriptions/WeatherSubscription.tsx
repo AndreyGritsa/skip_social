@@ -18,6 +18,23 @@ const WeatherSubscription = ({ id }: { id: string }) => {
   const [forecast, setForecast] = useState<Record<string, any>[]>([]);
   const [city, setCity] = useState<string>("");
   const [deleteSubscription] = useDeleteSubscriptionMutation();
+  const [lastUpdatedTimestamp, setLastUpdatedTimestamp] = useState<number>(0);
+  const [currentTimestamp, setCurrentTimestamp] = useState<number>(Date.now());
+
+  useEffect(() => {
+    if (isWeatherData(data)) {
+      setForecast(mapHourlyForecast(data[0]));
+      setCity(getCityName(data[0].longitude, data[0].latitude));
+      setLastUpdatedTimestamp(Date.now());
+    }
+  }, [data]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTimestamp(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const mapHourlyForecast = (data: Record<string, any>) => {
     const { temperature_2m: temperatures, time: times } = data.hourly;
@@ -49,13 +66,6 @@ const WeatherSubscription = ({ id }: { id: string }) => {
     return "";
   };
 
-  useEffect(() => {
-    if (isWeatherData(data)) {
-      setForecast(mapHourlyForecast(data[0]));
-      setCity(getCityName(data[0].longitude, data[0].latitude));
-    }
-  }, [data]);
-
   const handleDeleteSubscripion = () => {
     deleteSubscription(id)
       .unwrap()
@@ -64,6 +74,11 @@ const WeatherSubscription = ({ id }: { id: string }) => {
 
   return isWeatherData(data) ? (
     <Grid container spacing={2}>
+      <Grid size={12}>
+        Last updated:{" "}
+        {Math.ceil((currentTimestamp - lastUpdatedTimestamp) / 1000)} seconds
+        ago.
+      </Grid>
       <Grid size={6}>
         <Typography variant="h6">Weather: {city}</Typography>
       </Grid>
