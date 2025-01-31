@@ -1,4 +1,4 @@
-import type { EagerCollection, SkipService, Entry } from "@skipruntime/api";
+import type { EagerCollection, SkipService, Entry, Context, Json } from "@skipruntime/api";
 import type { User, Profile, ModifiedProfile, FriendRequest } from "./users.js";
 import type {
   WeatherResults,
@@ -48,6 +48,7 @@ import {
   createChannelsCollections,
   ChannelsResource,
   MessageResource,
+  ChannelCommandResource
 } from "./channels.js";
 import {
   WeatherExternalResource,
@@ -102,6 +103,7 @@ export type ResourcesCollection = {
     string,
     ExternalServiceSubscription
   >;
+  chatCommand: EagerCollection<string, Json>;
 };
 
 export function SocialSkipService(
@@ -154,10 +156,11 @@ export function SocialSkipService(
       // channels
       channels: ChannelsResource,
       messages: MessageResource,
+      channelCommand: ChannelCommandResource,
       // externals
       externals: ExternalServiceSubscriptionsResource,
       weather: WeatherExternalResource,
-      crypto: CryptoExternalResource
+      crypto: CryptoExternalResource,
     },
     externalServices: {
       externalAPI: new GenericExternalService({
@@ -181,7 +184,7 @@ export function SocialSkipService(
         }),
       }),
     },
-    createGraph: (inputCollections) => {
+    createGraph: (inputCollections: InputCollection, context: Context) => {
       const {
         friends,
         friendIndex,
@@ -206,9 +209,10 @@ export function SocialSkipService(
         ...inputCollections,
         modifiedProfiles,
       });
-      const { channels, messages } = createChannelsCollections({
+      const { channels, messages, chatCommand } = createChannelsCollections({
         ...inputCollections,
         modifiedProfiles,
+        context
       });
       const {
         profileExternalServiceSubscriptions,
@@ -235,6 +239,7 @@ export function SocialSkipService(
         serverProfileMember,
         profileExternalServiceSubscriptions,
         externalServiceSubscriptions,
+        chatCommand
       };
     },
   };

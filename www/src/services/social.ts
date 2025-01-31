@@ -14,7 +14,8 @@ const socialApi = createApi({
     "ServerMessages",
     "ServerMembers",
     "FriendRequests",
-    "Externals"
+    "Externals",
+    "ChannelCommand"
   ],
   endpoints: () => ({}),
 });

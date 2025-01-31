@@ -126,3 +126,16 @@ class MessageAPIView(APIView):
         )
 
         return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
+    
+    
+class ChannelCommandAPIView(APIView):
+    content_negotiation_class = IgnoreClientContentNegotiation
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+
+    def get(self, request):
+        channel_id = request.query_params.get("channel_id")
+        if not channel_id:
+            return Response(
+                {"error": "channel_id is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        return handle_reactive_get(request, "channelCommand", channel_id)
