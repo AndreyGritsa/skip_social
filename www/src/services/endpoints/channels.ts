@@ -96,21 +96,29 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
       },
       invalidatesTags: ["Channels"],
     }),
-    getChannelCommand: builder.query<string, string>({
+    getChannelCommand: builder.query<string[], string>({
       query: (channel_id) =>
         `channels/channel-command/?channel_id=${channel_id}`,
       async onCacheEntryAdded(
         arg,
-        { cacheDataLoaded, cacheEntryRemoved, dispatch }
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData }
       ) {
         handleEventSource(
           `/api/channels/channel-command/?channel_id=${arg}`,
           {
-            init: (data) => {
+            init: (data: string[]) => {
               console.log("init channel-command", data);
+              updateCachedData((draft) => {
+                draft.length = 0;
+                data.forEach((element) => draft.push(element));
+              });
             },
-            update: (data) => {
+            update: (data: string[]) => {
               console.log("update channel-command", data);
+              updateCachedData((draft) => {
+                draft.length = 0;
+                data.forEach((element) => draft.push(element));
+              });
             },
           },
           cacheDataLoaded,

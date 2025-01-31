@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../app/hooks";
 import { addMessage } from "../../features/channels/channelsSlice";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { setActiveChannel } from "../../features/active/activeSlice";
 import { reorderChannels } from "../../features/channels/channelsSlice";
 import {
@@ -24,10 +24,10 @@ const ChannelContainer = () => {
   const { refetch } = useGetMessagesQuery(channel ? channelId! : skipToken);
   const [invalidateMessages] = useInvalidateMessagesMutation();
   const [postMessage] = usePostMessageMutation();
-  const { refetch: refetchChannelCommand } = useGetChannelCommandQuery(
-    channel ? channelId! : skipToken
-  );
+  const { data: chatCommandResponse, refetch: refetchChannelCommand } =
+    useGetChannelCommandQuery(channel ? channelId! : skipToken);
   const [invalidateChannelCommand] = useInvalidateChannelCommandMutation();
+  const [chatCommand, setChatCommand] = useState<string>("");
 
   useEffect(() => {
     // on page reload, makes sure channel is present
@@ -53,6 +53,12 @@ const ChannelContainer = () => {
     }
   }, [channelId, dispatch]);
 
+  useEffect(() => {
+    if (chatCommandResponse) {
+      setChatCommand(chatCommandResponse[0]);
+    }
+  }, [chatCommandResponse]);
+
   const handleSendMessage = (messageInput: string) => {
     if (channelId) {
       dispatch(
@@ -73,6 +79,7 @@ const ChannelContainer = () => {
     <MessagesContainer
       messages={channel.messages}
       handleSendMessage={handleSendMessage}
+      chatCommand={chatCommand}
     />
   ) : null;
 };
