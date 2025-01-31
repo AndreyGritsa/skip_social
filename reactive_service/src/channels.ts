@@ -163,14 +163,31 @@ class ComputeChatCommand implements LazyCompute<string, string> {
       const lastMessage = messages[0]!;
       switch (lastMessage.content.toLowerCase()) {
         case "!info":
-          return ["Compute info"];
+          return [
+            `${
+              messages.length
+            } messages in this channel, first message was sent at ${
+              messages[messages.length - 1]!.created_at
+            } by ${messages[messages.length - 1]!.author}`,
+          ];
         case "!complex":
-          return ["Compute complex calculation"];
+          return [this.computeAverageMessageLength(messages)];
         default:
           return ["Unknown command"];
       }
     }
-    return ["No messages"];
+    return [""];
+  }
+
+  private computeAverageMessageLength(messages: ModifiedMessage[]): string {
+    const totalLength = messages.reduce(
+      (sum, message) => sum + message.content.length,
+      0
+    );
+    const averageLength = totalLength / messages.length;
+    return `Average message length in this channel: ${averageLength.toFixed(
+      2
+    )} characters`;
   }
 }
 

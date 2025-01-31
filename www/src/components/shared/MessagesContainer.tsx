@@ -16,10 +16,11 @@ import { Message } from "../../features/channels/channelsSlice";
 type MessageContainerProps = {
   messages: Message[];
   handleSendMessage: (messageInput: string) => void;
+  chatCommand?: string;
 };
 
 const MessagesContainer = (props: MessageContainerProps) => {
-  const { messages, handleSendMessage } = props;
+  const { messages, handleSendMessage, chatCommand } = props;
   const [messageInput, setMessageInput] = useState<string>("");
 
   const sendMessage = () => {
@@ -55,6 +56,24 @@ const MessagesContainer = (props: MessageContainerProps) => {
           scrollBehavior: "smooth",
         }}
       >
+        {chatCommand && (
+          <ListItem
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+            }}
+          >
+            <Paper sx={{ p: 1 }} variant="outlined">
+              <Typography variant="body1" color="primary">
+                {chatCommand}
+              </Typography>
+              <Typography variant="caption" color="textSecondary">
+                Lazy compute
+              </Typography>
+            </Paper>
+          </ListItem>
+        )}
         {messages.map((message) => (
           <ListItem
             sx={{
