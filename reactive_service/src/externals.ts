@@ -72,10 +72,6 @@ class ExternalServiceSubscriptionMapper
     values: Values<ExternalServiceSubscription>
   ): Iterable<[string, ExternalServiceSubscription]> {
     const value = values.getUnique();
-    console.log(
-      `external service subscription queryparams: ${value.query_params}, profile_id: ${value.profile_id}`
-    );
-
     return [[value.profile_id, value]];
   }
 }
@@ -149,6 +145,9 @@ export class CryptoExternalResource implements Resource {
     if (subcriptionArray && subcriptionArray.length > 0) {
       query_params = subcriptionArray[0]!.query_params;
     }
+    // TODO: move usage of useExternalResource 
+    // to createGraph and map the results there properly
+    // to avoid unnecessary connections
     return context.useExternalResource<string, CryptoResults>({
       service: "externalAPI",
       identifier: "cryptoAPI",

@@ -4,10 +4,13 @@ import type {
   Resource,
   Values,
   Json,
+  LazyCollection,
+  LazyCompute,
 } from "@skipruntime/api";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 import type { ModifiedProfile } from "./users.js";
 import { GenericSortedMapper } from "./utils/generic.js";
+import type { Context } from "@skipruntime/api";
 
 // types
 
@@ -35,10 +38,12 @@ export type ModifiedMessage = Message & { author: string };
 type OutputCollection = {
   channels: EagerCollection<string, Channel>;
   messages: EagerCollection<string, ModifiedMessage>;
+  chatCommand: EagerCollection<string, Json>;
 };
 
 type ChannelsInputCollection = InputCollection & {
   modifiedProfiles: EagerCollection<string, ModifiedProfile>;
+  context: Context;
 };
 
 // mappers
@@ -137,6 +142,71 @@ export class MessageMapper
   }
 }
 
+class ComputeChatCommand implements LazyCompute<string, string> {
+  constructor(
+    private skall: EagerCollection<string, ChannelParticipant>,
+    private messages: EagerCollection<string, ModifiedMessage>
+  ) {}
+  compute(
+    _self: LazyCollection<string, string>,
+    key: string
+  ): Iterable<string> {
+    const channelId = this.skall.getUnique(key).channel_id;
+    const messages = this.messages.getArray(channelId);
+    messages.sort((a, b) => {
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+
+    if (messages.length > 0) {
+      const lastMessage = messages[0]!;
+      switch (lastMessage.content.toLowerCase()) {
+        case "!info":
+          return ["Compute info"];
+        case "!complex":
+          return ["Compute complex calculation"];
+        default:
+          return ["Unknown command"];
+      }
+    }
+    return ["No messages"];
+  }
+}
+
+class ChatCommandMapper
+  implements Mapper<string, ChannelParticipant, string, string>
+{
+  constructor(
+    private evaluator: LazyCollection<string, string>,
+    private messages: EagerCollection<string, ModifiedMessage>
+  ) {}
+
+  mapEntry(
+    key: string,
+    values: Values<ChannelParticipant>
+  ): Iterable<[string, string]> {
+    const participant = values.getUnique();
+    let value = "";
+    // TODO: DRY
+    // TODO: Sort messages earlier
+    const messages = this.messages.getArray(participant.channel_id);
+    messages.sort((a, b) => {
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+
+    if (messages.length > 0) {
+      const lastMessage = messages[0]!;
+      if (lastMessage.content.startsWith("!")) {
+        value = this.evaluator.getUnique(key);
+      }
+    }
+    return [[participant.channel_id, value]];
+  }
+}
+
 // resources
 
 export class ChannelsResource implements Resource {
@@ -174,6 +244,20 @@ export class MessageResource implements Resource {
   }
 }
 
+export class ChannelCommandResource implements Resource {
+  private channelId: string = "";
+  constructor(params: Json) {
+    if (typeof params === "string") this.channelId = params;
+  }
+  instantiate(collections: ResourcesCollection): EagerCollection<string, Json> {
+    if (!this.channelId) {
+      throw new Error("channel_id parameter is required");
+    }
+
+    return collections.chatCommand.slice(this.channelId, this.channelId);
+  }
+}
+
 // main function
 export const createChannelsCollections = (
   inputCollections: ChannelsInputCollection
@@ -194,5 +278,17 @@ export const createChannelsCollections = (
     MessageMapper,
     inputCollections.modifiedProfiles
   );
-  return { channels, messages };
+  // TODO: Should be for chanels instead of participants?
+  const lazyChatCommand = inputCollections.context.createLazyCollection(
+    ComputeChatCommand,
+    inputCollections.channelParticipants,
+    messages
+  );
+  const chatCommand = inputCollections.channelParticipants.map(
+    ChatCommandMapper,
+    lazyChatCommand,
+    messages
+  );
+
+  return { channels, messages, chatCommand };
 };

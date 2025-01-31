@@ -8,6 +8,8 @@ import {
   useGetMessagesQuery,
   useInvalidateMessagesMutation,
   usePostMessageMutation,
+  useGetChannelCommandQuery,
+  useInvalidateChannelCommandMutation,
 } from "../../services/endpoints/channels";
 import { skipToken } from "@reduxjs/toolkit/query";
 import MessagesContainer from "../shared/MessagesContainer";
@@ -22,19 +24,27 @@ const ChannelContainer = () => {
   const { refetch } = useGetMessagesQuery(channel ? channelId! : skipToken);
   const [invalidateMessages] = useInvalidateMessagesMutation();
   const [postMessage] = usePostMessageMutation();
+  const { refetch: refetchChannelCommand } = useGetChannelCommandQuery(
+    channel ? channelId! : skipToken
+  );
+  const [invalidateChannelCommand] = useInvalidateChannelCommandMutation();
 
   useEffect(() => {
     // on page reload, makes sure channel is present
     // before fetching messages
-    if (channel) refetch();
-  }, [refetch, channel]);
+    if (channel) {
+      refetch();
+      refetchChannelCommand();
+    }
+  }, [refetch, channel, refetchChannelCommand]);
 
   useEffect(() => {
     // close the event source when the component is unmounted
     return () => {
       invalidateMessages();
+      invalidateChannelCommand();
     };
-  }, [invalidateMessages]);
+  }, [invalidateMessages, invalidateChannelCommand]);
 
   useEffect(() => {
     // make sure the active channel is set when page is reloaded

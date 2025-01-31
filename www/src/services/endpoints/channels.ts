@@ -96,6 +96,34 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
       },
       invalidatesTags: ["Channels"],
     }),
+    getChannelCommand: builder.query<string, string>({
+      query: (channel_id) =>
+        `channels/channel-command/?channel_id=${channel_id}`,
+      async onCacheEntryAdded(
+        arg,
+        { cacheDataLoaded, cacheEntryRemoved, dispatch }
+      ) {
+        handleEventSource(
+          `/api/channels/channel-command/?channel_id=${arg}`,
+          {
+            init: (data) => {
+              console.log("init channel-command", data);
+            },
+            update: (data) => {
+              console.log("update channel-command", data);
+            },
+          },
+          cacheDataLoaded,
+          cacheEntryRemoved
+        );
+      },
+    }),
+    invalidateChannelCommand: builder.mutation<void, void>({
+      queryFn: () => {
+        return { data: undefined };
+      },
+      invalidatesTags: ["ChannelCommand"],
+    })
   }),
 });
 
@@ -106,4 +134,6 @@ export const {
   useInvalidateMessagesMutation,
   usePostMessageMutation,
   useInvalidateChannelsMutation,
+  useGetChannelCommandQuery,
+  useInvalidateChannelCommandMutation,
 } = extendedSocialSlice;
