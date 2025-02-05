@@ -71,7 +71,15 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-social_password}
       POSTGRES_HOST: ${DB_HOST:-postgres}
     depends_on:
+      - web
       - postgres
+    entrypoint: >
+      sh -c "while ! curl -sSf http://web:3031/api/health/; do
+               echo 'Waiting for web to be healthy...';
+               sleep 5;
+             done;
+             echo 'Web is healthy, starting reactive_cache...';
+             npm start"
 
 volumes:
   postgres_data:

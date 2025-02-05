@@ -17,12 +17,14 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from .views import HealthAPIView
 
 admin.site.site_header = "Reactive Social Admin"
 admin.site.index_title = "Reactive Social features area"
 admin.site.site_title = "Reactive Social Admin"
 
 urlpatterns = [
+    path("api/health/", HealthAPIView.as_view(), name="health"),
     path("api/admin/", admin.site.urls),
     path("api/users/", include("users.urls")),
     path("api/posts/", include("posts.urls")),
