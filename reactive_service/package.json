@@ -9,8 +9,8 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
-    "@skipruntime/helpers": "^0.0.8",
-    "@skipruntime/server": "^0.0.8",
+    "@skipruntime/helpers": "^0.0.10",
+    "@skipruntime/server": "^0.0.10",
     "postgres": "^3.4.5"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import type { Mapper, Values, Json } from "@skipruntime/api";
+import type { Mapper, Values, Json } from "@skipruntime/core";
 
 export type CustomJson = Json & { created_at: string };
 

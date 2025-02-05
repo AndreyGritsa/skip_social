@@ -6,11 +6,11 @@ import type {
   Json,
   LazyCollection,
   LazyCompute,
-} from "@skipruntime/api";
+} from "@skipruntime/core";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 import type { ModifiedProfile } from "./users.js";
 import { GenericSortedMapper } from "./utils/generic.js";
-import type { Context } from "@skipruntime/api";
+import type { Context } from "@skipruntime/core";
 
 // types
 

@@ -4,9 +4,9 @@ import type {
   Mapper,
   Values,
   Json,
-} from "@skipruntime/api";
+} from "@skipruntime/core";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
-import { isJsonObject } from "./utils/function.js";
+import { isJsonObject } from "./utils/other.js";
 
 // Types
 

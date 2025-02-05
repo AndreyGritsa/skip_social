@@ -4,7 +4,7 @@ import type {
   Values,
   Resource,
   Json,
-} from "@skipruntime/api";
+} from "@skipruntime/core";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 import type { ModifiedProfile } from "./users.js";
 
