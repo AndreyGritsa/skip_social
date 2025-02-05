@@ -1,9 +1,15 @@
-import type { EagerCollection, SkipService, Entry, Context, Json } from "@skipruntime/api";
+import type {
+  EagerCollection,
+  SkipService,
+  Entry,
+  Context,
+  Json,
+} from "@skipruntime/core";
 import type { User, Profile, ModifiedProfile, FriendRequest } from "./users.js";
 import type {
   WeatherResults,
   ExternalServiceSubscription,
-  CryptoResults
+  CryptoResults,
 } from "./externals.js";
 import type {
   ServerMember,
@@ -48,14 +54,14 @@ import {
   createChannelsCollections,
   ChannelsResource,
   MessageResource,
-  ChannelCommandResource
+  ChannelCommandResource,
 } from "./channels.js";
 import {
   WeatherExternalResource,
   createExternalsCollections,
   ExternalServiceSubscriptionsResource,
-  CustomPolled,
-  CryptoExternalResource
+  cryptoParamEncoder,
+  CryptoExternalResource,
 } from "./externals.js";
 
 export type InputCollection = {
@@ -175,13 +181,18 @@ export function SocialSkipService(
             return [];
           }
         ),
-        cryptoAPI: new CustomPolled("", 45000, (data: CryptoResults) => {
-          console.log("crypto", data);
-          if (data) {
-            return [[0, [data]]];
-          }
-          return [];
-        }),
+        cryptoAPI: new Polled(
+          "",
+          45000,
+          (data: CryptoResults) => {
+            console.log("crypto", data);
+            if (data) {
+              return [[0, [data]]];
+            }
+            return [];
+          },
+          cryptoParamEncoder
+        ),
       }),
     },
     createGraph: (inputCollections: InputCollection, context: Context) => {
@@ -212,7 +223,7 @@ export function SocialSkipService(
       const { channels, messages, chatCommand } = createChannelsCollections({
         ...inputCollections,
         modifiedProfiles,
-        context
+        context,
       });
       const {
         profileExternalServiceSubscriptions,
@@ -239,7 +250,7 @@ export function SocialSkipService(
         serverProfileMember,
         profileExternalServiceSubscriptions,
         externalServiceSubscriptions,
-        chatCommand
+        chatCommand,
       };
     },
   };

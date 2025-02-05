@@ -4,13 +4,13 @@ import type {
   Values,
   Resource,
   Json,
-} from "@skipruntime/api";
+} from "@skipruntime/core";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 import type { Message } from "./channels.js";
 import { MessageMapper } from "./channels.js";
 import type { FriendRequest, ModifiedProfile } from "./users.js";
 import { GenericSortedMapper } from "./utils/generic.js";
-import { isJsonObject } from "./utils/function.js";
+import { isJsonObject } from "./utils/other.js";
 
 // types
 export type Server = {
