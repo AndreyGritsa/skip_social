@@ -13,7 +13,7 @@ export const extendedExternalSlice = socialApi.injectEndpoints({
       providesTags: ["Externals"],
       async onCacheEntryAdded(
         arg,
-        { cacheDataLoaded, cacheEntryRemoved, dispatch, updateCachedData }
+        { cacheDataLoaded, cacheEntryRemoved, dispatch }
       ) {
         handleEventSource(
           `/api/externals/?profile_id=${arg.profile_id}&type=${arg.type}&id=${arg.id}`,

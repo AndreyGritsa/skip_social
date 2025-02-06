@@ -57,7 +57,7 @@ const NewSubscriptionDialog = () => {
       case "currency":
         addSubscription({
           type: "crypto",
-          params: { url: `https://api.coincap.io/v2/assets/${currency}` },
+          params: { url: currency },
           profile_id: user.id,
         });
         break;

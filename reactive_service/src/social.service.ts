@@ -182,7 +182,7 @@ export function SocialSkipService(
           }
         ),
         cryptoAPI: new Polled(
-          "",
+          "https://api.coincap.io/v2/assets/",
           45000,
           (data: CryptoResults) => {
             console.log("crypto", data);
