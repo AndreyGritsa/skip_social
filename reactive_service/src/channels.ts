@@ -277,31 +277,31 @@ export class ChannelCommandResource implements Resource {
 
 // main function
 export const createChannelsCollections = (
-  inputCollections: ChannelsInputCollection
+  input: ChannelsInputCollection
 ): OutputCollection => {
-  const profileIdParticipantsId = inputCollections.channelParticipants.map(
+  const profileIdParticipantsId = input.channelParticipants.map(
     ProfileParticipantMapper
   );
   const channelIdProfileId =
-    inputCollections.channelParticipants.map(ChannelProfileMapper);
+    input.channelParticipants.map(ChannelProfileMapper);
   const channelsRaw = profileIdParticipantsId.map(
     ChannelMapper,
-    inputCollections.modifiedProfiles,
-    inputCollections.channelParticipants,
+    input.modifiedProfiles,
+    input.channelParticipants,
     channelIdProfileId
   );
   const channels = channelsRaw.map(ChannelNotOneParticipantMapper);
-  const messages = inputCollections.messages.map(
+  const messages = input.messages.map(
     MessageMapper,
-    inputCollections.modifiedProfiles
+    input.modifiedProfiles
   );
   // TODO: Should be for chanels instead of participants?
-  const lazyChatCommand = inputCollections.context.createLazyCollection(
+  const lazyChatCommand = input.context.createLazyCollection(
     ComputeChatCommand,
-    inputCollections.channelParticipants,
+    input.channelParticipants,
     messages
   );
-  const chatCommand = inputCollections.channelParticipants.map(
+  const chatCommand = input.channelParticipants.map(
     ChatCommandMapper,
     lazyChatCommand,
     messages
