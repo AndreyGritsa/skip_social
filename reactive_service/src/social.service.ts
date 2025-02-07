@@ -21,7 +21,7 @@ import type {
   ServerMemberProfile,
   ServerChannelAllowedRole,
 } from "./servers.js";
-import type { ModifiedPost, Post, Comment } from "./posts.js";
+import type { ModifiedPost, Post, Comment, Reply } from "./posts.js";
 import type {
   ChannelParticipant,
   Channel,
@@ -81,6 +81,7 @@ export type InputCollection = {
     string,
     ExternalServiceSubscription
   >;
+  replies: EagerCollection<string, Reply>;
 };
 
 export type ResourcesCollection = {
@@ -125,7 +126,8 @@ export function SocialSkipService(
   serverChannels: Entry<string, ServerChannel>[],
   serverMessages: Entry<string, ServerMessage>[],
   serverChannelAllowedRoles: Entry<string, ServerChannelAllowedRole>[],
-  externalServiceSubscriptions: Entry<string, ExternalServiceSubscription>[]
+  externalServiceSubscriptions: Entry<string, ExternalServiceSubscription>[],
+  replies: Entry<string, Reply>[]
 ): SkipService<InputCollection, ResourcesCollection> {
   return {
     initialData: {
@@ -142,6 +144,7 @@ export function SocialSkipService(
       serverMessages,
       serverChannelAllowedRoles,
       externalServiceSubscriptions,
+      replies,
     },
     resources: {
       // users
@@ -174,7 +177,6 @@ export function SocialSkipService(
           "https://api.open-meteo.com/v1/forecast",
           45000,
           (data: WeatherResults) => {
-            // console.log("externalAPI", data);
             if (data) {
               return [[0, [data]]];
             }
@@ -185,7 +187,6 @@ export function SocialSkipService(
           "https://api.coincap.io/v2/assets/",
           45000,
           (data: CryptoResults) => {
-            console.log("crypto", data);
             if (data) {
               return [[0, [data]]];
             }
@@ -219,6 +220,7 @@ export function SocialSkipService(
         friends,
         ...inputCollections,
         modifiedProfiles,
+        context
       });
       const { channels, messages, chatCommand } = createChannelsCollections({
         ...inputCollections,
