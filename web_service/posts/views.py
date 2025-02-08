@@ -91,12 +91,26 @@ class CommentAPIView(APIView):
     authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def get(self, request):
-        post_id = request.query_params.get("post_id")
-        if not post_id:
+        id_ = request.query_params.get("id")
+        type_ = request.query_params.get("type")
+        if not id_ or not type_:
             return Response(
-                {"error": "Post ID not provided"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "ID or type not provided"}, status=status.HTTP_400_BAD_REQUEST
             )
-        return handle_reactive_get(request, "comments", post_id)
+            
+        if type_ == "post":
+            resource = "comments"
+        elif type_ == "comment":
+            resource = "replies"
+        elif type_ == "reply":
+            resource = "replies"
+            id_ = f"{id_}_replies"
+        else:
+            return Response(
+                {"error": "Invalid type"}, status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        return handle_reactive_get(request, resource, id_)
 
     def post(self, request):
         serializer = CommentSerializer(data=request.data)

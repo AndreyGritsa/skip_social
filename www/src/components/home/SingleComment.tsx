@@ -5,12 +5,36 @@ import {
   Avatar,
   ListItemText,
   Typography,
+  Button,
 } from "@mui/material";
 import React from "react";
 
-const SingleComment = ({ ...props }: Comment) => {
+interface SingleCommentProps extends Comment {
+  setCommentQuery?: React.Dispatch<React.SetStateAction<any>>;
+}
+
+const SingleComment = ({ setCommentQuery, ...props }: SingleCommentProps) => {
+
+  const handleClick = () => {
+    if (setCommentQuery) {
+      setCommentQuery({
+        type: "comment",
+        id: props.id,
+      });
+    }
+  };
+  
   return (
-    <ListItem alignItems="flex-start">
+    <ListItem
+      alignItems="flex-start"
+      secondaryAction={
+        setCommentQuery && (
+          <Button
+            onClick={handleClick}
+          >{`${props.replies_count} Replies`}</Button>
+        )
+      }
+    >
       <ListItemAvatar>
         <Avatar alt={props.author} src="/" />
       </ListItemAvatar>

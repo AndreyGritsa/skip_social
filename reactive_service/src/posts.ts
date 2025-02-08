@@ -279,6 +279,27 @@ export class CommentsResource implements Resource {
   }
 }
 
+export class RepliesResource implements Resource {
+  private id: string = "";
+  constructor(params: Json) {
+    if (typeof params === "string") this.id = params;
+  }
+  instantiate(
+    collections: ResourcesCollection
+  ): EagerCollection<string, Reply> {
+    let id = this.id;
+    if (!id) {
+      throw new Error("id parameter is required");
+    } else if (id.endsWith("_replies")) {
+      id = `${id.replace('_replies', '')}/19`;
+    } else {
+      id = `${id}/15`;
+    }
+
+    return collections.replies.slice(id, id);
+  }
+}
+
 // main function
 export const createPostsCollections = (
   input: PostsInputCollection
