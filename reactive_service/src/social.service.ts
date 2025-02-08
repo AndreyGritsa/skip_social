@@ -21,7 +21,13 @@ import type {
   ServerMemberProfile,
   ServerChannelAllowedRole,
 } from "./servers.js";
-import type { ModifiedPost, Post, Comment, Reply } from "./posts.js";
+import type {
+  ModifiedPost,
+  Post,
+  Comment,
+  Reply,
+  ModifiedReply,
+} from "./posts.js";
 import type {
   ChannelParticipant,
   Channel,
@@ -49,6 +55,7 @@ import {
   FriendsPostsResource,
   createPostsCollections,
   CommentsResource,
+  RepliesResource,
 } from "./posts.js";
 import {
   createChannelsCollections,
@@ -111,6 +118,7 @@ export type ResourcesCollection = {
     ExternalServiceSubscription
   >;
   chatCommand: EagerCollection<string, Json>;
+  replies: EagerCollection<string, ModifiedReply>;
 };
 
 export function SocialSkipService(
@@ -162,6 +170,7 @@ export function SocialSkipService(
       friendsPosts: FriendsPostsResource,
       authorPosts: AuthorPostsResource,
       comments: CommentsResource,
+      replies: RepliesResource,
       // channels
       channels: ChannelsResource,
       messages: MessageResource,
@@ -216,12 +225,13 @@ export function SocialSkipService(
         ...inputCollections,
         modifiedProfiles,
       });
-      const { friendsPosts, authorPosts, comments } = createPostsCollections({
-        friends,
-        ...inputCollections,
-        modifiedProfiles,
-        context
-      });
+      const { friendsPosts, authorPosts, comments, replies } =
+        createPostsCollections({
+          friends,
+          ...inputCollections,
+          modifiedProfiles,
+          context,
+        });
       const { channels, messages, chatCommand } = createChannelsCollections({
         ...inputCollections,
         modifiedProfiles,
@@ -253,6 +263,7 @@ export function SocialSkipService(
         profileExternalServiceSubscriptions,
         externalServiceSubscriptions,
         chatCommand,
+        replies,
       };
     },
   };

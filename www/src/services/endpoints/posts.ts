@@ -4,6 +4,11 @@ import { setPosts } from "../../features/posts/postsSlice";
 
 interface PostsResponse extends Post {}
 
+export type CommentQueryParams = {
+  type: "post" | "comment" | "reply";
+  id: string;
+}
+
 export const extendedSocialSlice = socialApi.injectEndpoints({
   endpoints: (builder) => ({
     getPosts: builder.query<PostsResponse[], string>({
@@ -109,15 +114,15 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
         body: data,
       }),
     }),
-    getComments: builder.query<Comment[], string>({
-      query: (postId) => `posts/comments/?post_id=${postId}`,
+    getComments: builder.query<Comment[], CommentQueryParams>({
+      query: (params) => `posts/comments/?id=${params.id}&type=${params.type}`,
       providesTags: ["Comments"],
       async onCacheEntryAdded(
         arg,
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData }
       ) {
         handleEventSource(
-          `/api/posts/comments/?post_id=${arg}`,
+          `/api/posts/comments/?id=${arg.id}&type=${arg.type}`,
           {
             init: (data: Comment[]) => {
               updateCachedData((draft) => {

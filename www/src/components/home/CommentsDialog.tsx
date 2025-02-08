@@ -16,6 +16,7 @@ import { useGetCommentsQuery } from "../../services/endpoints/posts";
 import { useInvalidateCommentsMutation } from "../../services/endpoints/posts";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useState, Fragment, useEffect, MouseEvent } from "react";
+import type { CommentQueryParams } from "../../services/endpoints/posts";
 
 const CommentsDialog = ({
   comment,
@@ -32,7 +33,13 @@ const CommentsDialog = ({
 }) => {
   const [open, setOpen] = useState<boolean>(false);
   const [comments, setComments] = useState<Comment[]>([]);
-  const { data, refetch } = useGetCommentsQuery(open ? postId : skipToken);
+  const [commentQuery, setCommentQuery] = useState<CommentQueryParams>({
+    type: "post",
+    id: postId,
+  });
+  const { data, refetch } = useGetCommentsQuery(
+    open ? commentQuery : skipToken
+  );
   const [invalidateComments] = useInvalidateCommentsMutation();
 
   useEffect(() => {
@@ -44,6 +51,10 @@ const CommentsDialog = ({
   useEffect(() => {
     if (open) refetch();
   }, [open, refetch]);
+
+  // useEffect(() => {
+  //   refetch();
+  // }, [commentQuery]);
 
   useEffect(() => {
     // close the event source when the component is unmounted
@@ -78,7 +89,13 @@ const CommentsDialog = ({
         <DialogContent dividers={true}>
           <List>
             {comments.map((comment, key) => {
-              return <SingleComment key={key} {...comment} />;
+              return (
+                <SingleComment
+                  key={key}
+                  {...comment}
+                  setCommentQuery={setCommentQuery}
+                />
+              );
             })}
           </List>
         </DialogContent>

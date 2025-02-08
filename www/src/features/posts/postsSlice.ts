@@ -1,10 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { User } from "../user/userSlice";
+
 export interface Comment {
   id: string;
   content: string;
   author_id: string;
   author: string;
+  replies_count: number;
 }
 export interface Post {
   id: string;
