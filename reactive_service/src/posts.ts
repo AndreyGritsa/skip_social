@@ -192,7 +192,7 @@ class ComputeRepliesCount implements LazyCompute<string, number> {
     const repliesArray = this.skall.getArray(key);
     let count = repliesArray.length;
     for (const reply of repliesArray) {
-      count += self.getArray(`${reply.object_id}/19`).length;
+      count += self.getUnique(`${reply.id}/19`);
     }
     return [count];
   }
@@ -214,7 +214,7 @@ class RepliesWithCountMapper
       let count = 0;
 
       const lazyCountArray = this.repliesCount.getArray(
-        `${reply.object_id}/15`
+        `${reply.id}/19`
       );
       if (lazyCountArray.length > 0) {
         count = lazyCountArray[0]!;
