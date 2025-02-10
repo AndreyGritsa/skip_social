@@ -8,27 +8,36 @@ import {
   Button,
 } from "@mui/material";
 import React from "react";
+import { CommentQueryParams } from "../../services/endpoints/posts";
 
 interface SingleCommentProps extends Comment {
-  setCommentQuery?: React.Dispatch<React.SetStateAction<any>>;
+  setCommentQuery?: React.Dispatch<React.SetStateAction<CommentQueryParams>>;
+  commentQuery?: CommentQueryParams;
 }
 
-const SingleComment = ({ setCommentQuery, ...props }: SingleCommentProps) => {
-
+const SingleComment = ({
+  setCommentQuery,
+  commentQuery,
+  ...props
+}: SingleCommentProps) => {
   const handleClick = () => {
-    if (setCommentQuery) {
+    if (setCommentQuery && commentQuery) {
+      let type = "comment";
+      if (commentQuery.type === "comment" || commentQuery.type === "reply") {
+        type = "reply";
+      }
       setCommentQuery({
-        type: "comment",
+        type: type as typeof commentQuery.type,
         id: props.id,
       });
     }
   };
-  
+
   return (
     <ListItem
       alignItems="flex-start"
       secondaryAction={
-        setCommentQuery && (
+        commentQuery && (
           <Button
             onClick={handleClick}
           >{`${props.replies_count} Replies`}</Button>
