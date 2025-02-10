@@ -143,7 +143,8 @@ class CommentMapper
 {
   constructor(
     private profiles: EagerCollection<string, ModifiedProfile>,
-    private lazyRepliesCount: LazyCollection<string, number>
+    private lazyRepliesCount: LazyCollection<string, number>,
+    private replies: EagerCollection<string, ModifiedReply>
   ) {}
   mapEntry(
     _key: string,
@@ -153,9 +154,12 @@ class CommentMapper
     const authorName = this.profiles.getUnique(comment.author_id).name;
     let repliesCount = 0;
 
-    const lazyCountArray = this.lazyRepliesCount.getArray(`${comment.id}/15`);
-    if (lazyCountArray.length > 0) {
-      repliesCount = lazyCountArray[0]!;
+    const replies = this.replies.getArray(`${comment.id}/15`);
+    if (replies.length > 0) {
+      const lazyCountArray = this.lazyRepliesCount.getArray(`${comment.id}/15`);
+      if (lazyCountArray.length > 0) {
+        repliesCount = lazyCountArray[0]!;
+      }
     }
 
     return [
@@ -213,9 +217,7 @@ class RepliesWithCountMapper
     for (const reply of replies) {
       let count = 0;
 
-      const lazyCountArray = this.repliesCount.getArray(
-        `${reply.id}/19`
-      );
+      const lazyCountArray = this.repliesCount.getArray(`${reply.id}/19`);
       if (lazyCountArray.length > 0) {
         count = lazyCountArray[0]!;
       }
@@ -291,7 +293,7 @@ export class RepliesResource implements Resource {
     if (!id) {
       throw new Error("id parameter is required");
     } else if (id.endsWith("_replies")) {
-      id = `${id.replace('_replies', '')}/19`;
+      id = `${id.replace("_replies", "")}/19`;
     } else {
       id = `${id}/15`;
     }
@@ -316,7 +318,8 @@ export const createPostsCollections = (
   const comments = input.comments.map(
     CommentMapper,
     input.modifiedProfiles,
-    lazyRepliesCount
+    lazyRepliesCount,
+    replies
   );
   const authorPosts = input.posts
     .map(ZeroPostMapper)

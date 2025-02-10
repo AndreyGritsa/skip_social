@@ -17,6 +17,7 @@ import { useInvalidateCommentsMutation } from "../../services/endpoints/posts";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useState, Fragment, useEffect, MouseEvent } from "react";
 import type { CommentQueryParams } from "../../services/endpoints/posts";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 
 const CommentsDialog = ({
   comment,
@@ -41,6 +42,19 @@ const CommentsDialog = ({
     open ? commentQuery : skipToken
   );
   const [invalidateComments] = useInvalidateCommentsMutation();
+  const [commentQueryHistory, setCommentQueryHistory] = useState<
+    CommentQueryParams[]
+  >([]);
+
+  useEffect(() => {
+    if (
+      commentQueryHistory.length === 0 ||
+      JSON.stringify(commentQueryHistory[commentQueryHistory.length - 1]) !==
+        JSON.stringify(commentQuery)
+    ) {
+      setCommentQueryHistory((prevHistory) => [...prevHistory, commentQuery]);
+    }
+  }, [commentQuery]);
 
   useEffect(() => {
     if (data) {
@@ -51,10 +65,6 @@ const CommentsDialog = ({
   useEffect(() => {
     if (open) refetch();
   }, [open, refetch]);
-
-  // useEffect(() => {
-  //   refetch();
-  // }, [commentQuery]);
 
   useEffect(() => {
     // close the event source when the component is unmounted
@@ -71,6 +81,14 @@ const CommentsDialog = ({
     setOpen(false);
   };
 
+  const handleBack = () => {
+    if (commentQueryHistory.length > 0) {
+      const previousQuery = commentQueryHistory[commentQueryHistory.length - 2];  
+      setCommentQuery(previousQuery);
+      setCommentQueryHistory(commentQueryHistory.slice(0, -2));
+    }
+  };
+
   return (
     <Fragment>
       <Button size="small" onClick={handleClickOpen()}>
@@ -85,7 +103,14 @@ const CommentsDialog = ({
         aria-labelledby="scroll-dialog-title"
         aria-describedby="scroll-dialog-description"
       >
-        <DialogTitle id="scroll-dialog-title">Comments</DialogTitle>
+        <DialogTitle id="scroll-dialog-title">
+          {commentQuery.type !== "post" && (
+            <IconButton onClick={handleBack}>
+              <ArrowBackIosIcon />
+            </IconButton>
+          )}
+          Comments
+        </DialogTitle>
         <DialogContent dividers={true}>
           <List>
             {comments.map((comment, key) => {
@@ -94,6 +119,7 @@ const CommentsDialog = ({
                   key={key}
                   {...comment}
                   setCommentQuery={setCommentQuery}
+                  commentQuery={commentQuery}
                 />
               );
             })}
