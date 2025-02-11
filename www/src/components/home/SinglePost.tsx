@@ -34,7 +34,7 @@ const SinglePost = ({ ...props }: PostProps) => {
   const user = useAppSelector((state) => state.user);
   const [newComment] = useNewCommentMutation();
 
-  const handleSendComment = () => {
+  const handleSendComment = (id: string, type: string) => {
     console.log("sending comment");
     if (!comment) {
       return;
@@ -42,7 +42,8 @@ const SinglePost = ({ ...props }: PostProps) => {
     newComment({
       content: comment,
       author: user.id,
-      post: props.id,
+      object_id: id,
+      type: type
     })
       .unwrap()
       .catch((error) => {
@@ -120,7 +121,7 @@ const SinglePost = ({ ...props }: PostProps) => {
                 input: {
                   endAdornment: (
                     <InputAdornment position="start">
-                      <IconButton onClick={handleSendComment}>
+                      <IconButton onClick={() => handleSendComment(props.id, "post")}>
                         <SendIcon color="primary" />
                       </IconButton>
                     </InputAdornment>

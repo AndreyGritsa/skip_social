@@ -29,7 +29,7 @@ const CommentsDialog = ({
   commentsAmount: number;
   comment: string;
   setComment: Function;
-  handleSendComment: (event: MouseEvent<HTMLButtonElement>) => void;
+  handleSendComment: (id: string, type: string) => void;
   postId: string;
 }) => {
   const [open, setOpen] = useState<boolean>(false);
@@ -83,7 +83,7 @@ const CommentsDialog = ({
 
   const handleBack = () => {
     if (commentQueryHistory.length > 0) {
-      const previousQuery = commentQueryHistory[commentQueryHistory.length - 2];  
+      const previousQuery = commentQueryHistory[commentQueryHistory.length - 2];
       setCommentQuery(previousQuery);
       setCommentQueryHistory(commentQueryHistory.slice(0, -2));
     }
@@ -138,7 +138,11 @@ const CommentsDialog = ({
               input: {
                 endAdornment: (
                   <InputAdornment position="start">
-                    <IconButton onClick={handleSendComment}>
+                    <IconButton
+                      onClick={() =>
+                        handleSendComment(commentQuery.id, commentQuery.type)
+                      }
+                    >
                       <SendIcon color="primary" />
                     </IconButton>
                   </InputAdornment>
