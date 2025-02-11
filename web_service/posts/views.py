@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Post
-from .serializers import PostSerializer, CommentSerializer
+from .serializers import PostSerializer, CommentSerializer, ReplySerializer
 from utils import (
     handle_reactive_get,
     handle_reactive_put,
@@ -44,9 +44,9 @@ class PostAPIView(APIView):
             serializer.save()
 
             collections_data = {
-                **serializer.data, 
-                "author_id": profile_id, 
-                "created_at": str(serializer.data["created_at"])
+                **serializer.data,
+                "author_id": profile_id,
+                "created_at": str(serializer.data["created_at"]),
             }
 
             # Write to reactive input collections
@@ -97,7 +97,7 @@ class CommentAPIView(APIView):
             return Response(
                 {"error": "ID or type not provided"}, status=status.HTTP_400_BAD_REQUEST
             )
-            
+
         if type_ == "post":
             resource = "comments"
         elif type_ == "comment":
@@ -109,22 +109,43 @@ class CommentAPIView(APIView):
             return Response(
                 {"error": "Invalid type"}, status=status.HTTP_400_BAD_REQUEST
             )
-            
+
         return handle_reactive_get(request, resource, id_)
 
     def post(self, request):
-        serializer = CommentSerializer(data=request.data)
+        type_ = request.data["type"]
+        serializer_class, collection_name, id_date = None, None, {}
+        id_ = request.data["object_id"]
+
+        if type_ == "post":
+            serializer_class = CommentSerializer
+            collection_name = "comments"
+            id_date = {"post_id": id_}
+        elif type_ in ["comment", "reply"]:
+            serializer_class = ReplySerializer
+            collection_name = "replies"
+            id_date = (
+                {"content_type": 15, "object_id": id_, "content_type_id": "15"}
+                if type_ == "comment"
+                else {"content_type": 19, "object_id": id_, "content_type_id": "19"}
+            )
+        else:
+            return Response(
+                {"error": "Invalid type"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = serializer_class(data={**request.data, **id_date})
         if serializer.is_valid():
             serializer.save()
 
             collections_data = {
                 **serializer.data,
-                "post_id": str(request.data["post"]),
+                **id_date,
                 "author_id": str(request.data["author"]),
             }
-
-            # write to reactive input collections
-            handle_reactive_put("comments", serializer.data["id"], collections_data)
-
+            handle_reactive_put(
+                collection_name, serializer.data["id"], collections_data
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -106,7 +106,7 @@ export const extendedSocialSlice = socialApi.injectEndpoints({
     }),
     newComment: builder.mutation<
       void,
-      { content: string; author: string; post: string }
+      { content: string; author: string; object_id: string, type: string }
     >({
       query: (data) => ({
         url: "posts/comments/",
