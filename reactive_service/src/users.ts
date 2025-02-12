@@ -7,6 +7,7 @@ import type {
 } from "@skipruntime/core";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 import { isJsonObject } from "./utils/other.js";
+import { OneToOneMapper } from "@skipruntime/core";
 
 // Types
 
@@ -144,17 +145,17 @@ class FriendRequestIntersectPhase2Mapper
   }
 }
 
-class ModifiedProfileMapper
-  implements Mapper<string, Profile, string, ModifiedProfile>
-{
-  constructor(private users: EagerCollection<string, User>) {}
-  mapEntry(
-    key: string,
-    values: Values<Profile>
-  ): Iterable<[string, ModifiedProfile]> {
-    const profile: Profile = values.getUnique();
-    const user = this.users.getUnique(profile.user_id);
-    return [[key, { ...profile, name: user.username }]];
+class ModifiedProfileMapper extends OneToOneMapper<
+  string,
+  Profile,
+  ModifiedProfile
+> {
+  constructor(private users: EagerCollection<string, User>) {
+    super();
+  }
+  mapValue(value: Profile, _key: string): ModifiedProfile {
+    const user = this.users.getUnique(value.user_id);
+    return { ...value, name: user.username };
   }
 }
 
