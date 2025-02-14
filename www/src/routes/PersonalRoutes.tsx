@@ -3,6 +3,7 @@ import HomePage from "../pages/HomePage";
 import ChannelPage from "../pages/ChannelPage";
 import FriendsPage from "../pages/FriendsPage";
 import SubscriptionPage from "../pages/SubscriptionPage";
+import GamesPage from "../pages/GamesPage";
 
 const PersonalRoutes = () => {
   return (
@@ -11,6 +12,7 @@ const PersonalRoutes = () => {
       <Route path="/channel/:channelId" element={<ChannelPage />} />
       <Route path="/friends" element={<FriendsPage />} />
       <Route path="/subscriptions" element={<SubscriptionPage />} />
+      <Route path="/games" element={<GamesPage />} />
     </Routes>
   );
 };
