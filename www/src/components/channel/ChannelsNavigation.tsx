@@ -8,6 +8,7 @@ import Divider from "@mui/material/Divider";
 import PeopleIcon from "@mui/icons-material/People";
 import HomeIcon from "@mui/icons-material/Home";
 import SubscriptionsIcon from "@mui/icons-material/Subscriptions";
+import VideogameAssetIcon from '@mui/icons-material/VideogameAsset';
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../app/hooks";
 import { setActiveChannel } from "../../features/active/activeSlice";
@@ -61,6 +62,15 @@ const ChannelsNavigation = () => {
               <ListItemText primary="Subscriptions" />
             </ListItemButton>
           </ListItem>
+          <ListItem disablePadding><ListItemButton
+              selected={currentPath === "/games"}
+              onClick={() => handleNavigation("/games")}
+            >
+              <ListItemIcon>
+                <VideogameAssetIcon />
+              </ListItemIcon>
+              <ListItemText primary="Games" />
+            </ListItemButton></ListItem>
         </List>
       </nav>
       <Divider />

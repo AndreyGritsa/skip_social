@@ -31,4 +31,5 @@ urlpatterns = [
     path("api/channels/", include("channels.urls")),
     path("api/servers/", include("servers.urls")),
     path("api/externals/", include("externals.urls")),
+    path("api/games/", include("games.urls")),
 ]

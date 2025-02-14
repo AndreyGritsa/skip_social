@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'posts',
     'channels',
     'externals',
+    'games',
     'rest_framework',
     'corsheaders'
 ]
