@@ -10,12 +10,40 @@ from utils import (
     IgnoreClientContentNegotiation,
 )
 
+
 class GameListAPIView(APIView):
     authentication_classes = [CsrfExemptSessionAuthentication]
     content_negotiation_class = IgnoreClientContentNegotiation
     serializer_class = GameSerializer
 
-    def get(self, request, format=None):
+    def get(self, request):
         games = Game.objects.all()
         serializer = self.serializer_class(games, many=True)
         return Response(serializer.data)
+
+
+class InviteAPIView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    content_negotiation_class = IgnoreClientContentNegotiation
+
+    def get(self, request):
+        id_ = request.query_params.get("id")
+        if not id_:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return handle_reactive_get(request, "invites", id_)
+
+    def post(self, request):
+        from_id = request.data.get("from_id")
+        to_id = request.data.get("to_id")
+        room_id = request.data.get("room_id")
+        if not from_id or not to_id or not room_id:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        data = {
+            "status": "pending",
+            "from_id": from_id,
+            "to_id": to_id,
+            "room_id": room_id,
+        }
+
+        res = handle_reactive_put("invites", "0", data)
+        return Response(res.reason, status=res.status_code)

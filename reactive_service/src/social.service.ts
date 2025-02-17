@@ -21,6 +21,7 @@ import type {
   ServerMemberProfile,
   ServerChannelAllowedRole,
 } from "./servers.js";
+import type { Invite } from "./games.js";
 import type {
   ModifiedPost,
   Post,
@@ -70,6 +71,7 @@ import {
   cryptoParamEncoder,
   CryptoExternalResource,
 } from "./externals.js";
+import { createGamesCollections, InvitesResource } from "./games.js";
 
 export type InputCollection = {
   users: EagerCollection<string, User>;
@@ -89,6 +91,7 @@ export type InputCollection = {
     ExternalServiceSubscription
   >;
   replies: EagerCollection<string, Reply>;
+  invites: EagerCollection<string, Invite>;
 };
 
 export type ResourcesCollection = {
@@ -119,6 +122,7 @@ export type ResourcesCollection = {
   >;
   chatCommand: EagerCollection<string, Json>;
   replies: EagerCollection<string, ModifiedReply>;
+  invites: EagerCollection<string, Invite>;
 };
 
 export function SocialSkipService(
@@ -153,6 +157,7 @@ export function SocialSkipService(
       serverChannelAllowedRoles,
       externalServiceSubscriptions,
       replies,
+      invites: [],
     },
     resources: {
       // users
@@ -179,6 +184,8 @@ export function SocialSkipService(
       externals: ExternalServiceSubscriptionsResource,
       weather: WeatherExternalResource,
       crypto: CryptoExternalResource,
+      // games
+      invites: InvitesResource,
     },
     externalServices: {
       externalAPI: new GenericExternalService({
@@ -241,6 +248,7 @@ export function SocialSkipService(
         profileExternalServiceSubscriptions,
         externalServiceSubscriptions,
       } = createExternalsCollections(inputCollections);
+      const { invites } = createGamesCollections(inputCollections);
 
       return {
         friends,
@@ -264,6 +272,7 @@ export function SocialSkipService(
         externalServiceSubscriptions,
         chatCommand,
         replies,
+        invites,
       };
     },
   };
