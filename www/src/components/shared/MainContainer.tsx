@@ -3,6 +3,7 @@ import { Container, Paper } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import User from "./User";
 import ServersContainer from "../server/ServersContainer";
+import GameInvitationDialog from "./GameInvitationDialog";
 
 interface MainContainerProps {
   managmentPanel: ReactNode;
@@ -35,6 +36,7 @@ const MainContainer: React.FC<MainContainerProps> = ({
           </Paper>
         </Grid>
       </Grid>
+      <GameInvitationDialog />
     </Container>
   );
 };
