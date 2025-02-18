@@ -9,6 +9,7 @@ from utils import (
     CsrfExemptSessionAuthentication,
     IgnoreClientContentNegotiation,
 )
+import uuid
 
 
 class GameListAPIView(APIView):
@@ -45,5 +46,28 @@ class InviteAPIView(APIView):
             "room_id": room_id,
         }
 
-        res = handle_reactive_put("invites", "0", data)
+        res = handle_reactive_put("invites", uuid.uuid4(), data)
+        handle_reactive_put(
+            "ticTacToe",
+            room_id,
+            {"room_id": room_id, **{index: "" for index in range(1, 10)}},
+        )
+        return Response(res.reason, status=res.status_code)
+
+
+class TicTacToeAPIView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    content_negotiation_class = IgnoreClientContentNegotiation
+
+    def get(self, request):
+        id_ = request.query_params.get("room_id")
+        if not id_:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST, data={"error": "No room_id"}
+            )
+        return handle_reactive_get(request, "ticTacToe", id_)
+
+    def post(self, request):
+
+        res = handle_reactive_put("ticTacToe", request.data.get("room_id"), request.data)
         return Response(res.reason, status=res.status_code)

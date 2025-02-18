@@ -21,7 +21,7 @@ import type {
   ServerMemberProfile,
   ServerChannelAllowedRole,
 } from "./servers.js";
-import type { Invite } from "./games.js";
+import type { Invite, TicTacToe } from "./games.js";
 import type {
   ModifiedPost,
   Post,
@@ -71,7 +71,11 @@ import {
   cryptoParamEncoder,
   CryptoExternalResource,
 } from "./externals.js";
-import { createGamesCollections, InvitesResource } from "./games.js";
+import {
+  createGamesCollections,
+  InvitesResource,
+  TicTacToeResource,
+} from "./games.js";
 
 export type InputCollection = {
   users: EagerCollection<string, User>;
@@ -92,6 +96,7 @@ export type InputCollection = {
   >;
   replies: EagerCollection<string, Reply>;
   invites: EagerCollection<string, Invite>;
+  ticTacToe: EagerCollection<string, TicTacToe>;
 };
 
 export type ResourcesCollection = {
@@ -123,6 +128,7 @@ export type ResourcesCollection = {
   chatCommand: EagerCollection<string, Json>;
   replies: EagerCollection<string, ModifiedReply>;
   invites: EagerCollection<string, Invite>;
+  ticTacToe: EagerCollection<string, TicTacToe>;
 };
 
 export function SocialSkipService(
@@ -158,6 +164,7 @@ export function SocialSkipService(
       externalServiceSubscriptions,
       replies,
       invites: [],
+      ticTacToe: [],
     },
     resources: {
       // users
@@ -186,6 +193,7 @@ export function SocialSkipService(
       crypto: CryptoExternalResource,
       // games
       invites: InvitesResource,
+      ticTacToe: TicTacToeResource,
     },
     externalServices: {
       externalAPI: new GenericExternalService({
@@ -248,7 +256,7 @@ export function SocialSkipService(
         profileExternalServiceSubscriptions,
         externalServiceSubscriptions,
       } = createExternalsCollections(inputCollections);
-      const { invites } = createGamesCollections(inputCollections);
+      const { invites, ticTacToe } = createGamesCollections(inputCollections);
 
       return {
         friends,
@@ -273,6 +281,7 @@ export function SocialSkipService(
         chatCommand,
         replies,
         invites,
+        ticTacToe,
       };
     },
   };
