@@ -4,6 +4,7 @@ import ChannelPage from "../pages/ChannelPage";
 import FriendsPage from "../pages/FriendsPage";
 import SubscriptionPage from "../pages/SubscriptionPage";
 import GamesPage from "../pages/GamesPage";
+import TicTacToePage from "../pages/TicTacToePage";
 
 const PersonalRoutes = () => {
   return (
@@ -13,6 +14,7 @@ const PersonalRoutes = () => {
       <Route path="/friends" element={<FriendsPage />} />
       <Route path="/subscriptions" element={<SubscriptionPage />} />
       <Route path="/games" element={<GamesPage />} />
+      <Route path="/games/:roomId" element={<TicTacToePage />} />
     </Routes>
   );
 };

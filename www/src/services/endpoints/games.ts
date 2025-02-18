@@ -13,6 +13,10 @@ type Invite = {
   room_id: string;
 };
 
+type TicTacToe = {
+  [key: number]: string;
+};
+
 export const extendedGamesSlice = socialApi.injectEndpoints({
   endpoints: (builder) => ({
     getGames: builder.query<Game[], void>({
@@ -20,7 +24,10 @@ export const extendedGamesSlice = socialApi.injectEndpoints({
     }),
     getInvites: builder.query<Invite[], string>({
       query: (id) => `games/invites/?id=${id}`,
-      onCacheEntryAdded(arg, { cacheDataLoaded, cacheEntryRemoved, updateCachedData }) {
+      onCacheEntryAdded(
+        arg,
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData }
+      ) {
         handleEventSource(
           `/api/games/invites/?id=${arg}`,
           {
@@ -42,15 +49,71 @@ export const extendedGamesSlice = socialApi.injectEndpoints({
         );
       },
     }),
-    postInvite: builder.mutation<Game, { from_id: string; to_id: string, room_id: string }>({
+    postInvite: builder.mutation<
+      Game,
+      { from_id: string; to_id: string; room_id: string }
+    >({
       query: ({ from_id, to_id, room_id }) => ({
         url: `games/invites/`,
         method: "POST",
         body: { from_id, to_id, room_id },
       }),
     }),
+    getTicTacToe: builder.query<TicTacToe[], string>({
+      query: (id) => `games/tictactoe/?room_id=${id}`,
+      onCacheEntryAdded(
+        arg,
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData }
+      ) {
+        handleEventSource(
+          `/api/games/tictactoe/?room_id=${arg}`,
+          {
+            init: (data: TicTacToe[]) => {
+              updateCachedData((draft) => {
+                draft.length = 0;
+                data.forEach((invite) => draft.push(invite));
+              });
+            },
+            update: (data: TicTacToe[]) => {
+              updateCachedData((draft) => {
+                draft.length = 0;
+                data.forEach((invite) => draft.push(invite));
+              });
+            },
+          },
+          cacheDataLoaded,
+          cacheEntryRemoved
+        );
+      },
+    }),
+    postTicTacToe: builder.mutation<
+      TicTacToe,
+      {
+        room_id: string;
+        1: string;
+        2: string;
+        3: string;
+        4: string;
+        5: string;
+        6: string;
+        7: string;
+        8: string;
+        9: string;
+      }
+    >({
+      query: (body) => ({
+        url: `games/tictactoe/`,
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
-export const { useGetGamesQuery, useGetInvitesQuery, usePostInviteMutation } =
-  extendedGamesSlice;
+export const {
+  useGetGamesQuery,
+  useGetInvitesQuery,
+  usePostInviteMutation,
+  useGetTicTacToeQuery,
+  usePostTicTacToeMutation,
+} = extendedGamesSlice;
