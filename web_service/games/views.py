@@ -50,7 +50,11 @@ class InviteAPIView(APIView):
         handle_reactive_put(
             "ticTacToe",
             room_id,
-            {"room_id": room_id, **{index: "" for index in range(1, 10)}},
+            {
+                "room_id": room_id,
+                "last_move": "",
+                **{index: "" for index in range(1, 10)},
+            },
         )
         return Response(res.reason, status=res.status_code)
 
@@ -69,5 +73,7 @@ class TicTacToeAPIView(APIView):
 
     def post(self, request):
 
-        res = handle_reactive_put("ticTacToe", request.data.get("room_id"), request.data)
+        res = handle_reactive_put(
+            "ticTacToe", request.data.get("room_id"), request.data
+        )
         return Response(res.reason, status=res.status_code)
