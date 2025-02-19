@@ -21,7 +21,7 @@ import type {
   ServerMemberProfile,
   ServerChannelAllowedRole,
 } from "./servers.js";
-import type { Invite, TicTacToe } from "./games.js";
+import type { Invite, TicTacToe, WinTicTacToe } from "./games.js";
 import type {
   ModifiedPost,
   Post,
@@ -128,7 +128,7 @@ export type ResourcesCollection = {
   chatCommand: EagerCollection<string, Json>;
   replies: EagerCollection<string, ModifiedReply>;
   invites: EagerCollection<string, Invite>;
-  ticTacToe: EagerCollection<string, TicTacToe>;
+  ticTacToe: EagerCollection<string, WinTicTacToe>;
 };
 
 export function SocialSkipService(

@@ -13,8 +13,20 @@ type Invite = {
   room_id: string;
 };
 
-type TicTacToe = {
-  [key: number]: string;
+export type TicTacToe = {
+  1: string;
+  2: string;
+  3: string;
+  4: string;
+  5: string;
+  6: string;
+  7: string;
+  8: string;
+  9: string;
+  room_id: string;
+  last_move: string;
+  winning_combo: number[];
+  [key: string]: string | number[];
 };
 
 export const extendedGamesSlice = socialApi.injectEndpoints({
@@ -99,6 +111,7 @@ export const extendedGamesSlice = socialApi.injectEndpoints({
         7: string;
         8: string;
         9: string;
+        last_move: string;
       }
     >({
       query: (body) => ({
