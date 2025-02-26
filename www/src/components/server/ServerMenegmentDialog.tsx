@@ -173,7 +173,7 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
                               handleStartEditChannel(
                                 channel.id,
                                 channel.name,
-                                channel.allowedRoles
+                                channel.allowed_roles
                               )
                             }
                           >
@@ -249,7 +249,7 @@ const ServerMenegmentDialog = ({ server }: { server: Server }) => {
                               }}
                             >
                               {channel.name}
-                              {channel.allowedRoles.map((role) => {
+                              {channel.allowed_roles.map((role) => {
                                 if (role.role === "owner") return null;
                                 return (
                                   <Chip
