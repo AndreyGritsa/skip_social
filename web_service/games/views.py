@@ -32,6 +32,10 @@ class InviteAPIView(APIView):
         if not id_:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return handle_reactive_get(request, "invites", id_)
+    
+    def put(self, request, id):
+        res = handle_reactive_put("invites", id, request.data)
+        return Response(res.reason, status=res.status_code)
 
     def post(self, request):
         from_id = request.data.get("from_id")

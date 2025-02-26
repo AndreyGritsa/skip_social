@@ -21,6 +21,7 @@ const winningCombos = [
 
 // types
 export type Invite = {
+  id?: string;
   from_id: string;
   to_id: string;
   status: "pending" | "accepted" | "declined";
@@ -66,10 +67,13 @@ type GamesInputCollection = InputCollection & {
 // mappers
 
 class InviteMapper implements Mapper<string, Invite, string, Invite> {
-  mapEntry(_key: string, values: Values<Invite>): Iterable<[string, Invite]> {
+  mapEntry(key: string, values: Values<Invite>): Iterable<[string, Invite]> {
     const result: [string, Invite][] = [];
     for (const value of values) {
-      result.push([`${value.to_id}/${value.status}`, value]);
+      result.push([
+        `${value.to_id}/${value.status}`,
+        { ...(value as Invite), id: key },
+      ]);
     }
     return result;
   }

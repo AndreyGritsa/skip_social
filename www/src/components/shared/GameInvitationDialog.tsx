@@ -7,7 +7,10 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useGetInvitesQuery } from "../../services/endpoints/games";
+import {
+  useGetInvitesQuery,
+  useUpdateInviteMutation,
+} from "../../services/endpoints/games";
 import { useAppSelector } from "../../app/hooks";
 import { useNavigate } from "react-router-dom";
 
@@ -15,6 +18,7 @@ const GameInvitationDialog = () => {
   const [open, setOpen] = useState<boolean>(false);
   const user = useAppSelector((state) => state.user);
   const { data } = useGetInvitesQuery(user.id);
+  const [updateInvite] = useUpdateInviteMutation();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,12 +27,22 @@ const GameInvitationDialog = () => {
     }
   }, [data]);
 
-  const handleAcceptGame = () => {
-    console.log(data);
-
+  const handleAcceptOrDeclineGame = (status: "accepted" | "declined") => {
     if (!data) return;
-    navigate(`/games/${data[0].room_id}`);
-    setOpen(false);
+    const invite = data[0];
+    updateInvite({
+      from_id: invite.from_id,
+      to_id: invite.to_id,
+      room_id: invite.room_id,
+      id: invite.id!,
+      status: status,
+    })
+      .unwrap()
+      .then(() => {
+        if (status === "accepted") navigate(`/games/${invite.room_id}`);
+        setOpen(false);
+      })
+      .catch((e) => console.log(e));
   };
 
   return (
@@ -40,10 +54,16 @@ const GameInvitationDialog = () => {
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button color="primary" onClick={() => setOpen(false)}>
+        <Button
+          color="primary"
+          onClick={() => handleAcceptOrDeclineGame("declined")}
+        >
           Cancel
         </Button>
-        <Button color="success" onClick={handleAcceptGame}>
+        <Button
+          color="success"
+          onClick={() => handleAcceptOrDeclineGame("accepted")}
+        >
           Join Game
         </Button>
       </DialogActions>
