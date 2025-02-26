@@ -7,6 +7,7 @@ export type Game = {
 };
 
 type Invite = {
+  id?: string;
   from_id: string;
   to_id: string;
   status: "pending" | "accepted" | "declined";
@@ -132,6 +133,13 @@ export const extendedGamesSlice = socialApi.injectEndpoints({
         body: data,
       }),
     }),
+    updateInvite: builder.mutation<string, Invite & { id: string }>({
+      query: (data) => ({
+        url: `games/invites/${data.id}/`,
+        method: "PUT",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -142,4 +150,5 @@ export const {
   useGetTicTacToeQuery,
   usePostTicTacToeMutation,
   useIncreaseScoreMutation,
+  useUpdateInviteMutation,
 } = extendedGamesSlice;
