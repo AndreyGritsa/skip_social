@@ -3076,5 +3076,13 @@
       "content": "gg",
       "created_at": "2025-01-20T15:04:17.470Z"
     }
+  },
+  {
+    "model": "games.game",
+    "pk": 1,
+    "fields": {
+      "name": "Tic-Tac-Toe",
+      "slug": "tic-tac-toe"
+    }
   }
 ]

@@ -48,6 +48,11 @@ class InviteAPIView(APIView):
 
         res = handle_reactive_put("invites", uuid.uuid4(), data)
         handle_reactive_put(
+            "ticTacToeScores",
+            room_id,
+            {"initial": 0},
+        )
+        handle_reactive_put(
             "ticTacToe",
             room_id,
             {
@@ -77,3 +82,32 @@ class TicTacToeAPIView(APIView):
             "ticTacToe", request.data.get("room_id"), request.data
         )
         return Response(res.reason, status=res.status_code)
+
+
+class TicTacToeScoresAPIView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    content_negotiation_class = IgnoreClientContentNegotiation
+
+    def post(self, request):
+        room_id = request.data.pop("room_id")
+        if not room_id:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST, data={"error": "No room_id"}
+            )
+        if (
+            handle_reactive_put("ticTacToeScores", room_id, request.data).status_code
+            == 200
+        ):
+            res = handle_reactive_put(
+                "ticTacToe",
+                room_id,
+                {
+                    "room_id": room_id,
+                    "last_move": "",
+                    **{index: "" for index in range(1, 10)},
+                },
+            )
+            return Response(res.reason, status=res.status_code)
+        return Response(
+            status=status.HTTP_400_BAD_REQUEST, data={"error": "Failed to update score"}
+        )

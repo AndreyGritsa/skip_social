@@ -26,7 +26,9 @@ export type TicTacToe = {
   room_id: string;
   last_move: string;
   winning_combo: number[];
-  [key: string]: string | number[];
+  players: string[];
+  draw: string;
+  [key: string]: string | number[] | string[];
 };
 
 export const extendedGamesSlice = socialApi.injectEndpoints({
@@ -120,6 +122,16 @@ export const extendedGamesSlice = socialApi.injectEndpoints({
         body,
       }),
     }),
+    increaseScore: builder.mutation<
+      string,
+      { room_id: string; [key: string]: string }
+    >({
+      query: (data) => ({
+        url: `games/tictactoe/score/`,
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -129,4 +141,5 @@ export const {
   usePostInviteMutation,
   useGetTicTacToeQuery,
   usePostTicTacToeMutation,
+  useIncreaseScoreMutation,
 } = extendedGamesSlice;

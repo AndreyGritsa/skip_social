@@ -5,6 +5,7 @@ import type {
   Resource,
   Json,
 } from "@skipruntime/core";
+import type { ModifiedProfile } from "./users.js";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
 
 const winningCombos = [
@@ -38,17 +39,29 @@ export type TicTacToe = {
   9: string;
   room_id: string;
   last_move: string;
-  [key: string]: string | number[];
+  [key: string]: string | number[] | string[] | TicTacToeScore | boolean;
 };
 
-export type WinTicTacToe = TicTacToe & { winning_combo: number[] };
+export type WinTicTacToe = TicTacToe & {
+  winning_combo: number[];
+  winner: string;
+  players: string[];
+  score: TicTacToeScore;
+  draw: boolean;
+};
+
+export type TicTacToeScore = {
+  [key: string]: number | string;
+};
 
 type OutputCollection = {
   invites: EagerCollection<string, Invite>;
   ticTacToe: EagerCollection<string, WinTicTacToe>;
 };
 
-type GamesInputCollection = InputCollection;
+type GamesInputCollection = InputCollection & {
+  modifiedProfiles: EagerCollection<string, ModifiedProfile>;
+};
 
 // mappers
 
@@ -86,17 +99,50 @@ class TicTacToeMapper implements Mapper<string, TicTacToe, string, TicTacToe> {
 class WinTicTacToeMapper
   implements Mapper<string, TicTacToe, string, WinTicTacToe>
 {
+  constructor(
+    private modifiedProfiles: EagerCollection<string, ModifiedProfile>,
+    private invites: EagerCollection<string, Invite>,
+    private scores: EagerCollection<string, TicTacToeScore>
+  ) {}
   mapEntry(
     key: string,
     values: Values<TicTacToe>
   ): Iterable<[string, WinTicTacToe]> {
     const value = values.getUnique();
+    const invite = this.invites.getUnique(value.room_id);
+    const fromIdName = this.modifiedProfiles.getUnique(invite.from_id).name;
+    const toIdName = this.modifiedProfiles.getUnique(invite.to_id).name;
+    const players = [fromIdName, toIdName];
+    const score = this.scores.getUnique(value.room_id);
+    let draw = false;
+    let winner = "";
+
     const winning_combo = winningCombos.find((combo) => {
       const [a, b, c] = combo;
       return value[a!] && value[a!] === value[b!] && value[b!] === value[c!];
     });
+
+    if (winning_combo) {
+      winner =
+        value[winning_combo[0] as number] === "X" ? fromIdName : toIdName;
+    } else {
+      draw = Object.keys(value)
+        .filter((key) => /^[1-9]$/.test(key))
+        .every((key) => value[key] === "X" || value[key] === "O");
+    }
+
     return [
-      [key, { ...(value as TicTacToe), winning_combo: winning_combo || [] }],
+      [
+        key,
+        {
+          ...(value as TicTacToe),
+          winning_combo: winning_combo || [],
+          winner: winner,
+          players: players,
+          score: score,
+          draw: draw,
+        },
+      ],
     ];
   }
 }
@@ -142,6 +188,11 @@ export const createGamesCollections = (
     invites: input.invites.map(InviteMapper),
     ticTacToe: input.ticTacToe
       .map(TicTacToeMapper, roomIdInvites)
-      .map(WinTicTacToeMapper),
+      .map(
+        WinTicTacToeMapper,
+        input.modifiedProfiles,
+        roomIdInvites,
+        input.ticTacToeScores
+      ),
   };
 };
