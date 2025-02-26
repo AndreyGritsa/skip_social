@@ -21,7 +21,7 @@ export interface ServerChannel {
   id: string;
   name: string;
   messages: ServerMessage[];
-  allowedRoles: ServerChannelAllowedRole[];
+  allowed_roles: ServerChannelAllowedRole[];
 }
 
 export interface Server extends User {

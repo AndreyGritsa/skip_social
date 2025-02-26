@@ -27,7 +27,7 @@ export type ServerChannel = {
 };
 
 export type ServerChannelWithAllowedRoles = ServerChannel & {
-  allowedRoles: ServerChannelAllowedRole[];
+  allowed_roles: ServerChannelAllowedRole[];
 };
 
 export type ModifiedServer = Server & { channels: ServerChannel[] };
@@ -46,7 +46,7 @@ export type ModifiedServerMessage = ServerMessage & { author: string };
 export type ServerMemberProfile = ModifiedProfile & {
   role: string;
   friend?: boolean;
-  friendRequested?: boolean;
+  friend_requested?: boolean;
 };
 
 export type ServerChannelAllowedRole = {
@@ -120,9 +120,9 @@ class ServerChannelMapper
     values: Values<ServerChannel>
   ): Iterable<[string, ServerChannelWithAllowedRoles]> {
     const value: ServerChannel = values.getUnique();
-    const allowedRoles = this.serverChannelIdAllowedRoles.getArray(value.id);
+    const allowedRroles = this.serverChannelIdAllowedRoles.getArray(value.id);
 
-    return [[value.server_id, { ...value, allowedRoles }]];
+    return [[value.server_id, { ...value, allowed_roles: allowedRroles }]];
   }
 }
 
@@ -219,14 +219,14 @@ class ServerMemberIsFrienRequestedMapper extends OneToManyMapper<
   }
   mapValue(value: ServerMemberProfile, _key: string): ServerMemberProfile[] {
     if (value.friend) {
-      return [{ ...value, friendRequested: false }];
+      return [{ ...value, friend_requested: false }];
     }
-    const friendRequested = this.friendRequestsFromTo.getArray(
+    const friendRrequested = this.friendRequestsFromTo.getArray(
       `${this.profileId}/${value.id}`
     ).length
       ? true
       : false;
-    return [{ ...value, friendRequested }];
+    return [{ ...value, friend_requested: friendRrequested }];
   }
 }
 
