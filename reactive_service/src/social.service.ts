@@ -21,7 +21,12 @@ import type {
   ServerMemberProfile,
   ServerChannelAllowedRole,
 } from "./servers.js";
-import type { Invite, TicTacToe, WinTicTacToe } from "./games.js";
+import type {
+  Invite,
+  TicTacToe,
+  WinTicTacToe,
+  TicTacToeScore,
+} from "./games.js";
 import type {
   ModifiedPost,
   Post,
@@ -97,6 +102,7 @@ export type InputCollection = {
   replies: EagerCollection<string, Reply>;
   invites: EagerCollection<string, Invite>;
   ticTacToe: EagerCollection<string, TicTacToe>;
+  ticTacToeScores: EagerCollection<string, TicTacToeScore>;
 };
 
 export type ResourcesCollection = {
@@ -165,6 +171,7 @@ export function SocialSkipService(
       replies,
       invites: [],
       ticTacToe: [],
+      ticTacToeScores: [],
     },
     resources: {
       // users
@@ -256,7 +263,10 @@ export function SocialSkipService(
         profileExternalServiceSubscriptions,
         externalServiceSubscriptions,
       } = createExternalsCollections(inputCollections);
-      const { invites, ticTacToe } = createGamesCollections(inputCollections);
+      const { invites, ticTacToe } = createGamesCollections({
+        ...inputCollections,
+        modifiedProfiles,
+      });
 
       return {
         friends,
