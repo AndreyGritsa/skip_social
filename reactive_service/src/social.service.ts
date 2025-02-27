@@ -154,6 +154,9 @@ function SocialSkipService(
   serverChannelAllowedRoles: Entry<string, ServerChannelAllowedRole>[],
   externalServiceSubscriptions: Entry<string, ExternalServiceSubscription>[],
   replies: Entry<string, Reply>[],
+  invites: Entry<string, Invite>[],
+  ticTacToe: Entry<string, TicTacToe>[],
+  ticTacToeScores: Entry<string, TicTacToeScore>[],
 ): SkipService<InputCollection, ResourcesCollection> {
   return {
     initialData: {
@@ -171,9 +174,9 @@ function SocialSkipService(
       serverChannelAllowedRoles,
       externalServiceSubscriptions,
       replies,
-      invites: [],
-      ticTacToe: [],
-      ticTacToeScores: [],
+      invites,
+      ticTacToe,
+      ticTacToeScores,
     },
     resources: {
       // users
@@ -363,6 +366,9 @@ export function main() {
       serverChannelAllowedRoles,
       externalServiceSubscriptions,
       replies,
+      [],
+      [],
+      [],
     ),
   );
 }
