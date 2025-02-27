@@ -3,6 +3,7 @@ import type {
   EagerCollection,
   SkipService,
   Entry,
+  InitialData,
   Context,
   Json,
 } from "@skipruntime/core";
@@ -140,44 +141,10 @@ export type ResourcesCollection = {
 };
 
 function SocialSkipService(
-  users: Entry<string, User>[],
-  profiles: Entry<string, Profile>[],
-  friendRequests: Entry<string, FriendRequest>[],
-  serverMembers: Entry<string, ServerMember>[],
-  posts: Entry<string, Post>[],
-  comments: Entry<string, Comment>[],
-  channelParticipants: Entry<string, ChannelParticipant>[],
-  messages: Entry<string, Message>[],
-  servers: Entry<string, Server>[],
-  serverChannels: Entry<string, ServerChannel>[],
-  serverMessages: Entry<string, ServerMessage>[],
-  serverChannelAllowedRoles: Entry<string, ServerChannelAllowedRole>[],
-  externalServiceSubscriptions: Entry<string, ExternalServiceSubscription>[],
-  replies: Entry<string, Reply>[],
-  invites: Entry<string, Invite>[],
-  ticTacToe: Entry<string, TicTacToe>[],
-  ticTacToeScores: Entry<string, TicTacToeScore>[],
+  initialData: InitialData<InputCollection>,
 ): SkipService<InputCollection, ResourcesCollection> {
   return {
-    initialData: {
-      users,
-      profiles,
-      friendRequests,
-      serverMembers,
-      posts,
-      comments,
-      channelParticipants,
-      messages,
-      servers,
-      serverChannels,
-      serverMessages,
-      serverChannelAllowedRoles,
-      externalServiceSubscriptions,
-      replies,
-      invites,
-      ticTacToe,
-      ticTacToeScores,
-    },
+    initialData,
     resources: {
       // users
       friends: FriendsResource,
@@ -351,7 +318,7 @@ const replies = await selectAll<Reply>("posts_reply");
 
 export function main() {
   runService(
-    SocialSkipService(
+    SocialSkipService({
       users,
       profiles,
       friendRequests,
@@ -366,9 +333,9 @@ export function main() {
       serverChannelAllowedRoles,
       externalServiceSubscriptions,
       replies,
-      [],
-      [],
-      [],
-    ),
+      invites: [],
+      ticTacToe: [],
+      ticTacToeScores: [],
+    }),
   );
 }
