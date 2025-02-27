@@ -330,7 +330,7 @@ async function selectAll<Row extends Json>(
 const users = await selectAll<User>("auth_user");
 const profiles = await selectAll<Profile>("users_profile");
 const friendRequests = await selectAll<FriendRequest>("users_friendrequest");
-const serversMembers = await selectAll<ServerMember>("servers_member");
+const serverMembers = await selectAll<ServerMember>("servers_member");
 const posts = await selectAll<Post>("posts_post");
 const comments = await selectAll<Comment>("posts_comment");
 const channelParticipants = await selectAll<ChannelParticipant>(
@@ -355,7 +355,7 @@ export function main() {
       users,
       profiles,
       friendRequests,
-      serversMembers,
+      serverMembers,
       posts,
       comments,
       channelParticipants,
