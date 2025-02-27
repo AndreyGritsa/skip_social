@@ -1,10 +1,14 @@
+import postgres from "postgres";
 import type {
   EagerCollection,
   SkipService,
   Entry,
+  InitialData,
   Context,
   Json,
 } from "@skipruntime/core";
+import { runService } from "@skipruntime/server";
+import { GenericExternalService, Polled } from "@skipruntime/helpers";
 import type { User, Profile, ModifiedProfile, FriendRequest } from "./users.js";
 import type {
   WeatherResults,
@@ -40,7 +44,6 @@ import type {
   Message,
   ModifiedMessage,
 } from "./channels.js";
-import { GenericExternalService, Polled } from "@skipruntime/helpers";
 import {
   ServerMembersIndexResource,
   createServersCollections,
@@ -137,42 +140,11 @@ export type ResourcesCollection = {
   ticTacToe: EagerCollection<string, WinTicTacToe>;
 };
 
-export function SocialSkipService(
-  users: Entry<string, User>[],
-  profiles: Entry<string, Profile>[],
-  friendRequests: Entry<string, FriendRequest>[],
-  serverMembers: Entry<string, ServerMember>[],
-  posts: Entry<string, Post>[],
-  comments: Entry<string, Comment>[],
-  channelParticipants: Entry<string, ChannelParticipant>[],
-  messages: Entry<string, Message>[],
-  servers: Entry<string, Server>[],
-  serverChannels: Entry<string, ServerChannel>[],
-  serverMessages: Entry<string, ServerMessage>[],
-  serverChannelAllowedRoles: Entry<string, ServerChannelAllowedRole>[],
-  externalServiceSubscriptions: Entry<string, ExternalServiceSubscription>[],
-  replies: Entry<string, Reply>[]
+function SocialSkipService(
+  initialData: InitialData<InputCollection>,
 ): SkipService<InputCollection, ResourcesCollection> {
   return {
-    initialData: {
-      users,
-      profiles,
-      friendRequests,
-      serverMembers,
-      posts,
-      comments,
-      channelParticipants,
-      messages,
-      servers,
-      serverChannels,
-      serverMessages,
-      serverChannelAllowedRoles,
-      externalServiceSubscriptions,
-      replies,
-      invites: [],
-      ticTacToe: [],
-      ticTacToeScores: [],
-    },
+    initialData,
     resources: {
       // users
       friends: FriendsResource,
@@ -212,7 +184,7 @@ export function SocialSkipService(
               return [[0, [data]]];
             }
             return [];
-          }
+          },
         ),
         cryptoAPI: new Polled(
           "https://api.coincap.io/v2/assets/",
@@ -223,76 +195,113 @@ export function SocialSkipService(
             }
             return [];
           },
-          cryptoParamEncoder
+          cryptoParamEncoder,
         ),
       }),
     },
     createGraph: (inputCollections: InputCollection, context: Context) => {
-      const {
-        friends,
-        friendIndex,
-        modifiedProfiles,
-        friendRequestsTo,
-        friendRequestsFrom,
-        friendRequestsFromTo,
-      } = createUsersCollections(inputCollections);
-      const {
-        serverIndex,
-        profileServers,
-        serverMessages,
-        serverMembers,
-        serverChannelsAllowedIndexRoles,
-        serverProfileMember,
-      } = createServersCollections({
+      const usersCollections = createUsersCollections(inputCollections);
+      const { modifiedProfiles, friends } = usersCollections;
+      const serversCollections = createServersCollections({
         ...inputCollections,
         modifiedProfiles,
       });
-      const { friendsPosts, authorPosts, comments, replies } =
-        createPostsCollections({
-          friends,
-          ...inputCollections,
-          modifiedProfiles,
-          context,
-        });
-      const { channels, messages, chatCommand } = createChannelsCollections({
+      const postsCollections = createPostsCollections({
+        friends,
         ...inputCollections,
         modifiedProfiles,
         context,
       });
-      const {
-        profileExternalServiceSubscriptions,
-        externalServiceSubscriptions,
-      } = createExternalsCollections(inputCollections);
-      const { invites, ticTacToe } = createGamesCollections({
+      const channelsCollections = createChannelsCollections({
+        ...inputCollections,
+        modifiedProfiles,
+        context,
+      });
+      const externalsCollections = createExternalsCollections(inputCollections);
+      const gamesCollections = createGamesCollections({
         ...inputCollections,
         modifiedProfiles,
       });
 
       return {
-        friends,
-        friendIndex,
-        serverIndex,
-        modifiedProfiles,
-        friendRequestsTo,
-        friendRequestsFrom,
-        friendRequestsFromTo,
-        friendsPosts,
-        authorPosts,
-        comments,
-        channels,
-        messages,
-        profileServers,
-        serverMessages,
-        serverMembers,
-        serverChannelsAllowedIndexRoles,
-        serverProfileMember,
-        profileExternalServiceSubscriptions,
-        externalServiceSubscriptions,
-        chatCommand,
-        replies,
-        invites,
-        ticTacToe,
+        ...usersCollections,
+        ...serversCollections,
+        ...postsCollections,
+        ...channelsCollections,
+        ...externalsCollections,
+        ...gamesCollections,
       };
     },
   };
+}
+
+const {
+  POSTGRES_USER,
+  POSTGRES_PASSWORD,
+  POSTGRES_DB,
+  POSTGRES_HOST,
+  POSTGRES_PORT = "5432",
+} = process.env;
+
+const sql = postgres(
+  `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`,
+);
+
+// `Row` is the type which rows of `table` are ASSUMED to be compatible with
+async function selectAll<Row extends Json>(
+  table: string,
+): Promise<Entry<string, Row>[]> {
+  return (await sql`SELECT * FROM ${sql(table)}`).map((r) => {
+    if (r["created_at"]) {
+      r["created_at"] = r["created_at"].toString();
+    }
+    return [r["id"], [r as Row]];
+  });
+}
+
+// Initial values.
+const users = await selectAll<User>("auth_user");
+const profiles = await selectAll<Profile>("users_profile");
+const friendRequests = await selectAll<FriendRequest>("users_friendrequest");
+const serverMembers = await selectAll<ServerMember>("servers_member");
+const posts = await selectAll<Post>("posts_post");
+const comments = await selectAll<Comment>("posts_comment");
+const channelParticipants = await selectAll<ChannelParticipant>(
+  "channels_channel_participants",
+);
+const messages = await selectAll<Message>("channels_message");
+const servers = await selectAll<Server>("servers_server");
+const serverChannels = await selectAll<ServerChannel>("servers_serverchannel");
+const serverMessages = await selectAll<Message>("servers_serverchannelmessage");
+const serverChannelAllowedRoles = await selectAll<ServerChannelAllowedRole>(
+  "servers_serverchannelallowedrole",
+);
+const externalServiceSubscriptions =
+  await selectAll<ExternalServiceSubscription>(
+    "externals_externalservicesubscription",
+  );
+const replies = await selectAll<Reply>("posts_reply");
+
+export function main() {
+  runService(
+    SocialSkipService({
+      users,
+      profiles,
+      friendRequests,
+      serverMembers,
+      posts,
+      comments,
+      channelParticipants,
+      messages,
+      servers,
+      serverChannels,
+      serverMessages,
+      serverChannelAllowedRoles,
+      externalServiceSubscriptions,
+      replies,
+      invites: [],
+      ticTacToe: [],
+      ticTacToeScores: [],
+    }),
+  );
 }
