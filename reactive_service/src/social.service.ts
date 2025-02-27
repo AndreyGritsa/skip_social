@@ -200,70 +200,36 @@ function SocialSkipService(
       }),
     },
     createGraph: (inputCollections: InputCollection, context: Context) => {
-      const {
-        friends,
-        friendIndex,
-        modifiedProfiles,
-        friendRequestsTo,
-        friendRequestsFrom,
-        friendRequestsFromTo,
-      } = createUsersCollections(inputCollections);
-      const {
-        serverIndex,
-        profileServers,
-        serverMessages,
-        serverMembers,
-        serverChannelsAllowedIndexRoles,
-        serverProfileMember,
-      } = createServersCollections({
+      const usersCollections = createUsersCollections(inputCollections);
+      const { modifiedProfiles, friends } = usersCollections;
+      const serversCollections = createServersCollections({
         ...inputCollections,
         modifiedProfiles,
       });
-      const { friendsPosts, authorPosts, comments, replies } =
-        createPostsCollections({
-          friends,
-          ...inputCollections,
-          modifiedProfiles,
-          context,
-        });
-      const { channels, messages, chatCommand } = createChannelsCollections({
+      const postsCollections = createPostsCollections({
+        friends,
         ...inputCollections,
         modifiedProfiles,
         context,
       });
-      const {
-        profileExternalServiceSubscriptions,
-        externalServiceSubscriptions,
-      } = createExternalsCollections(inputCollections);
-      const { invites, ticTacToe } = createGamesCollections({
+      const channelsCollections = createChannelsCollections({
+        ...inputCollections,
+        modifiedProfiles,
+        context,
+      });
+      const externalsCollections = createExternalsCollections(inputCollections);
+      const gamesCollections = createGamesCollections({
         ...inputCollections,
         modifiedProfiles,
       });
 
       return {
-        friends,
-        friendIndex,
-        serverIndex,
-        modifiedProfiles,
-        friendRequestsTo,
-        friendRequestsFrom,
-        friendRequestsFromTo,
-        friendsPosts,
-        authorPosts,
-        comments,
-        channels,
-        messages,
-        profileServers,
-        serverMessages,
-        serverMembers,
-        serverChannelsAllowedIndexRoles,
-        serverProfileMember,
-        profileExternalServiceSubscriptions,
-        externalServiceSubscriptions,
-        chatCommand,
-        replies,
-        invites,
-        ticTacToe,
+        ...usersCollections,
+        ...serversCollections,
+        ...postsCollections,
+        ...channelsCollections,
+        ...externalsCollections,
+        ...gamesCollections,
       };
     },
   };
