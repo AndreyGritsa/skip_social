@@ -1,3 +1,4 @@
+import postgres from "postgres";
 import type {
   EagerCollection,
   SkipService,
@@ -5,6 +6,8 @@ import type {
   Context,
   Json,
 } from "@skipruntime/core";
+import { runService } from "@skipruntime/server";
+import { GenericExternalService, Polled } from "@skipruntime/helpers";
 import type { User, Profile, ModifiedProfile, FriendRequest } from "./users.js";
 import type {
   WeatherResults,
@@ -40,7 +43,6 @@ import type {
   Message,
   ModifiedMessage,
 } from "./channels.js";
-import { GenericExternalService, Polled } from "@skipruntime/helpers";
 import {
   ServerMembersIndexResource,
   createServersCollections,
@@ -137,7 +139,7 @@ export type ResourcesCollection = {
   ticTacToe: EagerCollection<string, WinTicTacToe>;
 };
 
-export function SocialSkipService(
+function SocialSkipService(
   users: Entry<string, User>[],
   profiles: Entry<string, Profile>[],
   friendRequests: Entry<string, FriendRequest>[],
@@ -151,7 +153,7 @@ export function SocialSkipService(
   serverMessages: Entry<string, ServerMessage>[],
   serverChannelAllowedRoles: Entry<string, ServerChannelAllowedRole>[],
   externalServiceSubscriptions: Entry<string, ExternalServiceSubscription>[],
-  replies: Entry<string, Reply>[]
+  replies: Entry<string, Reply>[],
 ): SkipService<InputCollection, ResourcesCollection> {
   return {
     initialData: {
@@ -212,7 +214,7 @@ export function SocialSkipService(
               return [[0, [data]]];
             }
             return [];
-          }
+          },
         ),
         cryptoAPI: new Polled(
           "https://api.coincap.io/v2/assets/",
@@ -223,7 +225,7 @@ export function SocialSkipService(
             }
             return [];
           },
-          cryptoParamEncoder
+          cryptoParamEncoder,
         ),
       }),
     },
@@ -295,4 +297,72 @@ export function SocialSkipService(
       };
     },
   };
+}
+
+const {
+  POSTGRES_USER,
+  POSTGRES_PASSWORD,
+  POSTGRES_DB,
+  POSTGRES_HOST,
+  POSTGRES_PORT = "5432",
+} = process.env;
+
+const sql = postgres(
+  `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`,
+);
+
+// `Row` is the type which rows of `table` are ASSUMED to be compatible with
+async function selectAll<Row extends Json>(
+  table: string,
+): Promise<Entry<string, Row>[]> {
+  return (await sql`SELECT * FROM ${sql(table)}`).map((r) => {
+    if (r["created_at"]) {
+      r["created_at"] = r["created_at"].toString();
+    }
+    return [r["id"], [r as Row]];
+  });
+}
+
+// Initial values.
+const users = await selectAll<User>("auth_user");
+const profiles = await selectAll<Profile>("users_profile");
+const friendRequests = await selectAll<FriendRequest>("users_friendrequest");
+const serversMembers = await selectAll<ServerMember>("servers_member");
+const posts = await selectAll<Post>("posts_post");
+const comments = await selectAll<Comment>("posts_comment");
+const channelParticipants = await selectAll<ChannelParticipant>(
+  "channels_channel_participants",
+);
+const messages = await selectAll<Message>("channels_message");
+const servers = await selectAll<Server>("servers_server");
+const serverChannels = await selectAll<ServerChannel>("servers_serverchannel");
+const serverMessages = await selectAll<Message>("servers_serverchannelmessage");
+const serverChannelAllowedRoles = await selectAll<ServerChannelAllowedRole>(
+  "servers_serverchannelallowedrole",
+);
+const externalServiceSubscriptions =
+  await selectAll<ExternalServiceSubscription>(
+    "externals_externalservicesubscription",
+  );
+const replies = await selectAll<Reply>("posts_reply");
+
+export function main() {
+  runService(
+    SocialSkipService(
+      users,
+      profiles,
+      friendRequests,
+      serversMembers,
+      posts,
+      comments,
+      channelParticipants,
+      messages,
+      servers,
+      serverChannels,
+      serverMessages,
+      serverChannelAllowedRoles,
+      externalServiceSubscriptions,
+      replies,
+    ),
+  );
 }
