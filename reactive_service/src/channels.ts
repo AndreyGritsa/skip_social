@@ -11,7 +11,6 @@ import type { InputCollection, ResourcesCollection } from "./social.service.js";
 import type { ModifiedProfile } from "./users.js";
 import { GenericSortedMapper } from "./utils/generic.js";
 import type { Context } from "@skipruntime/core";
-import { OneToManyMapper } from "@skipruntime/core";
 
 // types
 
@@ -104,16 +103,18 @@ class ChannelMapper implements Mapper<string, string, string, Channel> {
   }
 }
 
-class ChannelNotOneParticipantMapper extends OneToManyMapper<
-  string,
-  Channel,
-  Channel
-> {
-  mapValue(value: Channel, _key: string): Channel[] {
-    if (value.participants.length > 1) {
-      return [value];
+class ChannelNotOneParticipantMapper
+  implements Mapper<string, Channel, string, Channel>
+{
+  mapEntry(key: string, values: Values<Channel>): Iterable<[string, Channel]> {
+    const result: [string, Channel][] = [];
+    const value = values.toArray();
+    for (const v of value) {
+      if (v.participants.length > 1) {
+        result.push([key, v]);
+      }
     }
-    return [];
+    return result;
   }
 }
 
