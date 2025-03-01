@@ -11,7 +11,6 @@ import { MessageMapper } from "./channels.js";
 import type { FriendRequest, ModifiedProfile } from "./users.js";
 import { GenericSortedMapper } from "./utils/generic.js";
 import { isJsonObject } from "./utils/other.js";
-import { OneToOneMapper, OneToManyMapper } from "@skipruntime/core";
 
 // types
 export type Server = {
@@ -126,18 +125,19 @@ class ServerChannelMapper
   }
 }
 
-class MemberProfileMapper extends OneToOneMapper<
-  string,
-  ServerMember,
-  ModifiedProfile
-> {
+class MemberProfileMapper
+  implements Mapper<string, ServerMember, string, ModifiedProfile>
+{
   constructor(
     private modifiedProfiles: EagerCollection<string, ModifiedProfile>
-  ) {
-    super();
-  }
-  mapValue(value: ServerMember, _key: string): ModifiedProfile {
-    return this.modifiedProfiles.getUnique(value.profile_id);
+  ) {}
+  mapEntry(
+    key: string,
+    values: Values<ServerMember>
+  ): Iterable<[string, ModifiedProfile]> {
+    const member = values.getUnique();
+    const profile = this.modifiedProfiles.getUnique(member.profile_id);
+    return [[key, profile]];
   }
 }
 
@@ -178,55 +178,77 @@ class ServerProfileMemberMapper
   }
 }
 
-class ServerMemberIsFriendMapper extends OneToManyMapper<
-  string,
-  ServerMemberProfile,
-  ServerMemberProfile
-> {
+class ServerMemberIsFriendMapper
+  implements Mapper<string, ServerMemberProfile, string, ServerMemberProfile>
+{
   constructor(
     private friendIndex: EagerCollection<string, boolean>,
     private profileId: string
-  ) {
-    super();
-  }
-  mapValue(value: ServerMemberProfile, _key: string): ServerMemberProfile[] {
-    let id1 = value.id;
-    let id2 = this.profileId;
+  ) {}
+  mapEntry(
+    key: string,
+    values: Values<ServerMemberProfile>
+  ): Iterable<[string, ServerMemberProfile]> {
+    const membersArray = values.toArray();
+    const result: [string, ServerMemberProfile][] = [];
+    for (const member of membersArray) {
+      let id1 = member.id;
+      let id2 = this.profileId;
 
-    if (id1 > id2) {
-      [id1, id2] = [id2, id1];
-    } else if (id1 === id2) {
-      return [value];
+      if (id1 > id2) {
+        [id1, id2] = [id2, id1];
+      } else if (id1 === id2) {
+        result.push([key, member]);
+        continue;
+      }
+
+      const friendKey = `${id1}/${id2}`;
+      const isFriend =
+        this.friendIndex.getArray(friendKey).length > 0 ? true : false;
+      result.push([
+        key,
+        { ...(member as ServerMemberProfile), friend: isFriend },
+      ]);
     }
-
-    const friendKey = `${id1}/${id2}`;
-    const isFriend =
-      this.friendIndex.getArray(friendKey).length > 0 ? true : false;
-    return [{ ...value, friend: isFriend }];
+    return result;
   }
 }
 
-class ServerMemberIsFrienRequestedMapper extends OneToManyMapper<
-  string,
-  ServerMemberProfile,
-  ServerMemberProfile
-> {
+class ServerMemberIsFrienRequestedMapper
+  implements Mapper<string, ServerMemberProfile, string, ServerMemberProfile>
+{
   constructor(
     private friendRequestsFromTo: EagerCollection<string, FriendRequest>,
     private profileId: string
-  ) {
-    super();
-  }
-  mapValue(value: ServerMemberProfile, _key: string): ServerMemberProfile[] {
-    if (value.friend) {
-      return [{ ...value, friend_requested: false }];
+  ) {}
+  mapEntry(
+    key: string,
+    values: Values<ServerMemberProfile>
+  ): Iterable<[string, ServerMemberProfile]> {
+    const membersArray = values.toArray();
+    const result: [string, ServerMemberProfile][] = [];
+    for (const member of membersArray) {
+      if (member.friend) {
+        result.push([
+          key,
+          { ...(member as ServerMemberProfile), friend_requested: false },
+        ]);
+        continue;
+      }
+      const friendRequested = this.friendRequestsFromTo.getArray(
+        `${this.profileId}/${member.id}`
+      ).length
+        ? true
+        : false;
+      result.push([
+        key,
+        {
+          ...(member as ServerMemberProfile),
+          friend_requested: friendRequested,
+        },
+      ]);
     }
-    const friendRrequested = this.friendRequestsFromTo.getArray(
-      `${this.profileId}/${value.id}`
-    ).length
-      ? true
-      : false;
-    return [{ ...value, friend_requested: friendRrequested }];
+    return result;
   }
 }
 
@@ -242,32 +264,39 @@ class ServerChannelAllowedRoleIndexMapper
   }
 }
 
-class ProfileServersResourceAllowedChannelsMapper extends OneToManyMapper<
-  string,
-  ModifiedServer,
-  ModifiedServer
-> {
+class ProfileServersResourceAllowedChannelsMapper
+  implements Mapper<string, ModifiedServer, string, ModifiedServer>
+{
   constructor(
     private serverChannelAllowedRoles: EagerCollection<string, boolean>,
     private profileId: string,
     private serverProfileMembers: EagerCollection<string, ServerMemberProfile>
-  ) {
-    super();
-  }
-  mapValue(value: ModifiedServer, _key: string): ModifiedServer[] {
-    const allowedChannels: ServerChannel[] = [];
-    const serverProfileMember = this.serverProfileMembers.getUnique(
-      `${value.id}/${this.profileId}`
-    );
+  ) {}
+  mapEntry(
+    key: string,
+    values: Values<ModifiedServer>
+  ): Iterable<[string, ModifiedServer]> {
+    const servers = values.toArray();
+    const result: [string, ModifiedServer][] = [];
+    for (const server of servers) {
+      const allowedChannels: ServerChannel[] = [];
+      const serverProfileMember = this.serverProfileMembers.getUnique(
+        `${server.id}/${this.profileId}`
+      );
+      const channels = server.channels;
 
-    const channels = value.channels;
-    for (const channel of channels) {
-      const channelKey = `${channel.id}/${serverProfileMember.role}`;
-      if (this.serverChannelAllowedRoles.getArray(channelKey).length === 1) {
-        allowedChannels.push(channel);
+      for (const channel of channels) {
+        const channelKey = `${channel.id}/${serverProfileMember.role}`;
+        if (this.serverChannelAllowedRoles.getArray(channelKey).length === 1) {
+          allowedChannels.push(channel);
+        }
       }
+      result.push([
+        key,
+        { ...(server as ModifiedServer), channels: allowedChannels },
+      ]);
     }
-    return [{ ...value, channels: allowedChannels }];
+    return result;
   }
 }
 

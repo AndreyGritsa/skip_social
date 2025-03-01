@@ -9,8 +9,7 @@ import type {
   LazyCollection,
 } from "@skipruntime/core";
 import type { InputCollection, ResourcesCollection } from "./social.service.js";
-import type { ModifiedProfile, Profile } from "./users.js";
-import { OneToManyMapper } from "@skipruntime/core";
+import type { ModifiedProfile } from "./users.js";
 
 // types
 
@@ -111,23 +110,30 @@ class PostsMapper implements Mapper<string, Post, string, Post> {
   }
 }
 
-class FriendsPostsMapper extends OneToManyMapper<
-  string,
-  ModifiedProfile,
-  ModifiedPost
-> {
-  constructor(private posts: EagerCollection<string, Post>) {
-    super();
-  }
-  mapValue(
-    value: Profile & { name: string },
-    _key: string
-  ): ModifiedPost[] {
-    const posts = this.posts.getArray(value.id);
-    return posts.map((post) => ({
-      ...(post as Post),
-      author: value.name,
-    }));
+class FriendsPostsMapper
+  implements Mapper<string, ModifiedProfile, string, ModifiedPost>
+{
+  constructor(private posts: EagerCollection<string, Post>) {}
+  mapEntry(
+    key: string,
+    values: Values<ModifiedProfile>
+  ): Iterable<[string, ModifiedPost]> {
+    const result: [string, ModifiedPost][] = [];
+    const friends = values.toArray();
+    for (const friend of friends) {
+      const posts = this.posts.getArray(friend!.id);
+      for (const post of posts) {
+        result.push([
+          key,
+          {
+            ...(post as Post),
+            author: friend!.name,
+          },
+        ]);
+      }
+    }
+
+    return result;
   }
 }
 
@@ -195,19 +201,17 @@ class ComputeRepliesCount implements LazyCompute<string, number> {
   }
 }
 
-class RepliesWithCountMapper extends OneToManyMapper<
-  string,
-  ModifiedReply,
-  ModifiedReply>{
-  constructor(private repliesCount: LazyCollection<string, number>) {
-    super();
-  }
-  mapValue(
-    value: ModifiedReply,
-    _key: string
-  ): ModifiedReply[] {
-    const count = this.repliesCount.getUnique(`${value.id}/19`);
-    return [{ ...value as unknown as ModifiedReply, replies_count: count }];
+class RepliesWithCountMapper
+  implements Mapper<string, ModifiedReply, string, ModifiedReply>
+{
+  constructor(private repliesCount: LazyCollection<string, number>) {}
+  mapEntry(
+    _key: string,
+    values: Values<ModifiedReply>
+  ): Iterable<[string, ModifiedReply]> {
+    const reply = values.getUnique();
+    const count = this.repliesCount.getUnique(`${reply.id}/19`);
+    return [[reply.id, { ...(reply as ModifiedReply), replies_count: count }]];
   }
 }
 
