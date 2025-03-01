@@ -8,7 +8,7 @@ import type {
   LazyCompute,
   LazyCollection,
 } from "@skipruntime/core";
-import type { InputCollection, ResourcesCollection } from "./social.service.js";
+import type { PostgresCollection, ResourcesCollection } from "./social.service.js";
 import type { ModifiedProfile } from "./users.js";
 
 // types
@@ -56,7 +56,7 @@ type OutputCollection = {
   replies: EagerCollection<string, ModifiedReply>;
 };
 
-type PostsInputCollection = InputCollection & {
+type PostsInputCollection = PostgresCollection & {
   friends: EagerCollection<string, ModifiedProfile>;
   modifiedProfiles: EagerCollection<string, ModifiedProfile>;
   context: Context;

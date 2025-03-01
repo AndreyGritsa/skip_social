@@ -7,7 +7,7 @@ import type {
   LazyCollection,
   LazyCompute,
 } from "@skipruntime/core";
-import type { InputCollection, ResourcesCollection } from "./social.service.js";
+import type { ResourcesCollection, PostgresCollection } from "./social.service.js";
 import type { ModifiedProfile } from "./users.js";
 import { GenericSortedMapper } from "./utils/generic.js";
 import type { Context } from "@skipruntime/core";
@@ -41,7 +41,7 @@ type OutputCollection = {
   chatCommand: EagerCollection<string, Json>;
 };
 
-type ChannelsInputCollection = InputCollection & {
+type ChannelsInputCollection = PostgresCollection & {
   modifiedProfiles: EagerCollection<string, ModifiedProfile>;
   context: Context;
 };

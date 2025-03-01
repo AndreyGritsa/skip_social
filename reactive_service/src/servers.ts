@@ -5,7 +5,7 @@ import type {
   Resource,
   Json,
 } from "@skipruntime/core";
-import type { InputCollection, ResourcesCollection } from "./social.service.js";
+import type { PostgresCollection, ResourcesCollection } from "./social.service.js";
 import type { Message } from "./channels.js";
 import { MessageMapper } from "./channels.js";
 import type { FriendRequest, ModifiedProfile } from "./users.js";
@@ -63,7 +63,7 @@ type OutputCollection = {
   serverProfileMember: EagerCollection<string, ServerMemberProfile>;
 };
 
-type ServersInputCollection = InputCollection & {
+type ServersInputCollection = PostgresCollection & {
   modifiedProfiles: EagerCollection<string, ModifiedProfile>;
 };
 

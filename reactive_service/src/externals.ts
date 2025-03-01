@@ -6,7 +6,7 @@ import type {
   Values,
   Json,
 } from "@skipruntime/core";
-import type { InputCollection, ResourcesCollection } from "./social.service.js";
+import type { PostgresCollection, ResourcesCollection } from "./social.service.js";
 import { isJsonObject } from "./utils/other.js";
 
 // types
@@ -41,7 +41,7 @@ export type CryptoResults = {
   timestamp: number;
 };
 
-type PostsInputCollection = InputCollection;
+type PostsInputCollection = PostgresCollection;
 
 type OutputCollection = {
   profileExternalServiceSubscriptions: EagerCollection<

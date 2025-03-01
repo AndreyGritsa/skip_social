@@ -1,8 +1,7 @@
-import postgres from "postgres";
+import { PostgresExternalService } from "@skip-adapter/postgres";
 import type {
   EagerCollection,
   SkipService,
-  Entry,
   InitialData,
   Context,
   Json,
@@ -85,24 +84,23 @@ import {
   TicTacToeResource,
 } from "./games.js";
 
+const {
+  POSTGRES_USER,
+  POSTGRES_PASSWORD,
+  POSTGRES_DB,
+  POSTGRES_HOST,
+  POSTGRES_PORT = 5432,
+} = process.env;
+
+const postgres = new PostgresExternalService({
+  host: POSTGRES_HOST!,
+  port: POSTGRES_PORT as number,
+  database: POSTGRES_DB!,
+  user: POSTGRES_USER!,
+  password: POSTGRES_PASSWORD!,
+});
+
 export type InputCollection = {
-  users: EagerCollection<string, User>;
-  profiles: EagerCollection<string, Profile>;
-  friendRequests: EagerCollection<string, FriendRequest>;
-  serverMembers: EagerCollection<string, ServerMember>;
-  posts: EagerCollection<string, Post>;
-  comments: EagerCollection<string, Comment>;
-  channelParticipants: EagerCollection<string, ChannelParticipant>;
-  messages: EagerCollection<string, Message>;
-  servers: EagerCollection<string, Server>;
-  serverChannels: EagerCollection<string, ServerChannel>;
-  serverMessages: EagerCollection<string, ServerMessage>;
-  serverChannelAllowedRoles: EagerCollection<string, ServerChannelAllowedRole>;
-  externalServiceSubscriptions: EagerCollection<
-    string,
-    ExternalServiceSubscription
-  >;
-  replies: EagerCollection<string, Reply>;
   invites: EagerCollection<string, Invite>;
   ticTacToe: EagerCollection<string, TicTacToe>;
   ticTacToeScores: EagerCollection<string, TicTacToeScore>;
@@ -140,8 +138,28 @@ export type ResourcesCollection = {
   ticTacToe: EagerCollection<string, WinTicTacToe>;
 };
 
+export type PostgresCollection = {
+  users: EagerCollection<string, User>;
+  profiles: EagerCollection<string, Profile>;
+  friendRequests: EagerCollection<string, FriendRequest>;
+  serverMembers: EagerCollection<string, ServerMember>;
+  posts: EagerCollection<string, Post>;
+  comments: EagerCollection<string, Comment>;
+  channelParticipants: EagerCollection<string, ChannelParticipant>;
+  messages: EagerCollection<string, Message>;
+  servers: EagerCollection<string, Server>;
+  serverChannels: EagerCollection<string, ServerChannel>;
+  serverMessages: EagerCollection<string, ServerMessage>;
+  serverChannelAllowedRoles: EagerCollection<string, ServerChannelAllowedRole>;
+  externalServiceSubscriptions: EagerCollection<
+    string,
+    ExternalServiceSubscription
+  >;
+  replies: EagerCollection<string, Reply>;
+};
+
 function SocialSkipService(
-  initialData: InitialData<InputCollection>,
+  initialData: InitialData<InputCollection>
 ): SkipService<InputCollection, ResourcesCollection> {
   return {
     initialData,
@@ -175,6 +193,7 @@ function SocialSkipService(
       ticTacToe: TicTacToeResource,
     },
     externalServices: {
+      postgres,
       externalAPI: new GenericExternalService({
         weatherAPI: new Polled(
           "https://api.open-meteo.com/v1/forecast",
@@ -184,7 +203,7 @@ function SocialSkipService(
               return [[0, [data]]];
             }
             return [];
-          },
+          }
         ),
         cryptoAPI: new Polled(
           "https://api.coincap.io/v2/assets/",
@@ -195,30 +214,33 @@ function SocialSkipService(
             }
             return [];
           },
-          cryptoParamEncoder,
+          cryptoParamEncoder
         ),
       }),
     },
     createGraph: (inputCollections: InputCollection, context: Context) => {
-      const usersCollections = createUsersCollections(inputCollections);
+      const postgresCollections = createPostgresCollection(context);
+      const usersCollections = createUsersCollections(postgresCollections);
       const { modifiedProfiles, friends } = usersCollections;
       const serversCollections = createServersCollections({
-        ...inputCollections,
+        ...postgresCollections,
         modifiedProfiles,
       });
       const postsCollections = createPostsCollections({
         friends,
-        ...inputCollections,
+        ...postgresCollections,
         modifiedProfiles,
         context,
       });
       const channelsCollections = createChannelsCollections({
-        ...inputCollections,
+        ...postgresCollections,
         modifiedProfiles,
         context,
       });
-      const externalsCollections = createExternalsCollections(inputCollections);
+      const externalsCollections =
+        createExternalsCollections(postgresCollections);
       const gamesCollections = createGamesCollections({
+        ...postgresCollections,
         ...inputCollections,
         modifiedProfiles,
       });
@@ -235,73 +257,48 @@ function SocialSkipService(
   };
 }
 
-const {
-  POSTGRES_USER,
-  POSTGRES_PASSWORD,
-  POSTGRES_DB,
-  POSTGRES_HOST,
-  POSTGRES_PORT = "5432",
-} = process.env;
+const createPostgresCollection = (context: Context): PostgresCollection => {
+  const serialIDKey = { key: { col: "id", type: "SERIAL" } };
 
-const sql = postgres(
-  `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`,
-);
+  const createResource = <T extends Json>(identifier: string) =>
+    context.useExternalResource<string, T>({
+      service: "postgres",
+      identifier,
+      params: serialIDKey,
+    });
 
-// `Row` is the type which rows of `table` are ASSUMED to be compatible with
-async function selectAll<Row extends Json>(
-  table: string,
-): Promise<Entry<string, Row>[]> {
-  return (await sql`SELECT * FROM ${sql(table)}`).map((r) => {
-    if (r["created_at"]) {
-      r["created_at"] = r["created_at"].toString();
-    }
-    return [r["id"], [r as Row]];
-  });
-}
-
-// Initial values.
-const users = await selectAll<User>("auth_user");
-const profiles = await selectAll<Profile>("users_profile");
-const friendRequests = await selectAll<FriendRequest>("users_friendrequest");
-const serverMembers = await selectAll<ServerMember>("servers_member");
-const posts = await selectAll<Post>("posts_post");
-const comments = await selectAll<Comment>("posts_comment");
-const channelParticipants = await selectAll<ChannelParticipant>(
-  "channels_channel_participants",
-);
-const messages = await selectAll<Message>("channels_message");
-const servers = await selectAll<Server>("servers_server");
-const serverChannels = await selectAll<ServerChannel>("servers_serverchannel");
-const serverMessages = await selectAll<Message>("servers_serverchannelmessage");
-const serverChannelAllowedRoles = await selectAll<ServerChannelAllowedRole>(
-  "servers_serverchannelallowedrole",
-);
-const externalServiceSubscriptions =
-  await selectAll<ExternalServiceSubscription>(
-    "externals_externalservicesubscription",
-  );
-const replies = await selectAll<Reply>("posts_reply");
+  return {
+    users: createResource<User>("auth_user"),
+    profiles: createResource<Profile>("users_profile"),
+    friendRequests: createResource<FriendRequest>("users_friendrequest"),
+    serverMembers: createResource<ServerMember>("servers_member"),
+    posts: createResource<Post>("posts_post"),
+    comments: createResource<Comment>("posts_comment"),
+    channelParticipants: createResource<ChannelParticipant>(
+      "channels_channel_participants"
+    ),
+    messages: createResource<Message>("channels_message"),
+    servers: createResource<Server>("servers_server"),
+    serverChannels: createResource<ServerChannel>("servers_serverchannel"),
+    serverMessages: createResource<ServerMessage>(
+      "servers_serverchannelmessage"
+    ),
+    serverChannelAllowedRoles: createResource<ServerChannelAllowedRole>(
+      "servers_serverchannelallowedrole"
+    ),
+    externalServiceSubscriptions: createResource<ExternalServiceSubscription>(
+      "externals_externalservicesubscription"
+    ),
+    replies: createResource<Reply>("posts_reply"),
+  };
+};
 
 export function main() {
   runService(
     SocialSkipService({
-      users,
-      profiles,
-      friendRequests,
-      serverMembers,
-      posts,
-      comments,
-      channelParticipants,
-      messages,
-      servers,
-      serverChannels,
-      serverMessages,
-      serverChannelAllowedRoles,
-      externalServiceSubscriptions,
-      replies,
       invites: [],
       ticTacToe: [],
       ticTacToeScores: [],
-    }),
+    })
   );
 }

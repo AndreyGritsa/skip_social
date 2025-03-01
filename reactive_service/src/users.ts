@@ -5,7 +5,7 @@ import type {
   Values,
   Json,
 } from "@skipruntime/core";
-import type { InputCollection, ResourcesCollection } from "./social.service.js";
+import type { PostgresCollection, ResourcesCollection } from "./social.service.js";
 import { isJsonObject } from "./utils/other.js";
 
 // Types
@@ -319,7 +319,7 @@ export class FriendsIndexResource implements Resource {
 // Main function
 
 export const createUsersCollections = (
-  inputCollections: InputCollection
+  inputCollections: PostgresCollection
 ): OutputCollection => {
   const modifiedProfiles = inputCollections.profiles.map(
     ModifiedProfileMapper,

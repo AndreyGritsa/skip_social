@@ -6,7 +6,7 @@ import type {
   Json,
 } from "@skipruntime/core";
 import type { ModifiedProfile } from "./users.js";
-import type { InputCollection, ResourcesCollection } from "./social.service.js";
+import type { InputCollection, ResourcesCollection, PostgresCollection } from "./social.service.js";
 
 const winningCombos = [
   [1, 2, 3],
@@ -60,7 +60,7 @@ type OutputCollection = {
   ticTacToe: EagerCollection<string, WinTicTacToe>;
 };
 
-type GamesInputCollection = InputCollection & {
+type GamesInputCollection = InputCollection & PostgresCollection & {
   modifiedProfiles: EagerCollection<string, ModifiedProfile>;
 };
 
