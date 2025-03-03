@@ -5,7 +5,6 @@ from .models import Profile, FriendRequest
 from .serializers import ProfileSerializer, FriendRequestSerializer
 from utils import (
     handle_reactive_get,
-    handle_reactive_put,
     CsrfExemptSessionAuthentication,
     IgnoreClientContentNegotiation,
 )
@@ -22,9 +21,7 @@ class UserAPIView(APIView):
             return Response(
                 {"error": "Profile ID not provided"}, status=status.HTTP_400_BAD_REQUEST
             )
-        return handle_reactive_get(
-            request, "modifiedProfiles", profile_id
-        )
+        return handle_reactive_get(request, "modifiedProfiles", profile_id)
 
     def patch(self, request):
         # TODO: for testing purposes no auth here
@@ -37,17 +34,6 @@ class UserAPIView(APIView):
                 profile.status = data["status"]
                 profile.save()
                 serializer = ProfileSerializer(profile)
-
-                # Write to reactive input collections
-                handle_reactive_put(
-                    "profiles",
-                    profile.id,
-                    {
-                        "status": profile.status,
-                        "id": profile.id,
-                        "user_id": profile.user.id,
-                    },
-                )
 
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except Profile.DoesNotExist:
@@ -93,27 +79,9 @@ class FriendAPIView(APIView):
             profile.save()
             serializer = ProfileSerializer(profile)
 
-            request1 = FriendRequest.objects.get(
-                from_profile=profile, to_profile=friend
-            )
-            request2 = FriendRequest.objects.get(
-                from_profile=friend, to_profile=profile
-            )
+            FriendRequest.objects.get(from_profile=profile, to_profile=friend).delete()
+            FriendRequest.objects.get(from_profile=friend, to_profile=profile).delete()
 
-            # Write to reactive input collections
-            handle_reactive_put(
-                "friendRequests",
-                request1.id,
-                None,
-            )
-            handle_reactive_put(
-                "friendRequests",
-                request2.id,
-                None,
-            )
-
-            request1.delete()
-            request2.delete()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({"error": "Friend not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -129,9 +97,7 @@ class FriendRequestAPIView(APIView):
                 {"error": "Profile ID not provided"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        return handle_reactive_get(
-            request, "friendRequestsTo", profile_id
-        )
+        return handle_reactive_get(request, "friendRequestsTo", profile_id)
 
     def post(self, request):
         to_profile = request.data.get("to_profile")
@@ -162,20 +128,6 @@ class FriendRequestAPIView(APIView):
                     from_profile=profile_from, to_profile=profile_to
                 )
                 serializer = FriendRequestSerializer(friend_request)
-
-                collections_data = {
-                    "id": str(serializer.data["id"]),
-                    "from_profile_id": str(serializer.data["from_profile"]),
-                    "to_profile_id": str(serializer.data["to_profile"]),
-                }
-
-                # Write to reactive input collections
-                handle_reactive_put(
-                    "friendRequests",
-                    serializer.data["id"],
-                    collections_data,
-                )
-
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except Profile.DoesNotExist:
                 return Response(
@@ -192,17 +144,7 @@ class FriendRequestAPIView(APIView):
         if FriendRequest.objects.filter(
             from_profile=profile, to_profile=friend
         ).exists():
-            friend_request = FriendRequest.objects.get(from_profile=profile, to_profile=friend)
-            
-            # Write to reactive input collections
-            handle_reactive_put(
-                "friendRequests",
-                friend_request.id,
-                None,
-            )
-            
-            friend_request.delete()
-            
+            FriendRequest.objects.get(from_profile=profile, to_profile=friend).delete()
             return Response(status=status.HTTP_200_OK)
         return Response(
             {"error": "Friend request not found"}, status=status.HTTP_404_NOT_FOUND
