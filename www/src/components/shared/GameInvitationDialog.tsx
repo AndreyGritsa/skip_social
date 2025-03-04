@@ -26,7 +26,7 @@ const GameInvitationDialog = () => {
     if (user.id && data) {
       refetch();
     }
-  }, [user]);
+  }, [user, data, refetch]);
 
   useEffect(() => {
     if (data) {

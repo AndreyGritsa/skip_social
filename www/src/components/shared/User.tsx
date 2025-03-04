@@ -38,7 +38,7 @@ const User = () => {
     refetchUser();
     refetchFriends();
     refetchExternals();
-  }, [profileId]);
+  }, [profileId, refetchUser, refetchFriends, refetchExternals]);
 
   return (
     <Paper sx={{ p: 1 }} elevation={4}>

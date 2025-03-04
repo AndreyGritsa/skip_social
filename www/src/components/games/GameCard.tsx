@@ -28,7 +28,7 @@ const GameCard = (props: Game) => {
   const friends = useAppSelector((state) => state.friends.friends);
   const user = useAppSelector((state) => state.user);
   const [postInvite] = usePostInviteMutation();
-  const { data } = useGetInvitesQuery(user.id);
+  useGetInvitesQuery(user.id);
   const navigate = useNavigate();
   useGetFriendsQuery(user.id);
 

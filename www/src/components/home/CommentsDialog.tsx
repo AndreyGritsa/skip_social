@@ -15,7 +15,7 @@ import type { Comment } from "../../features/posts/postsSlice";
 import { useGetCommentsQuery } from "../../services/endpoints/posts";
 import { useInvalidateCommentsMutation } from "../../services/endpoints/posts";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { useState, Fragment, useEffect, MouseEvent } from "react";
+import { useState, Fragment, useEffect } from "react";
 import type { CommentQueryParams } from "../../services/endpoints/posts";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 
@@ -54,7 +54,7 @@ const CommentsDialog = ({
     ) {
       setCommentQueryHistory((prevHistory) => [...prevHistory, commentQuery]);
     }
-  }, [commentQuery]);
+  }, [commentQuery, commentQueryHistory]);
 
   useEffect(() => {
     if (data) {
