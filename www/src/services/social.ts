@@ -44,6 +44,7 @@ export const handleEventSource = async (
     eventSource.addEventListener(event, (e: MessageEvent<string>) => {
       const data = JSON.parse(e.data);
       console.log(`${event} data`, data);
+      if (!data || !data[0]) return
       try {
         eventHandlers[event](data[0][1]);
       } catch (error) {
