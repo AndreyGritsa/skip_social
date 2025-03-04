@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { User } from "../user/userSlice";
 
 export interface Comment {
   id: string;
@@ -38,7 +37,7 @@ export const postsSlice = createSlice({
   initialState,
   reducers: {
     addComment: (state, action: PayloadAction<CommentWithPostId>) => {
-      const { postId, postType, ...comment } = action.payload;
+      // const { postId, postType, ...comment } = action.payload;
       // const post = state[postType].find((post) => post.id === postId);
       // if (post) {
       //   if (!post.comments) {

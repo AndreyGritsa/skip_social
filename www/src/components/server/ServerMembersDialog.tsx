@@ -45,17 +45,17 @@ const ServerMembersDialog = ({ serverId }: { serverId: string }) => {
     if (data) {
       setUserMember(data.find((member) => member.id === user.id));
     }
-  }, [data]);
+  }, [data, user.id]);
 
   useEffect(() => {
     return () => {
       invalidateServerMembers();
     };
-  }, []);
+  }, [invalidateServerMembers]);
 
   useEffect(() => {
     if (user.id) refetch();
-  }, [user]);
+  }, [user, refetch]);
 
   const handleClickOpen = () => {
     setOpen(true);

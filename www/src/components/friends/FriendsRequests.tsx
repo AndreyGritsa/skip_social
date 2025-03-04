@@ -33,7 +33,7 @@ const FriendRequests = () => {
       // close EventSource when component is unmounted
       invalidateFriendRequests();
     };
-  }, []);
+  }, [invalidateFriendRequests]);
 
   const handleAcceptRequest = (name: string) => {
     console.log("Accepting friend request from:", name);

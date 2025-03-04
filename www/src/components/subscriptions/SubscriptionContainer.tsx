@@ -17,7 +17,7 @@ const SubscriptionContainer = () => {
     return () => {
       invalidateExternals();
     };
-  }, []);
+  }, [invalidateExternals]);
 
   return (
     <Grid container spacing={2} sx={{height: "1dvh",}}>

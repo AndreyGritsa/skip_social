@@ -45,7 +45,7 @@ const RoomsContainer = () => {
       const serverId = urlPath[2];
       dispatch(setActiveServer(serverId));
     }
-  }, [activeServer]);
+  }, [activeServer, dispatch]);
 
   const handleChangeRoom = (channelId: string) => {
     dispatch(

@@ -67,7 +67,6 @@ const TicTacToeContainer = () => {
         acc[player] = oldScore + (player === gameData.winner ? 1 : 0);
         return acc;
       }, {} as any);
-      console.log(`New Score: ${JSON.stringify(newScore)}`);
 
       increaseScore({ room_id: roomId!, ...newScore })
         .unwrap()

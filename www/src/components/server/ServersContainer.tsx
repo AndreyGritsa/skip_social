@@ -4,7 +4,6 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemButton,
-  Badge,
   Tooltip,
 } from "@mui/material";
 import { useAppSelector, useAppDispatch } from "../../app/hooks";
