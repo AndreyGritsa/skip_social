@@ -13,13 +13,20 @@ import {
 } from "../../services/endpoints/games";
 import { useAppSelector } from "../../app/hooks";
 import { useNavigate } from "react-router-dom";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 const GameInvitationDialog = () => {
   const [open, setOpen] = useState<boolean>(false);
   const user = useAppSelector((state) => state.user);
-  const { data } = useGetInvitesQuery(user.id);
+  const { data, refetch } = useGetInvitesQuery(user.id ? user.id : skipToken);
   const [updateInvite] = useUpdateInviteMutation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user.id && data) {
+      refetch();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (data) {
