@@ -15,7 +15,7 @@ const socialApi = createApi({
     "ServerMembers",
     "FriendRequests",
     "Externals",
-    "ChannelCommand"
+    "ChannelCommand",
   ],
   endpoints: () => ({}),
 });
@@ -33,22 +33,22 @@ export const handleEventSource = async (
   // Handle the initial cache data
   try {
     const cacheData = await cacheDataLoaded;
-    console.log("cacheData", cacheData);
+    console.log(`cacheData for ${url}`, cacheData);
     eventHandlers.init && eventHandlers.init(cacheData.data);
   } catch (error) {
-    console.error("Error loading cache data:", error);
+    console.error(`Error loading cache data for ${url}:`, error);
   }
 
   // Handle the events
   Object.keys(eventHandlers).forEach((event) => {
     eventSource.addEventListener(event, (e: MessageEvent<string>) => {
       const data = JSON.parse(e.data);
-      console.log(`${event} data`, data);
-      if (!data || !data[0]) return
+      console.log(`${event} data for ${url}`, data);
+      if (!data || !data[0]) return;
       try {
         eventHandlers[event](data[0][1]);
       } catch (error) {
-        console.error(`Error handling ${event} event:`, error);
+        console.error(`Error handling ${event} event for ${url}:`, error);
       }
     });
   });
